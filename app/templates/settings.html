@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="settings-page">
+    <div class="settings-container">
+        <div class="settings-sidebar">
+            <ul class="settings-nav">
+                <li class="settings-nav-item active" data-target="general">
+                    <i class="mdi mdi-cog"></i> General
+                </li>
+                <li class="settings-nav-item" data-target="business">
+                    <i class="mdi mdi-store"></i> Business
+                </li>
+                <li class="settings-nav-item" data-target="users">
+                    <i class="mdi mdi-account-group"></i> Users
+                </li>
+                <li class="settings-nav-item" data-target="taxes">
+                    <i class="mdi mdi-percent"></i> Taxes
+                </li>
+                <li class="settings-nav-item" data-target="payment">
+                    <i class="mdi mdi-credit-card"></i> Payment
+                </li>
+                <li class="settings-nav-item" data-target="receipts">
+                    <i class="mdi mdi-receipt"></i> Receipts
+                </li>
+                <li class="settings-nav-item" data-target="integrations">
+                    <i class="mdi mdi-connection"></i> Integrations
+                </li>
+                <li class="settings-nav-item" data-target="backup">
+                    <i class="mdi mdi-backup-restore"></i> Backup
+                </li>
+            </ul>
+        </div>
+        
+        <div class="settings-content">
+            <!-- General Settings -->
+            <div class="settings-section active" id="general">
+                <h2>General Settings</h2>
+                
+                <form class="settings-form">
+                    <div class="form-group">
+                        <label for="language">Language</label>
+                        <select id="language" class="form-control">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timezone">Timezone</label>
+                        <select id="timezone" class="form-control">
+                            <option value="UTC">UTC</option>
+                            <option value="EST">Eastern Standard Time (EST)</option>
+                            <option value="CST">Central Standard Time (CST)</option>
+                            <option value="MST">Mountain Standard Time (MST)</option>
+                            <option value="PST">Pacific Standard Time (PST)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date-format">Date Format</label>
+                        <select id="date-format" class="form-control">
+                            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="currency">Currency</label>
+                        <select id="currency" class="form-control">
+                            <option value="INR">Indian Rupee (₹)</option>
+                            <option value="USD">US Dollar ($)</option>
+                            <option value="EUR">Euro (€)</option>
+                            <option value="GBP">British Pound (£)</option>
+                            <option value="JPY">Japanese Yen (¥)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Theme</label>
+                        <div class="theme-options">
+                            <div class="theme-option active">
+                                <div class="theme-preview light-theme"></div>
+                                <span>Light</span>
+                            </div>
+                            <div class="theme-option">
+                                <div class="theme-preview dark-theme"></div>
+                                <span>Dark</span>
+                            </div>
+                            <div class="theme-option">
+                                <div class="theme-preview system-theme"></div>
+                                <span>System</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="reset" class="btn btn-secondary">Reset</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Business Settings -->
+            <div class="settings-section" id="business">
+                <h2>Business Settings</h2>
+                <form class="settings-form">
+                    <div class="form-group">
+                        <label for="business-name">Business Name</label>
+                        <input type="text" id="business-name" class="form-control" placeholder="Your Business Name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="business-address">Business Address</label>
+                        <textarea id="business-address" class="form-control" rows="3" placeholder="Full address"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="business-phone">Phone Number</label>
+                        <input type="tel" id="business-phone" class="form-control" placeholder="Phone number">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="business-email">Email Address</label>
+                        <input type="email" id="business-email" class="form-control" placeholder="Email address">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tax-id">Tax ID / GST Number</label>
+                        <input type="text" id="tax-id" class="form-control" placeholder="Tax ID or GST Number">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="reset" class="btn btn-secondary">Reset</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Users Settings -->
+            <div class="settings-section" id="users">
+                <h2>Users & Permissions</h2>
+                <div class="users-list">
+                    <div class="user-item">
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <i class="mdi mdi-account"></i>
+                            </div>
+                            <div class="user-details">
+                                <h4>Admin User</h4>
+                                <p>admin@example.com</p>
+                                <span class="user-role admin">Administrator</span>
+                            </div>
+                        </div>
+                        <div class="user-actions">
+                            <button class="btn btn-sm btn-secondary">Edit</button>
+                        </div>
+                    </div>
+                    
+                    <div class="user-item">
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <i class="mdi mdi-account"></i>
+                            </div>
+                            <div class="user-details">
+                                <h4>Cashier User</h4>
+                                <p>cashier@example.com</p>
+                                <span class="user-role cashier">Cashier</span>
+                            </div>
+                        </div>
+                        <div class="user-actions">
+                            <button class="btn btn-sm btn-secondary">Edit</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions mt-4">
+                    <button class="btn btn-primary">Add New User</button>
+                </div>
+            </div>
+            
+            <!-- Other settings sections -->
+            <div class="settings-section" id="taxes">
+                <h2>Tax Settings</h2>
+                <!-- Tax settings form would go here -->
+            </div>
+            
+            <div class="settings-section" id="payment">
+                <h2>Payment Settings</h2>
+                <!-- Payment settings form would go here -->
+            </div>
+            
+            <div class="settings-section" id="receipts">
+                <h2>Receipt Settings</h2>
+                <!-- Receipt settings form would go here -->
+            </div>
+            
+            <div class="settings-section" id="integrations">
+                <h2>Integrations</h2>
+                <!-- Integrations settings form would go here -->
+            </div>
+            
+            <div class="settings-section" id="backup">
+                <h2>Backup & Restore</h2>
+                <!-- Backup settings form would go here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load settings data
+        loadSettingsData();
+        
+        // Form submission handlers
+        setupFormHandlers();
+        
+        // Tab navigation
+        setupTabNavigation();
+    });
+    
+    function loadSettingsData() {
+        // Get settings data from localStorage
+        const settingsData = JSON.parse(localStorage.getItem('settings_data') || '{}');
+        
+        // Populate general settings form
+        if (settingsData.general) {
+            document.getElementById('language').value = settingsData.general.language || 'en';
+            document.getElementById('timezone').value = settingsData.general.timezone || 'UTC';
+            document.getElementById('date-format').value = settingsData.general.date_format || 'MM/DD/YYYY';
+            document.getElementById('currency').value = settingsData.general.currency || 'INR';
+        }
+        
+        // Populate business settings form
+        if (settingsData.business) {
+            document.getElementById('business-name').value = settingsData.business.name || '';
+            document.getElementById('business-address').value = settingsData.business.address || '';
+            document.getElementById('business-phone').value = settingsData.business.phone || '';
+            document.getElementById('business-email').value = settingsData.business.email || '';
+            document.getElementById('tax-id').value = settingsData.business.tax_id || '';
+        }
+    }
+    
+    function setupFormHandlers() {
+        // Get all forms
+        const forms = document.querySelectorAll('.settings-form');
+        
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get form data
+                const formData = new FormData(form);
+                const formDataObj = Object.fromEntries(formData.entries());
+                
+                // Get settings data from localStorage
+                const settingsData = JSON.parse(localStorage.getItem('settings_data') || '{}');
+                
+                // Determine which section this form belongs to
+                const section = form.closest('.settings-section').id;
+                
+                // Update settings data
+                settingsData[section] = settingsData[section] || {};
+                Object.assign(settingsData[section], formDataObj);
+                
+                // Save to localStorage
+                localStorage.setItem('settings_data', JSON.stringify(settingsData));
+                
+                // Show success notification
+                if (window.Notifications) {
+                    window.Notifications.show('Settings saved successfully', 'success');
+                }
+            });
+        });
+    }
+    
+    function setupTabNavigation() {
+        // Get all nav items
+        const navItems = document.querySelectorAll('.settings-nav-item');
+        
+        // Add click event to each nav item
+        navItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove active class from all nav items
+                navItems.forEach(navItem => navItem.classList.remove('active'));
+                
+                // Add active class to clicked nav item
+                this.classList.add('active');
+                
+                // Get target section id
+                const targetId = this.getAttribute('data-target');
+                
+                // Hide all sections
+                document.querySelectorAll('.settings-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Show target section
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+            });
+        });
+    }
+</script>
+{% endblock %} 

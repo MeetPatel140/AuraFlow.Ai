@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="inventory-page">
+    <div class="page-header">
+        <h1>Inventory Management</h1>
+        <p>Manage your products and stock levels</p>
+    </div>
+    
+    <div class="inventory-actions">
+        <div class="search-container">
+            <input type="text" placeholder="Search products..." class="search-input">
+            <button class="search-btn"><i class="mdi mdi-magnify"></i></button>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="add-product">
+                <i class="mdi mdi-plus"></i> Add Product
+            </button>
+            <button class="btn btn-secondary" id="import-products">
+                <i class="mdi mdi-file-import"></i> Import
+            </button>
+            <button class="btn btn-secondary" id="export-products">
+                <i class="mdi mdi-file-export"></i> Export
+            </button>
+        </div>
+    </div>
+    
+    <div class="inventory-filters">
+        <div class="filter-group">
+            <label for="category-filter">Category:</label>
+            <select id="category-filter" class="form-control">
+                <option value="all">All Categories</option>
+                <option value="food">Food</option>
+                <option value="beverages">Beverages</option>
+                <option value="electronics">Electronics</option>
+                <option value="clothing">Clothing</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="stock-filter">Stock Status:</label>
+            <select id="stock-filter" class="form-control">
+                <option value="all">All</option>
+                <option value="in-stock">In Stock</option>
+                <option value="low-stock">Low Stock</option>
+                <option value="out-of-stock">Out of Stock</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="inventory-table-container">
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>SKU</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Products will be loaded dynamically -->
+                <tr>
+                    <td>1</td>
+                    <td><img src="/static/images/placeholder.png" alt="Product 1" class="product-thumbnail"></td>
+                    <td>Product 1</td>
+                    <td>Food</td>
+                    <td>SKU-001</td>
+                    <td>₹19.99</td>
+                    <td>25</td>
+                    <td><span class="status-badge in-stock">In Stock</span></td>
+                    <td>
+                        <div class="action-icons">
+                            <button class="icon-btn edit-product" data-id="1"><i class="mdi mdi-pencil"></i></button>
+                            <button class="icon-btn delete-product" data-id="1"><i class="mdi mdi-delete"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td><img src="/static/images/placeholder.png" alt="Product 2" class="product-thumbnail"></td>
+                    <td>Product 2</td>
+                    <td>Beverages</td>
+                    <td>SKU-002</td>
+                    <td>₹9.99</td>
+                    <td>5</td>
+                    <td><span class="status-badge low-stock">Low Stock</span></td>
+                    <td>
+                        <div class="action-icons">
+                            <button class="icon-btn edit-product" data-id="2"><i class="mdi mdi-pencil"></i></button>
+                            <button class="icon-btn delete-product" data-id="2"><i class="mdi mdi-delete"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td><img src="/static/images/placeholder.png" alt="Product 3" class="product-thumbnail"></td>
+                    <td>Product 3</td>
+                    <td>Electronics</td>
+                    <td>SKU-003</td>
+                    <td>₹29.99</td>
+                    <td>0</td>
+                    <td><span class="status-badge out-of-stock">Out of Stock</span></td>
+                    <td>
+                        <div class="action-icons">
+                            <button class="icon-btn edit-product" data-id="3"><i class="mdi mdi-pencil"></i></button>
+                            <button class="icon-btn delete-product" data-id="3"><i class="mdi mdi-delete"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="pagination">
+        <button class="pagination-btn" disabled><i class="mdi mdi-chevron-left"></i></button>
+        <span class="pagination-info">Page 1 of 1</span>
+        <button class="pagination-btn" disabled><i class="mdi mdi-chevron-right"></i></button>
+    </div>
+</div>
+{% endblock %} 

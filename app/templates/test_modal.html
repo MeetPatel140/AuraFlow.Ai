@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modal Test</title>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            background-color: #4A90E2;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Modal Test</h1>
+    
+    <button id="open-modal" class="btn">Open Modal</button>
+    
+    <div class="modal" id="test-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Test Modal</h2>
+                <button id="close-modal">Close</button>
+            </div>
+            <div style="padding: 20px;">
+                <p>This is a test modal to debug the modal functionality.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const openModalBtn = document.getElementById('open-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const modal = document.getElementById('test-modal');
+            
+            console.log('DOM Elements:', {
+                openModalBtn: !!openModalBtn,
+                closeModalBtn: !!closeModalBtn,
+                modal: !!modal
+            });
+            
+            openModalBtn.addEventListener('click', function() {
+                console.log('Open modal button clicked');
+                modal.classList.add('show');
+            });
+            
+            closeModalBtn.addEventListener('click', function() {
+                console.log('Close modal button clicked');
+                modal.classList.remove('show');
+            });
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    console.log('Clicked outside modal');
+                    modal.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

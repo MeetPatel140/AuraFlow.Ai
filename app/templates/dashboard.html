@@ -1,0 +1,2276 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css">
+<style>
+    .dashboard {
+        padding: 24px;
+        background-color: #f8f9fa;
+        min-height: calc(100vh - 60px);
+    }
+    
+    /* Enhanced Stats Cards */
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .stat-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 20px;
+        font-size: 1.75rem;
+        color: white;
+        background: linear-gradient(135deg, var(--start-color), var(--end-color));
+    }
+    
+    .stat-icon.sales {
+        --start-color: #4A90E2;
+        --end-color: #357ABD;
+    }
+    
+    .stat-icon.orders {
+        --start-color: #50C878;
+        --end-color: #3DA75C;
+    }
+    
+    .stat-icon.customers {
+        --start-color: #FF8C00;
+        --end-color: #E67E00;
+    }
+    
+    .stat-icon.products {
+        --start-color: #9370DB;
+        --end-color: #7B5DB5;
+    }
+    
+    .stat-info {
+        flex: 1;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #2c3e50;
+    }
+    
+    .stat-label {
+        color: #64748b;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    
+    .stat-change {
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 8px;
+        font-weight: 500;
+    }
+    
+    /* Enhanced Charts Section */
+    .dashboard-charts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    
+    /* Two-column layout for regular chart rows */
+    .dashboard-charts.two-column {
+        grid-template-columns: 2fr 1fr;
+    }
+    
+    .chart-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .chart-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .chart-title {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .chart-actions {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .chart-period {
+        padding: 6px 12px;
+        border-radius: 8px;
+        background-color: #f1f5f9;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #64748b;
+    }
+    
+    .chart-period:hover {
+        background-color: #e2e8f0;
+        color: #2c3e50;
+    }
+    
+    .chart-period.active {
+        background-color: #4A90E2;
+        color: white;
+    }
+    
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 200px;
+        max-height: 100%;
+    }
+    
+    /* Enhanced Secondary Stats */
+    .dashboard-stats-secondary {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .mini-stat-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 20px;
+        text-align: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .mini-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .mini-stat-icon {
+        font-size: 1.75rem;
+        margin-bottom: 12px;
+        background: linear-gradient(135deg, #4A90E2, #357ABD);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .mini-stat-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #2c3e50;
+    }
+    
+    .mini-stat-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+    
+    /* Enhanced Tertiary Charts */
+    .dashboard-charts-tertiary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .chart-card-mini {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 20px;
+        height: 240px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .chart-card-mini:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Enhanced Metrics Grid */
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .metric-item {
+        background-color: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .metric-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-title {
+        font-size: 1rem;
+        color: #64748b;
+        margin-bottom: 12px;
+        font-weight: 500;
+    }
+    
+    .metric-number {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+    
+    .metric-subtitle {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+    
+    /* Enhanced Widgets */
+    .dashboard-widgets {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .widget-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        height: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .widget-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .widget-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .widget-title {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .widget-action {
+        color: #4A90E2;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    
+    .widget-action:hover {
+        color: #357ABD;
+    }
+    
+    /* Enhanced List Items */
+    .inventory-list, .order-list, .activity-list {
+        max-height: 360px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+    
+    .inventory-list::-webkit-scrollbar,
+    .order-list::-webkit-scrollbar,
+    .activity-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .inventory-list::-webkit-scrollbar-track,
+    .order-list::-webkit-scrollbar-track,
+    .activity-list::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+    
+    .inventory-list::-webkit-scrollbar-thumb,
+    .order-list::-webkit-scrollbar-thumb,
+    .activity-list::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 3px;
+    }
+    
+    .inventory-item, .order-item, .activity-item {
+        display: flex;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #e2e8f0;
+        transition: background-color 0.2s;
+    }
+    
+    .inventory-item:hover, .order-item:hover, .activity-item:hover {
+        background-color: #f8fafc;
+    }
+    
+    .inventory-item:last-child,
+    .order-item:last-child,
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .inventory-image, .order-image {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        background-color: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        color: #64748b;
+    }
+    
+    .inventory-info, .order-info {
+        flex: 1;
+    }
+    
+    .inventory-name, .order-id {
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #2c3e50;
+    }
+    
+    .inventory-category, .order-date {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+    
+    .inventory-stock, .order-status {
+        font-size: 0.875rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    
+    /* Enhanced Status Colors */
+    .stock-low {
+        background-color: #FEE2E2;
+        color: #EF4444;
+    }
+    
+    .stock-medium {
+        background-color: #FEF3C7;
+        color: #F59E0B;
+    }
+    
+    .stock-high {
+        background-color: #D1FAE5;
+        color: #10B981;
+    }
+    
+    .status-pending {
+        background-color: #FEF3C7;
+        color: #F59E0B;
+    }
+    
+    .status-processing {
+        background-color: #DBEAFE;
+        color: #3B82F6;
+    }
+    
+    .status-completed {
+        background-color: #D1FAE5;
+        color: #10B981;
+    }
+    
+    .status-cancelled {
+        background-color: #FEE2E2;
+        color: #EF4444;
+    }
+    
+    /* Enhanced Activity Items */
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        color: white;
+        font-size: 1.25rem;
+    }
+    
+    .activity-icon.login {
+        background: linear-gradient(135deg, #4A90E2, #357ABD);
+    }
+    
+    .activity-icon.order {
+        background: linear-gradient(135deg, #50C878, #3DA75C);
+    }
+    
+    .activity-icon.inventory {
+        background: linear-gradient(135deg, #FF8C00, #E67E00);
+    }
+    
+    .activity-icon.settings {
+        background: linear-gradient(135deg, #9370DB, #7B5DB5);
+    }
+    
+    .activity-details {
+        flex: 1;
+    }
+    
+    .activity-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #2c3e50;
+    }
+    
+    .activity-description {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+    
+    .activity-time {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    
+    /* Enhanced Responsive Design */
+    @media (max-width: 1400px) {
+        .dashboard-stats,
+        .metric-grid,
+        .performance-metrics {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .dashboard-stats-secondary {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .dashboard-charts-tertiary {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 1200px) {
+        .dashboard-charts,
+        .dashboard-charts.two-column {
+            grid-template-columns: 1fr;
+        }
+        
+        .dashboard-widgets {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .dashboard-charts-secondary {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard {
+            padding: 16px;
+        }
+        
+        .dashboard-stats,
+        .dashboard-stats-secondary,
+        .dashboard-charts-tertiary,
+        .metric-grid,
+        .performance-metrics,
+        .dashboard-widgets,
+        .dashboard-charts-secondary {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card,
+        .chart-card,
+        .widget-card,
+        .chart-card-small,
+        .chart-card-mini,
+        .metric-card,
+        .mini-stat-card {
+            padding: 16px;
+        }
+        
+        .chart-container {
+            height: 280px;
+        }
+        
+        .chart-actions {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .chart-period {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .dashboard {
+            padding: 12px;
+        }
+        
+        .stat-card {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .stat-icon {
+            margin-right: 0;
+            margin-bottom: 16px;
+        }
+        
+        .chart-container {
+            height: 240px;
+        }
+    }
+
+    /* Enhanced Performance Metrics */
+    .performance-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .metric-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .metric-card i {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        color: #4A90E2;
+        display: inline-block;
+        background: #f0f7ff;
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #4A90E2, #357ABD);
+    }
+
+    .metric-card.success::before {
+        background: linear-gradient(90deg, #50C878, #3DA75C);
+    }
+
+    .metric-card.warning::before {
+        background: linear-gradient(90deg, #FF8C00, #E67E00);
+    }
+
+    .metric-card.danger::before {
+        background: linear-gradient(90deg, #EF4444, #DC2626);
+    }
+
+    .metric-card.success i {
+        color: #50C878;
+        background: #f0fff7;
+    }
+
+    .metric-card.warning i {
+        color: #FF8C00;
+        background: #fff8f0;
+    }
+
+    .metric-card.danger i {
+        color: #EF4444;
+        background: #fff0f0;
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: #2c3e50;
+        line-height: 1;
+    }
+
+    .metric-label {
+        color: #64748b;
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 16px;
+    }
+
+    .metric-trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-top: auto;
+    }
+
+    .trend-up {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .trend-down {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+
+    /* Fix for dashboard-charts-secondary */
+    .dashboard-charts-secondary {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .chart-card-small {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        height: 320px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .chart-card-small:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Trend indicators */
+    .positive {
+        color: #10B981;
+    }
+
+    .negative {
+        color: #EF4444;
+    }
+
+    .stat-change.positive {
+        color: #10B981;
+        font-weight: 500;
+    }
+
+    .stat-change.negative {
+        color: #EF4444;
+        font-weight: 500;
+    }
+
+    .trend-up {
+        color: #10B981;
+        font-weight: 500;
+    }
+
+    .trend-down {
+        color: #EF4444;
+        font-weight: 500;
+    }
+    
+    /* Chart action styling */
+    .chart-action {
+        padding: 6px 12px;
+        border-radius: 8px;
+        background-color: #f1f5f9;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #4A90E2;
+    }
+    
+    .chart-action:hover {
+        background-color: #e2e8f0;
+        color: #357ABD;
+    }
+    
+    /* Quick action cards */
+    .quick-action-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: #2c3e50;
+        border: 1px solid #e2e8f0;
+        height: 100%;
+    }
+    
+    .quick-action-card:hover {
+        background-color: #4A90E2;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .quick-action-card i {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    
+    .quick-action-card span {
+        font-weight: 500;
+    }
+
+    /* Business Metrics Grid */
+    .business-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .business-metric-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-align: center;
+    }
+    
+    .business-metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .business-metric-title {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #64748b;
+        margin-bottom: 12px;
+    }
+    
+    .business-metric-number {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+    
+    .business-metric-subtitle {
+        font-size: 0.875rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+    
+    .business-metric-subtitle.positive {
+        color: #10B981;
+    }
+    
+    .business-metric-subtitle.negative {
+        color: #EF4444;
+    }
+
+    /* Section Header */
+    .section-header {
+        margin-bottom: 24px;
+    }
+    
+    .section-header h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    /* Activity Filter */
+    .activity-filter {
+        margin-right: 10px;
+    }
+    
+    .filter-select {
+        padding: 6px 12px;
+        border-radius: 8px;
+        background-color: #f1f5f9;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s;
+        outline: none;
+    }
+    
+    .filter-select:hover {
+        background-color: #e2e8f0;
+    }
+    
+    .filter-select:focus {
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+    }
+    
+    /* Activity Item Animation */
+    .activity-item {
+        display: flex;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        transform-origin: left;
+        animation: fadeIn 0.5s ease forwards;
+        opacity: 0;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .activity-item:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+    
+    .activity-item:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .activity-item:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+    
+    .activity-item:nth-child(4) {
+        animation-delay: 0.4s;
+    }
+    
+    .activity-item:nth-child(5) {
+        animation-delay: 0.5s;
+    }
+    
+    .activity-item:hover {
+        background-color: #f8fafc;
+        transform: scale(1.01);
+        padding-left: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .activity-item.hidden {
+        display: none;
+    }
+
+    /* Ripple Effect */
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.4);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+    
+    /* Toast Notification */
+    .toast-notification {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background-color: #fff;
+        color: #2c3e50;
+        border-radius: 8px;
+        padding: 15px 25px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 1000;
+        font-weight: 500;
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+    
+    .toast-notification.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    
+    .toast-notification i {
+        color: #10B981;
+        font-size: 1.25rem;
+    }
+    
+    @media (max-width: 576px) {
+        .toast-notification {
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            text-align: center;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Top KPI Cards -->
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-icon sales">
+                <i class="mdi mdi-currency-inr"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">₹38,450</div>
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-change positive">
+                    <i class="mdi mdi-arrow-up"></i> 15.2% from last month
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon orders">
+                <i class="mdi mdi-cart"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">243</div>
+                <div class="stat-label">Total Orders</div>
+                <div class="stat-change positive">
+                    <i class="mdi mdi-arrow-up"></i> 8.7% from last month
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon customers">
+                <i class="mdi mdi-account-group"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">1,254</div>
+                <div class="stat-label">Total Customers</div>
+                <div class="stat-change positive">
+                    <i class="mdi mdi-arrow-up"></i> 12.3% from last month
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon products">
+                <i class="mdi mdi-package-variant"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">18</div>
+                <div class="stat-label">Low Stock Items</div>
+                <div class="stat-change negative">
+                    <i class="mdi mdi-arrow-up"></i> 5 more than last week
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Secondary KPI Cards -->
+    <div class="dashboard-stats-secondary">
+        <div class="mini-stat-card">
+            <div class="mini-stat-icon">
+                <i class="mdi mdi-cash-register"></i>
+            </div>
+            <div class="mini-stat-value">₹1,580</div>
+            <div class="mini-stat-label">Avg Order Value</div>
+        </div>
+        
+        <div class="mini-stat-card">
+            <div class="mini-stat-icon">
+                <i class="mdi mdi-cart-outline"></i>
+            </div>
+            <div class="mini-stat-value">42</div>
+            <div class="mini-stat-label">Orders Today</div>
+        </div>
+        
+        <div class="mini-stat-card">
+            <div class="mini-stat-icon">
+                <i class="mdi mdi-account-multiple-plus"></i>
+            </div>
+            <div class="mini-stat-value">12</div>
+            <div class="mini-stat-label">New Customers Today</div>
+        </div>
+        
+        <div class="mini-stat-card">
+            <div class="mini-stat-icon">
+                <i class="mdi mdi-package-variant"></i>
+            </div>
+            <div class="mini-stat-value">312</div>
+            <div class="mini-stat-label">Total Products</div>
+        </div>
+        
+        <div class="mini-stat-card">
+            <div class="mini-stat-icon">
+                <i class="mdi mdi-truck-delivery"></i>
+            </div>
+            <div class="mini-stat-value">24</div>
+            <div class="mini-stat-label">Pending Deliveries</div>
+        </div>
+        
+        <div class="mini-stat-card">
+            <div class="mini-stat-icon">
+                <i class="mdi mdi-star"></i>
+            </div>
+            <div class="mini-stat-value">4.7</div>
+            <div class="mini-stat-label">Avg Rating</div>
+        </div>
+    </div>
+    
+    <div class="business-metrics-grid">
+        <div class="business-metric-card">
+            <div class="business-metric-title">Average Order Processing Time</div>
+            <div class="business-metric-number">15 min</div>
+            <div class="business-metric-subtitle positive">
+                <i class="mdi mdi-arrow-down"></i> 3 min from last month
+            </div>
+        </div>
+        <div class="business-metric-card">
+            <div class="business-metric-title">Cart Abandonment Rate</div>
+            <div class="business-metric-number">21%</div>
+            <div class="business-metric-subtitle positive">
+                <i class="mdi mdi-arrow-down"></i> 4% from last month
+            </div>
+        </div>
+        <div class="business-metric-card">
+            <div class="business-metric-title">Inventory Turnover Rate</div>
+            <div class="business-metric-number">4.8x</div>
+            <div class="business-metric-subtitle positive">
+                <i class="mdi mdi-arrow-up"></i> 0.5x from last quarter
+            </div>
+        </div>
+        <div class="business-metric-card">
+            <div class="business-metric-title">Customer Lifetime Value</div>
+            <div class="business-metric-number">₹15,800</div>
+            <div class="business-metric-subtitle positive">
+                <i class="mdi mdi-arrow-up"></i> ₹1,500 from last year
+            </div>
+        </div>
+        <div class="business-metric-card">
+            <div class="business-metric-title">Gross Profit Margin</div>
+            <div class="business-metric-number">32.5%</div>
+            <div class="business-metric-subtitle positive">
+                <i class="mdi mdi-arrow-up"></i> 1.8% from last quarter
+            </div>
+        </div>
+        <div class="business-metric-card">
+            <div class="business-metric-title">Customer Acquisition Cost</div>
+            <div class="business-metric-number">₹850</div>
+            <div class="business-metric-subtitle positive">
+                <i class="mdi mdi-arrow-down"></i> ₹120 from last quarter
+            </div>
+        </div>
+        <div class="business-metric-card">
+            <div class="business-metric-title">Average Days of Inventory</div>
+            <div class="business-metric-number">24 days</div>
+            <div class="business-metric-subtitle positive">
+                <i class="mdi mdi-arrow-down"></i> 3 days from last quarter
+            </div>
+        </div>
+        <div class="business-metric-card">
+            <div class="business-metric-title">Return Rate</div>
+            <div class="business-metric-number">3.2%</div>
+            <div class="business-metric-subtitle positive">
+                <i class="mdi mdi-arrow-down"></i> 0.5% from last month
+            </div>
+        </div>
+    </div>
+    
+    <!-- Performance Metrics -->
+    <div class="performance-metrics">
+        <div class="metric-card success">
+            <i class="mdi mdi-emoticon-happy-outline"></i>
+            <div class="metric-value">92%</div>
+            <div class="metric-label">Customer Satisfaction</div>
+            <div class="metric-trend trend-up">
+                <i class="mdi mdi-arrow-up"></i> 4% from last month
+            </div>
+        </div>
+        
+        <div class="metric-card warning">
+            <i class="mdi mdi-clock-outline"></i>
+            <div class="metric-value">18min</div>
+            <div class="metric-label">Avg Response Time</div>
+            <div class="metric-trend trend-down">
+                <i class="mdi mdi-arrow-down"></i> 3min from last month
+            </div>
+        </div>
+        
+        <div class="metric-card success">
+            <i class="mdi mdi-cart-check"></i>
+            <div class="metric-value">97%</div>
+            <div class="metric-label">Order Completion Rate</div>
+            <div class="metric-trend trend-up">
+                <i class="mdi mdi-arrow-up"></i> 2% from last month
+            </div>
+        </div>
+        
+        <div class="metric-card success">
+            <i class="mdi mdi-account-multiple-check"></i>
+            <div class="metric-value">72%</div>
+            <div class="metric-label">Customer Retention</div>
+            <div class="metric-trend trend-up">
+                <i class="mdi mdi-arrow-up"></i> 5% from last month
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Charts Row 1 -->
+    <div class="dashboard-charts two-column">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Revenue Trends</div>
+                <div class="chart-actions">
+                    <div class="chart-period" data-period="day">Day</div>
+                    <div class="chart-period active" data-period="week">Week</div>
+                    <div class="chart-period" data-period="month">Month</div>
+                    <div class="chart-period" data-period="year">Year</div>
+                </div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="revenue-trend-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Sales by Category</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="sales-category-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Charts Row 2 -->
+    <div class="dashboard-charts two-column">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Customer Acquisition</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="customer-acquisition-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Order Status Distribution</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="order-status-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Charts Row 3 -->
+    <div class="dashboard-charts two-column">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Sales by Location</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="sales-location-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Customer Demographics</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="customer-demographics-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Charts Row 4 -->
+    <div class="dashboard-charts two-column">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Inventory Levels</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="inventory-levels-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Payment Methods</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="payment-methods-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Charts Row 5 -->
+    <div class="dashboard-charts two-column">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Hourly Sales Distribution</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="hourly-sales-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Product Performance</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="product-performance-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Charts Row 6 -->
+    <div class="dashboard-charts two-column">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Sales Forecast</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="sales-forecast-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Marketing ROI</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="marketing-roi-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Charts Row 7 -->
+    <div class="dashboard-charts two-column">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Customer Lifetime Value</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="customer-ltv-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Supplier Performance</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="supplier-performance-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Charts Row 8 -->
+    <div class="dashboard-charts">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Website Traffic Sources</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="traffic-sources-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Conversion Funnel</div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="conversion-funnel-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Recent Activity</div>
+                <div class="chart-actions">
+                    <div class="activity-filter">
+                        <select id="activity-filter" class="filter-select">
+                            <option value="all">All Activities</option>
+                            <option value="login">Logins</option>
+                            <option value="order">Orders</option>
+                            <option value="inventory">Inventory</option>
+                            <option value="settings">Settings</option>
+                        </select>
+                    </div>
+                    <div class="chart-action">View All</div>
+                </div>
+            </div>
+            <div class="activity-list" style="height: 320px; overflow-y: auto;">
+                <div class="activity-item" data-type="login">
+                    <div class="activity-icon login">
+                        <i class="mdi mdi-login"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">Login</div>
+                        <div class="activity-description">Admin logged in from 192.168.1.1</div>
+                        <div class="activity-time">Today, 10:30 AM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item" data-type="order">
+                    <div class="activity-icon order">
+                        <i class="mdi mdi-cart"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">New Order</div>
+                        <div class="activity-description">Order #12345 was created</div>
+                        <div class="activity-time">Today, 9:45 AM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item" data-type="inventory">
+                    <div class="activity-icon inventory">
+                        <i class="mdi mdi-package-variant"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">Inventory Update</div>
+                        <div class="activity-description">Added 10 units of Smartphone X</div>
+                        <div class="activity-time">Yesterday, 4:20 PM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item" data-type="settings">
+                    <div class="activity-icon settings">
+                        <i class="mdi mdi-cog"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">Settings Changed</div>
+                        <div class="activity-description">Updated tax settings</div>
+                        <div class="activity-time">Yesterday, 2:15 PM</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item" data-type="order">
+                    <div class="activity-icon order">
+                        <i class="mdi mdi-cart"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">Order Status</div>
+                        <div class="activity-description">Order #12342 was cancelled</div>
+                        <div class="activity-time">Yesterday, 11:30 AM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Revenue Trends Chart
+        const revenueTrendCtx = document.getElementById('revenue-trend-chart').getContext('2d');
+        const revenueTrendChart = new Chart(revenueTrendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [5500, 6200, 4800, 7100, 6800, 8200, 7500],
+                    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                    borderColor: '#4A90E2',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return '₹' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Sales by Category Chart
+        const salesCategoryCtx = document.getElementById('sales-category-chart').getContext('2d');
+        const salesCategoryChart = new Chart(salesCategoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Electronics', 'Clothing', 'Home & Kitchen', 'Books', 'Others'],
+                datasets: [{
+                    data: [45, 25, 15, 10, 5],
+                    backgroundColor: [
+                        '#4A90E2',
+                        '#50C878',
+                        '#FF8C00',
+                        '#9370DB',
+                        '#FF6B6B'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 20,
+                            boxWidth: 12
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+        
+        // Customer Acquisition Chart
+        const customerAcquisitionCtx = document.getElementById('customer-acquisition-chart').getContext('2d');
+        const customerAcquisitionChart = new Chart(customerAcquisitionCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'New Customers',
+                    data: [120, 150, 180, 250, 300, 380],
+                    borderColor: '#50C878',
+                    backgroundColor: 'rgba(80, 200, 120, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Order Status Distribution Chart
+        const orderStatusCtx = document.getElementById('order-status-chart').getContext('2d');
+        const orderStatusChart = new Chart(orderStatusCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Completed', 'Processing', 'Pending', 'Cancelled'],
+                datasets: [{
+                    data: [65, 20, 10, 5],
+                    backgroundColor: [
+                        '#10B981',
+                        '#3B82F6',
+                        '#F59E0B',
+                        '#EF4444'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 20,
+                            boxWidth: 12
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Sales by Location Chart
+        const salesLocationCtx = document.getElementById('sales-location-chart').getContext('2d');
+        const salesLocationChart = new Chart(salesLocationCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Hyderabad', 'Kolkata'],
+                datasets: [{
+                    label: 'Sales',
+                    data: [12500, 19000, 15500, 9800, 14200, 8500],
+                    backgroundColor: 'rgba(74, 144, 226, 0.7)',
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '₹' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Customer Demographics Chart
+        const customerDemographicsCtx = document.getElementById('customer-demographics-chart').getContext('2d');
+        const customerDemographicsChart = new Chart(customerDemographicsCtx, {
+            type: 'polarArea',
+            data: {
+                labels: ['18-24', '25-34', '35-44', '45-54', '55+'],
+                datasets: [{
+                    data: [20, 35, 25, 15, 5],
+                    backgroundColor: [
+                        'rgba(74, 144, 226, 0.7)',
+                        'rgba(80, 200, 120, 0.7)',
+                        'rgba(255, 140, 0, 0.7)',
+                        'rgba(147, 112, 219, 0.7)',
+                        'rgba(255, 107, 107, 0.7)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 10
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        ticks: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Inventory Levels Chart
+        const inventoryLevelsCtx = document.getElementById('inventory-levels-chart').getContext('2d');
+        const inventoryLevelsChart = new Chart(inventoryLevelsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Electronics', 'Clothing', 'Home & Kitchen', 'Books', 'Sports', 'Beauty'],
+                datasets: [{
+                    label: 'Current Stock',
+                    data: [250, 420, 180, 310, 150, 220],
+                    backgroundColor: 'rgba(74, 144, 226, 0.7)',
+                    borderWidth: 0
+                }, {
+                    label: 'Reorder Level',
+                    data: [100, 150, 80, 120, 50, 90],
+                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Units'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Payment Methods Chart
+        const paymentMethodsCtx = document.getElementById('payment-methods-chart').getContext('2d');
+        const paymentMethodsChart = new Chart(paymentMethodsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['UPI', 'Cards', 'Cash', 'Net Banking', 'Wallets'],
+                datasets: [{
+                    data: [45, 25, 15, 10, 5],
+                    backgroundColor: [
+                        '#4A90E2',
+                        '#50C878',
+                        '#FF8C00',
+                        '#9370DB',
+                        '#FF6B6B'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 10
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+        
+        // Hourly Sales Distribution Chart
+        const hourlySalesCtx = document.getElementById('hourly-sales-chart').getContext('2d');
+        const hourlySalesChart = new Chart(hourlySalesCtx, {
+            type: 'bar',
+            data: {
+                labels: ['9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM', '6PM'],
+                datasets: [{
+                    label: 'Orders',
+                    data: [12, 19, 15, 25, 22, 18, 20, 23, 17, 15],
+                    backgroundColor: 'rgba(74, 144, 226, 0.7)',
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 5
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Product Performance Chart
+        const productPerformanceCtx = document.getElementById('product-performance-chart').getContext('2d');
+        const productPerformanceChart = new Chart(productPerformanceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Smartphone X', 'Laptop Pro', 'Wireless Headphones', 'Smart Watch', 'Bluetooth Speaker'],
+                datasets: [{
+                    label: 'Units Sold',
+                    data: [120, 95, 85, 70, 65],
+                    backgroundColor: 'rgba(74, 144, 226, 0.7)',
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Sales Forecast Chart
+        const salesForecastCtx = document.getElementById('sales-forecast-chart').getContext('2d');
+        const salesForecastChart = new Chart(salesForecastCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                datasets: [{
+                    label: 'Actual Sales',
+                    data: [35000, 42000, 38000, 45000, 48000, 52000, null, null, null],
+                    borderColor: '#4A90E2',
+                    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Forecast',
+                    data: [null, null, null, null, null, 52000, 56000, 62000, 68000],
+                    borderColor: '#50C878',
+                    backgroundColor: 'rgba(80, 200, 120, 0.1)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.raw !== null) {
+                                    return context.dataset.label + ': ₹' + context.raw.toLocaleString();
+                                }
+                                return '';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Marketing ROI Chart
+        const marketingRoiCtx = document.getElementById('marketing-roi-chart').getContext('2d');
+        const marketingRoiChart = new Chart(marketingRoiCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Social Media', 'Email', 'Search', 'Display Ads', 'Affiliates'],
+                datasets: [{
+                    label: 'ROI (%)',
+                    data: [320, 280, 250, 180, 150],
+                    backgroundColor: [
+                        '#4A90E2',
+                        '#50C878',
+                        '#FF8C00',
+                        '#9370DB',
+                        '#FF6B6B'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'ROI: ' + context.raw + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Customer LTV Chart
+        const customerLtvCtx = document.getElementById('customer-ltv-chart').getContext('2d');
+        const customerLtvChart = new Chart(customerLtvCtx, {
+            type: 'line',
+            data: {
+                labels: ['0-6 months', '6-12 months', '1-2 years', '2-3 years', '3+ years'],
+                datasets: [{
+                    label: 'Customer Lifetime Value',
+                    data: [5000, 8500, 12000, 15800, 18500],
+                    borderColor: '#4A90E2',
+                    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'LTV: ₹' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Supplier Performance Chart
+        const supplierPerformanceCtx = document.getElementById('supplier-performance-chart').getContext('2d');
+        const supplierPerformanceChart = new Chart(supplierPerformanceCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Quality', 'On-time Delivery', 'Price', 'Communication', 'Reliability'],
+                datasets: [{
+                    label: 'Supplier A',
+                    data: [90, 85, 70, 95, 80],
+                    backgroundColor: 'rgba(74, 144, 226, 0.2)',
+                    borderColor: '#4A90E2',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#4A90E2'
+                }, {
+                    label: 'Supplier B',
+                    data: [75, 90, 85, 70, 95],
+                    backgroundColor: 'rgba(80, 200, 120, 0.2)',
+                    borderColor: '#50C878',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#50C878'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+        
+        // Traffic Sources Chart
+        const trafficSourcesCtx = document.getElementById('traffic-sources-chart').getContext('2d');
+        const trafficSourcesChart = new Chart(trafficSourcesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Direct', 'Organic Search', 'Social Media', 'Email', 'Referral', 'Paid Ads'],
+                datasets: [{
+                    data: [30, 25, 20, 10, 10, 5],
+                    backgroundColor: [
+                        '#4A90E2',
+                        '#50C878',
+                        '#FF8C00',
+                        '#9370DB',
+                        '#FF6B6B',
+                        '#FFD700'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 10
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+        
+        // Conversion Funnel Chart
+        const conversionFunnelCtx = document.getElementById('conversion-funnel-chart').getContext('2d');
+        const conversionFunnelChart = new Chart(conversionFunnelCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Visitors', 'Product Views', 'Add to Cart', 'Checkout', 'Purchase'],
+                datasets: [{
+                    label: 'Conversion Funnel',
+                    data: [1000, 750, 500, 300, 200],
+                    backgroundColor: [
+                        '#4A90E2',
+                        '#357ABD',
+                        '#2A6099',
+                        '#1F4674',
+                        '#142C4F'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Chart period toggle
+        const chartPeriods = document.querySelectorAll('.chart-period');
+        chartPeriods.forEach(period => {
+            period.addEventListener('click', function() {
+                // Remove active class from all periods
+                chartPeriods.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked period
+                this.classList.add('active');
+                
+                // Get period value
+                const periodValue = this.getAttribute('data-period');
+                
+                // Update chart data based on period
+                let labels, data;
+                
+                switch (periodValue) {
+                    case 'day':
+                        labels = ['9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM'];
+                        data = [1200, 1800, 2200, 3000, 2500, 2200, 3200, 2800, 3100, 2500];
+                        break;
+                    case 'week':
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                        data = [5500, 6200, 4800, 7100, 6800, 8200, 7500];
+                        break;
+                    case 'month':
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                        data = [22000, 25000, 28000, 24000];
+                        break;
+                    case 'year':
+                        labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        data = [65000, 72000, 68000, 80000, 75000, 85000, 78000, 76000, 90000, 88000, 92000, 100000];
+                        break;
+                }
+                
+                // Update chart data
+                revenueTrendChart.data.labels = labels;
+                revenueTrendChart.data.datasets[0].data = data;
+                revenueTrendChart.update();
+            });
+        });
+        
+        // Widget actions
+        const widgetActions = document.querySelectorAll('.chart-action');
+        widgetActions.forEach(action => {
+            action.addEventListener('click', function() {
+                const widgetTitle = this.parentElement.parentElement.querySelector('.chart-title').textContent;
+                
+                // Show notification
+                if (window.Notifications) {
+                    window.Notifications.show(`Viewing all ${widgetTitle}`, 'info');
+                }
+            });
+        });
+
+        // Add animation to metrics
+        document.querySelectorAll('.metric-value').forEach(metric => {
+            const value = metric.textContent;
+            metric.textContent = '0';
+            
+            // Animate the number
+            let start = 0;
+            const end = parseFloat(value.replace(/[^\d.-]/g, ''));
+            const duration = 1500;
+            const startTime = performance.now();
+            const unit = value.replace(/[\d.-]/g, '');
+            
+            function animateValue(timestamp) {
+                const runtime = timestamp - startTime;
+                const progress = Math.min(runtime / duration, 1);
+                const currentValue = Math.floor(progress * end);
+                
+                metric.textContent = currentValue + unit;
+                
+                if (runtime < duration) {
+                    requestAnimationFrame(animateValue);
+                } else {
+                    metric.textContent = value;
+                }
+            }
+            
+            requestAnimationFrame(animateValue);
+        });
+        
+        // Add hover effects to charts
+        document.querySelectorAll('.chart-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                const canvas = this.querySelector('canvas');
+                if (canvas) {
+                    const chartInstance = Chart.getChart(canvas);
+                    if (chartInstance) {
+                        chartInstance.update();
+                    }
+                }
+            });
+        });
+        
+        // Initialize all charts with animations
+        const allCharts = [
+            revenueTrendChart,
+            salesCategoryChart,
+            customerAcquisitionChart,
+            orderStatusChart,
+            salesLocationChart,
+            customerDemographicsChart,
+            inventoryLevelsChart,
+            paymentMethodsChart,
+            hourlySalesChart,
+            productPerformanceChart,
+            salesForecastChart,
+            marketingRoiChart,
+            customerLtvChart,
+            supplierPerformanceChart,
+            trafficSourcesChart,
+            conversionFunnelChart
+        ];
+        
+        allCharts.forEach(chart => {
+            if (chart) {
+                chart.options.animation = {
+                    duration: 1500,
+                    easing: 'easeOutQuart'
+                };
+                
+                // Ensure proper sizing
+                chart.options.maintainAspectRatio = false;
+                chart.options.responsive = true;
+                
+                // Update the chart
+                chart.update();
+            }
+        });
+        
+        // Fix chart sizing on window resize
+        window.addEventListener('resize', function() {
+            allCharts.forEach(chart => {
+                if (chart) {
+                    chart.resize();
+                    chart.update();
+                }
+            });
+        });
+        
+        // Activity Filter Functionality
+        const activityFilter = document.getElementById('activity-filter');
+        if (activityFilter) {
+            activityFilter.addEventListener('change', function() {
+                const filterValue = this.value;
+                const activityItems = document.querySelectorAll('.activity-item');
+                
+                activityItems.forEach(item => {
+                    if (filterValue === 'all' || item.getAttribute('data-type') === filterValue) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            });
+        }
+        
+        // Add animation to activity items on scroll
+        const activityList = document.querySelector('.activity-list');
+        if (activityList) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            document.querySelectorAll('.activity-item').forEach(item => {
+                observer.observe(item);
+            });
+            
+            // Add click effect on activity items
+            document.querySelectorAll('.activity-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    this.style.backgroundColor = 'rgba(74, 144, 226, 0.1)';
+                    setTimeout(() => {
+                        this.style.backgroundColor = '';
+                    }, 300);
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

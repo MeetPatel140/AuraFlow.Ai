@@ -1,0 +1,1533 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="inventory-add-container">
+    <div class="page-header">
+        <h1>Add New Product</h1>
+        <div class="header-actions">
+            <button type="button" class="btn btn-outline" id="cancel-product">
+                <i class="mdi mdi-arrow-left"></i>
+                Back to Inventory
+            </button>
+        </div>
+    </div>
+
+    <form id="add-product-form" class="product-form" method="POST" enctype="multipart/form-data">
+        <div class="form-layout">
+            <!-- Left Column - Main Form -->
+            <div class="form-main-column">
+                <!-- Basic Information Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="mdi mdi-information-outline"></i>
+                            <h2>Basic Information</h2>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="product-name">Product Name <span class="required">*</span></label>
+                                <input type="text" id="product-name" name="name" class="form-control" placeholder="Enter product name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-category">Category <span class="required">*</span></label>
+                                <div class="select-with-icon">
+                                    <i class="mdi mdi-shape selected-icon"></i>
+                                    <select id="product-category" name="category_id" class="form-control" required>
+                                        <option value="">Select Category</option>
+                                    </select>
+                                    <i class="mdi mdi-chevron-down chevron-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="product-sku">SKU <span class="required">*</span></label>
+                                <input type="text" id="product-sku" name="sku" class="form-control" placeholder="E.g., PRD-12345" required>
+                                <small class="form-hint">Unique product identifier</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-brand">Brand</label>
+                                <input type="text" id="product-brand" name="brand" class="form-control" placeholder="Enter brand name">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="product-description">Description</label>
+                                <textarea id="product-description" name="description" class="form-control" rows="3" placeholder="Describe your product..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barcode Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="mdi mdi-barcode-scan"></i>
+                            <h2>Barcode Information</h2>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="barcode-type">Barcode Type</label>
+                                <div class="select-with-icon">
+                                    <i class="mdi mdi-barcode selected-icon"></i>
+                                    <select id="barcode-type" name="barcode_type" class="form-control">
+                                        <option value="EAN13" data-icon="mdi-barcode">EAN-13</option>
+                                        <option value="UPC" data-icon="mdi-barcode-scan">UPC-A</option>
+                                        <option value="CODE128" data-icon="mdi-barcode">CODE 128</option>
+                                        <option value="QR" data-icon="mdi-qrcode">QR Code</option>
+                                    </select>
+                                    <i class="mdi mdi-chevron-down chevron-icon"></i>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-barcode">Barcode <span class="required">*</span></label>
+                                <div class="barcode-input-group">
+                                    <input type="text" id="product-barcode" name="barcode" class="form-control" placeholder="Scan or enter barcode" required>
+                                    <div class="barcode-actions">
+                                        <button type="button" id="generate-barcode" class="btn btn-icon" title="Generate Barcode">
+                                            <i class="mdi mdi-barcode"></i>
+                                        </button>
+                                        <button type="button" id="scan-barcode" class="btn btn-icon" title="Scan Barcode">
+                                            <i class="mdi mdi-camera"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing & Inventory Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="mdi mdi-currency-inr"></i>
+                            <h2>Pricing & Inventory</h2>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="product-cost">Cost Price (₹) <span class="required">*</span></label>
+                                <input type="number" id="product-cost" name="cost_price" class="form-control" step="0.01" min="0" placeholder="0.00" required>
+                                <small class="form-hint">Your purchase cost</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-mrp">MRP (₹) <span class="required">*</span></label>
+                                <input type="number" id="product-mrp" name="mrp" class="form-control" step="0.01" min="0" placeholder="0.00" required>
+                                <small class="form-hint">Maximum Retail Price</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-price">Selling Price (₹) <span class="required">*</span></label>
+                                <input type="number" id="product-price" name="selling_price" class="form-control" step="0.01" min="0" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="product-tax">Tax Rate (%)</label>
+                                <input type="number" id="product-tax" name="tax_rate" class="form-control" step="0.01" min="0" value="18" placeholder="18">
+                            </div>
+                            <div class="form-group">
+                                <label for="product-discount">Discount (%)</label>
+                                <input type="number" id="product-discount" name="discount" class="form-control" step="0.01" min="0" max="100" value="0" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="product-profit-margin">Profit Margin (%)</label>
+                                <input type="text" id="product-profit-margin" class="form-control" readonly placeholder="Auto-calculated">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="product-stock">Stock Quantity <span class="required">*</span></label>
+                                <input type="number" id="product-stock" name="stock_quantity" class="form-control" min="0" placeholder="Current inventory" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-low-stock">Low Stock Threshold</label>
+                                <input type="number" id="product-low-stock" name="low_stock_threshold" class="form-control" min="0" value="10" placeholder="10">
+                                <small class="form-hint">Alert when stock reaches this level</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-supplier">Supplier</label>
+                                <div class="select-with-icon">
+                                    <i class="mdi mdi-account-tie selected-icon"></i>
+                                    <select id="product-supplier" name="supplier_id" class="form-control">
+                                        <option value="">Select Supplier</option>
+                                    </select>
+                                    <i class="mdi mdi-chevron-down chevron-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Information Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="mdi mdi-package-variant"></i>
+                            <h2>Additional Information</h2>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="product-weight">Weight (kg)</label>
+                                <input type="number" id="product-weight" name="weight" class="form-control" step="0.01" min="0" placeholder="Product weight">
+                            </div>
+                            <div class="form-group">
+                                <label for="dimension-length">Dimensions (cm)</label>
+                                <div class="dimensions-group">
+                                    <div class="dimension-input">
+                                        <input type="number" id="dimension-length" name="length" placeholder="L" step="0.1" min="0" class="form-control">
+                                    </div>
+                                    <span class="separator">×</span>
+                                    <div class="dimension-input">
+                                        <input type="number" id="dimension-width" name="width" placeholder="W" step="0.1" min="0" class="form-control">
+                                    </div>
+                                    <span class="separator">×</span>
+                                    <div class="dimension-input">
+                                        <input type="number" id="dimension-height" name="height" placeholder="H" step="0.1" min="0" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="product-notes">Notes</label>
+                                <textarea id="product-notes" name="notes" class="form-control" rows="3" placeholder="Any additional information about this product..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column - Sidebar -->
+            <div class="form-sidebar">
+                <!-- Image Upload Card -->
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h3>Product Image</h3>
+                    </div>
+                    <div class="image-upload-container">
+                        <input type="file" id="product-image" name="image" accept="image/*" style="display: none;">
+                        <div class="image-preview" id="image-preview-container">
+                            <img id="image-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24'%3E%3Cpath fill='%23adb5bd' d='M19,19H5V5H19M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M13.96,12.29L11.21,15.83L9.25,13.47L6.5,17H17.5L13.96,12.29Z' /%3E%3C/svg%3E" alt="Product Image">
+                            <div class="upload-overlay">
+                                <div class="upload-content">
+                                    <i class="mdi mdi-cloud-upload"></i>
+                                    <span>Click to upload image</span>
+                                    <small>Recommended: 800x800px (Max: 2MB)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="image-actions">
+                            <button type="button" class="btn btn-sm btn-outline" id="upload-image-btn">
+                                <i class="mdi mdi-image-plus"></i> Upload Image
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline" id="remove-image-btn" style="display: none;">
+                                <i class="mdi mdi-delete"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product Status Card -->
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h3>Product Status</h3>
+                    </div>
+                    <div class="status-container">
+                        <label class="switch-label">
+                            <span>Active</span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="product-status" name="status" checked>
+                                <span class="toggle-slider"></span>
+                            </div>
+                        </label>
+                        <p class="status-description">Active products are visible to customers and available for sale</p>
+                    </div>
+                </div>
+                
+                <!-- Barcode Preview Card -->
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h3>Barcode Preview</h3>
+                    </div>
+                    <div class="barcode-preview-container">
+                        <div id="barcode-display">
+                            <div class="placeholder-container">
+                                <i class="mdi mdi-barcode"></i>
+                                <span>Barcode Preview</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product Summary Card -->
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h3>Product Summary</h3>
+                    </div>
+                    <div class="summary-container">
+                        <div class="summary-item">
+                            <span class="summary-label">Cost Price:</span>
+                            <span class="summary-value" id="summary-cost">₹0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Selling Price:</span>
+                            <span class="summary-value" id="summary-price">₹0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Profit Margin:</span>
+                            <span class="summary-value" id="summary-margin">0%</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Stock:</span>
+                            <span class="summary-value" id="summary-stock">0 units</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Form actions will go here -->
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize variables
+        const beepSound = new Audio("data:audio/mp3;base64,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" type="audio/mp3");
+        let zxingReader = null;
+        let selectedCameraId = localStorage.getItem('selectedCamera') || null;
+        
+        // Initialize barcode scanner
+        try {
+            zxingReader = new ZXing.BrowserMultiFormatReader();
+        } catch (err) {
+            console.error("Failed to initialize ZXing reader:", err);
+        }
+        
+        // Set up image upload
+        setupImageUpload();
+        
+        // Set up barcode functionality
+        setupBarcodeHandlers();
+        
+        // Set up form calculations and validation
+        setupFormCalculations();
+        
+        // Set up tab order and focus
+        setupTabOrder();
+        
+        /**
+         * Set up image upload functionality
+         */
+        function setupImageUpload() {
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const uploadImageBtn = document.getElementById('upload-image-btn');
+            const removeImageBtn = document.getElementById('remove-image-btn');
+            const productImageInput = document.getElementById('product-image');
+            
+            // Image preview container click handler
+            imagePreviewContainer.addEventListener('click', function() {
+                productImageInput.click();
+            });
+            
+            // Upload image button click handler
+            uploadImageBtn.addEventListener('click', function() {
+                productImageInput.click();
+            });
+            
+            // Image input change handler
+            productImageInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    
+                    // Check file size (max 2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        if (window.Notifications) {
+                            window.Notifications.show('Image size should be less than 2MB', 'error');
+                        } else {
+                            alert('Image size should be less than 2MB');
+                        }
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreviewContainer.classList.add('has-image');
+                        removeImageBtn.style.display = 'inline-flex';
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Remove image button click handler
+            removeImageBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                imagePreview.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24'%3E%3Cpath fill='%23adb5bd' d='M19,19H5V5H19M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M13.96,12.29L11.21,15.83L9.25,13.47L6.5,17H17.5L13.96,12.29Z' /%3E%3C/svg%3E";
+                productImageInput.value = '';
+                imagePreviewContainer.classList.remove('has-image');
+                removeImageBtn.style.display = 'none';
+            });
+        }
+        
+        /**
+         * Set up barcode handlers
+         */
+        function setupBarcodeHandlers() {
+            // Generate barcode button handler
+            document.getElementById('generate-barcode').addEventListener('click', function() {
+                const barcodeValue = document.getElementById('product-barcode').value;
+                const barcodeType = document.getElementById('barcode-type').value;
+                
+                if (barcodeValue) {
+                    try {
+                        const barcodeDisplay = document.getElementById('barcode-display');
+                        // Clear previous content
+                        barcodeDisplay.innerHTML = '';
+                        // Create SVG element
+                        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                        barcodeDisplay.appendChild(svg);
+                        
+                        JsBarcode(svg, barcodeValue, {
+                            format: barcodeType,
+                            width: 2,
+                            height: 100,
+                            displayValue: true,
+                            background: '#fcfcfc'
+                        });
+                    } catch (err) {
+                        console.error("Failed to generate barcode:", err);
+                        if (window.Notifications) {
+                            window.Notifications.show('Invalid barcode format or value', 'error');
+                        } else {
+                            alert('Invalid barcode format or value');
+                        }
+                    }
+                }
+            });
+            
+            // Scan barcode button handler
+            document.getElementById('scan-barcode').addEventListener('click', openBarcodeScanner);
+        }
+        
+        /**
+         * Open barcode scanner modal
+         */
+        function openBarcodeScanner() {
+            const overlay = document.createElement('div');
+            overlay.className = 'scanner-overlay';
+            
+            overlay.innerHTML = `
+                <div class="scanner-container">
+                    <div class="scanner-header">
+                        <h3>Scan Barcode</h3>
+                        <button class="scanner-close-btn" type="button">&times;</button>
+                    </div>
+                    
+                    <div class="camera-selector">
+                        <label for="camera-select">Camera:</label>
+                        <select id="camera-select" class="camera-select">
+                            <option value="">Loading cameras...</option>
+                        </select>
+                    </div>
+                    
+                    <div id="scanner-viewport">
+                        <video id="scanner-video" playsinline autoplay muted></video>
+                        <canvas id="scanner-canvas"></canvas>
+                        <div class="scan-region-highlight"></div>
+                        <button class="torch-btn" type="button">
+                            <i class="mdi mdi-flashlight"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="scanner-status">
+                        <span>Starting camera...</span>
+                    </div>
+                    
+                    <div class="manual-entry">
+                        <button class="manual-entry-btn" type="button">
+                            Enter Barcode Manually
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Get elements
+            const closeBtn = overlay.querySelector('.scanner-close-btn');
+            const manualEntryBtn = overlay.querySelector('.manual-entry-btn');
+            const cameraSelect = overlay.querySelector('#camera-select');
+            const statusElement = overlay.querySelector('.scanner-status span');
+            const videoElement = overlay.querySelector('#scanner-video');
+            const torchButton = overlay.querySelector('.torch-btn');
+            
+            let currentStream = null;
+            let scanning = false;
+            
+            // Close button handler
+            closeBtn.addEventListener('click', function() {
+                stopScanner();
+                document.body.removeChild(overlay);
+            });
+            
+            // Manual entry handler
+            manualEntryBtn.addEventListener('click', function() {
+                const currentValue = document.getElementById('product-barcode').value || '';
+                const enteredValue = prompt('Enter barcode manually:', currentValue);
+                
+                if (enteredValue && enteredValue.trim() !== '') {
+                    handleBarcodeDetected(enteredValue.trim());
+                }
+            });
+            
+            // Initialize camera
+            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+                statusElement.innerHTML = '<span class="error">Camera access not supported</span>';
+                return;
+            }
+            
+            // Request camera permissions and enumerate devices
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(initialStream => {
+                    initialStream.getTracks().forEach(track => track.stop());
+                    
+                    navigator.mediaDevices.enumerateDevices()
+                        .then(devices => {
+                            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                            
+                            if (videoDevices.length === 0) {
+                                statusElement.innerHTML = '<span class="error">No cameras found</span>';
+                                return;
+                            }
+                            
+                            // Populate camera select
+                            cameraSelect.innerHTML = videoDevices.map((device, index) => {
+                                let label = device.label || `Camera ${index + 1}`;
+                                if (label.toLowerCase().includes('back')) label += ' (Rear)';
+                                if (label.toLowerCase().includes('front')) label += ' (Front)';
+                                
+                                return `<option value="${device.deviceId}"${device.deviceId === selectedCameraId ? ' selected' : ''}>${label}</option>`;
+                            }).join('');
+                            
+                            // If no camera is selected, try to select rear camera
+                            if (!selectedCameraId) {
+                                const rearCamera = videoDevices.find(device => {
+                                    const label = device.label.toLowerCase();
+                                    return label.includes('back') || label.includes('rear');
+                                });
+                                
+                                if (rearCamera) {
+                                    selectedCameraId = rearCamera.deviceId;
+                                    cameraSelect.value = selectedCameraId;
+                                }
+                            }
+                            
+                            // Start camera
+                            startCamera(selectedCameraId || videoDevices[0].deviceId);
+                            
+                            // Camera selection change
+                            cameraSelect.addEventListener('change', function() {
+                                selectedCameraId = this.value;
+                                localStorage.setItem('selectedCamera', selectedCameraId);
+                                stopScanner();
+                                startCamera(selectedCameraId);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error enumerating devices:', error);
+                            statusElement.innerHTML = `<span class="error">Error accessing camera: ${error.message}</span>`;
+                        });
+                })
+                .catch(error => {
+                    console.error('Camera permission error:', error);
+                    statusElement.innerHTML = `<span class="error">Camera permission denied: ${error.message}</span>`;
+                });
+            
+            // Start camera with device ID
+            function startCamera(deviceId) {
+                const constraints = {
+                    video: {
+                        deviceId: deviceId ? { exact: deviceId } : undefined,
+                        facingMode: deviceId ? undefined : 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        aspectRatio: { ideal: 1.777778 }
+                    }
+                };
+                
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(stream => {
+                        currentStream = stream;
+                        videoElement.srcObject = stream;
+                        
+                        // Get video track for torch control
+                        const videoTrack = stream.getVideoTracks()[0];
+                        
+                        if (videoTrack && videoTrack.getCapabilities) {
+                            const capabilities = videoTrack.getCapabilities();
+                            
+                            // Enable torch button if available
+                            if (capabilities.torch) {
+                                torchButton.style.display = 'block';
+                                let torchOn = false;
+                                
+                                torchButton.addEventListener('click', function() {
+                                    torchOn = !torchOn;
+                                    videoTrack.applyConstraints({
+                                        advanced: [{ torch: torchOn }]
+                                    })
+                                    .then(() => {
+                                        torchButton.classList.toggle('active', torchOn);
+                                    })
+                                    .catch(err => console.error('Torch error:', err));
+                                });
+                            } else {
+                                torchButton.style.display = 'none';
+                            }
+                        }
+                        
+                        // Start video
+                        videoElement.onloadedmetadata = function() {
+                            videoElement.play()
+                                .then(() => {
+                                    statusElement.textContent = 'Scanner ready';
+                                    startScanning();
+                                })
+                                .catch(err => {
+                                    statusElement.innerHTML = `<span class="error">Error starting video: ${err.message}</span>`;
+                                });
+                        };
+                    })
+                    .catch(error => {
+                        console.error('Camera access error:', error);
+                        statusElement.innerHTML = `<span class="error">Camera access denied: ${error.message}</span>`;
+                    });
+            }
+            
+            // Stop scanner
+            function stopScanner() {
+                scanning = false;
+                
+                if (zxingReader) {
+                    try {
+                        zxingReader.reset();
+                    } catch (err) {
+                        console.error("Error resetting ZXing reader:", err);
+                    }
+                }
+                
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+            }
+            
+            // Start scanning
+            function startScanning() {
+                scanning = true;
+                
+                function scan() {
+                    if (!scanning) return;
+                    
+                    if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                        try {
+                            zxingReader.decodeOnceFromVideoElement(videoElement)
+                                .then(result => {
+                                    if (result && result.text) {
+                                        handleBarcodeDetected(result.text);
+                                    }
+                                    requestAnimationFrame(scan);
+                                })
+                                .catch(() => {
+                                    requestAnimationFrame(scan);
+                                });
+                        } catch (err) {
+                            console.error("Scanning error:", err);
+                            requestAnimationFrame(scan);
+                        }
+                    } else {
+                        requestAnimationFrame(scan);
+                    }
+                }
+                
+                scan();
+            }
+        }
+        
+        /**
+         * Handle detected barcode
+         */
+        function handleBarcodeDetected(barcodeValue) {
+            // Play beep sound
+            beepSound.play().catch(err => console.warn('Could not play beep sound:', err));
+            
+            // Update input and generate preview
+            document.getElementById('product-barcode').value = barcodeValue;
+            
+            try {
+                const barcodeDisplay = document.getElementById('barcode-display');
+                // Clear previous content
+                barcodeDisplay.innerHTML = '';
+                // Create SVG element
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                barcodeDisplay.appendChild(svg);
+                
+                JsBarcode(svg, barcodeValue, {
+                    format: document.getElementById('barcode-type').value,
+                    width: 2,
+                    height: 100,
+                    displayValue: true,
+                    background: '#fcfcfc'
+                });
+            } catch (err) {
+                console.error("Failed to generate barcode preview:", err);
+            }
+            
+            // Close scanner
+            const overlay = document.querySelector('.scanner-overlay');
+            if (overlay) {
+                const successOverlay = document.createElement('div');
+                successOverlay.className = 'success-overlay';
+                successOverlay.innerHTML = '<i class="mdi mdi-check"></i>';
+                overlay.querySelector('.scanner-container').appendChild(successOverlay);
+                
+                setTimeout(() => {
+                    document.body.removeChild(overlay);
+                }, 1000);
+            }
+        }
+        
+        /**
+         * Set up form calculations and summary updates
+         */
+        function setupFormCalculations() {
+            const costInput = document.getElementById('product-cost');
+            const mrpInput = document.getElementById('product-mrp');
+            const priceInput = document.getElementById('product-price');
+            const stockInput = document.getElementById('product-stock');
+            const profitMarginInput = document.getElementById('product-profit-margin');
+            
+            // Summary elements
+            const summaryCost = document.getElementById('summary-cost');
+            const summaryPrice = document.getElementById('summary-price');
+            const summaryMargin = document.getElementById('summary-margin');
+            const summaryStock = document.getElementById('summary-stock');
+            
+            // Calculate profit margin
+            function calculateProfitMargin() {
+                const cost = parseFloat(costInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                
+                if (cost > 0 && price > 0) {
+                    const margin = ((price - cost) / price) * 100;
+                    profitMarginInput.value = margin.toFixed(2);
+                    summaryMargin.textContent = margin.toFixed(2) + '%';
+                } else {
+                    profitMarginInput.value = '';
+                    summaryMargin.textContent = '0%';
+                }
+            }
+            
+            // Update summary
+            function updateSummary() {
+                const cost = parseFloat(costInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                const stock = parseInt(stockInput.value) || 0;
+                
+                summaryCost.textContent = '₹' + cost.toFixed(2);
+                summaryPrice.textContent = '₹' + price.toFixed(2);
+                summaryStock.textContent = stock + ' units';
+                
+                calculateProfitMargin();
+            }
+            
+            // Add input event listeners
+            [costInput, priceInput].forEach(input => {
+                input.addEventListener('input', calculateProfitMargin);
+                input.addEventListener('input', updateSummary);
+            });
+            
+            stockInput.addEventListener('input', updateSummary);
+            
+            // MRP validation - selling price should not exceed MRP
+            priceInput.addEventListener('change', function() {
+                const mrp = parseFloat(mrpInput.value) || 0;
+                const price = parseFloat(this.value) || 0;
+                
+                if (mrp > 0 && price > mrp) {
+                    if (window.Notifications) {
+                        window.Notifications.show('Selling price cannot exceed MRP', 'warning');
+                    } else {
+                        alert('Selling price cannot exceed MRP');
+                    }
+                    this.value = mrp;
+                    updateSummary();
+                }
+            });
+            
+            mrpInput.addEventListener('change', function() {
+                const mrp = parseFloat(this.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                
+                if (mrp > 0 && price > mrp) {
+                    priceInput.value = mrp;
+                    updateSummary();
+                }
+            });
+        }
+        
+        /**
+         * Set up tab order and focus handling
+         */
+        function setupTabOrder() {
+            // Set focus to product name on load
+            const productNameInput = document.getElementById('product-name');
+            if (productNameInput) {
+                setTimeout(() => {
+                    productNameInput.focus();
+                }, 100);
+            }
+            
+            // Handle dimensions tab order
+            const dimensionInputs = ['dimension-length', 'dimension-width', 'dimension-height'];
+            dimensionInputs.forEach((id, index) => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('keydown', function(e) {
+                        if (e.key === 'Tab' && !e.shiftKey) {
+                            if (index < dimensionInputs.length - 1) {
+                                e.preventDefault();
+                                document.getElementById(dimensionInputs[index + 1]).focus();
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+
+{% block extra_head %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Permissions-Policy" content="camera=*, microphone=*">
+
+<style>
+/* Base Layout */
+.inventory-add-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.product-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .form-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-main-column,
+.form-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Form Sections */
+.form-section {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 24px;
+    overflow: hidden;
+}
+
+.section-header {
+    margin-bottom: 20px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-title i {
+    font-size: 24px;
+    color: #4A90E2;
+}
+
+.section-title h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Form Controls */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.form-row.two-columns {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.form-row.three-columns {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+label {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.required {
+    color: #e74c3c;
+}
+
+.form-hint {
+    color: #7f8c8d;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.form-control {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+    border-color: #4A90E2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+    outline: none;
+}
+
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn i {
+    font-size: 18px;
+}
+
+.btn-primary {
+    background-color: #4A90E2;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #3a7bc8;
+}
+
+.btn-secondary {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #27ae60;
+}
+
+.btn-outline {
+    background-color: transparent;
+    border: 1px solid #4A90E2;
+    color: #4A90E2;
+}
+
+.btn-outline:hover {
+    background-color: rgba(74, 144, 226, 0.1);
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.btn-icon {
+    padding: 8px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.btn-icon:hover {
+    background-color: #e9ecef;
+}
+
+/* More styles will be added... */
+
+/* Sidebar Cards */
+.sidebar-card {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.card-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* Image Upload */
+.image-upload-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.image-preview {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 240px;
+    margin: 0 auto;
+    border: 2px dashed #ddd;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.image-preview:hover {
+    border-color: #4A90E2;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.upload-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.image-preview:hover .upload-overlay {
+    opacity: 1;
+}
+
+.upload-content {
+    text-align: center;
+    color: white;
+    padding: 20px;
+}
+
+.upload-content i {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.upload-content span {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.upload-content small {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.image-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* Status Toggle */
+.status-container {
+    padding: 20px;
+}
+
+.switch-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.switch-label span {
+    font-weight: 500;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #2ecc71;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.status-description {
+    color: #7f8c8d;
+    font-size: 13px;
+    margin-top: 12px;
+}
+
+/* Barcode Preview */
+.barcode-preview-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#barcode-display {
+    width: 100%;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fcfcfc;
+}
+
+#barcode-display svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.placeholder-container {
+    color: #adb5bd;
+    text-align: center;
+}
+
+.placeholder-container i {
+    font-size: 32px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Product Summary */
+.summary-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.summary-label {
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+.summary-value {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* More styles will be added... */
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 20px 0;
+}
+
+/* Select with Icon */
+.select-with-icon {
+    position: relative;
+}
+
+.select-with-icon select {
+    padding-left: 36px;
+    padding-right: 36px;
+    width: 100%;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.selected-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4A90E2;
+    pointer-events: none;
+}
+
+.chevron-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7f8c8d;
+    pointer-events: none;
+}
+
+/* Dimensions Group */
+.dimensions-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dimension-input {
+    position: relative;
+    flex: 1;
+}
+
+.separator {
+    color: #7f8c8d;
+    font-weight: 600;
+}
+
+/* Barcode Input Group */
+.barcode-input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.barcode-input-group input {
+    flex: 1;
+}
+
+.barcode-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Scanner Modal */
+.scanner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.scanner-container {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    background-color: #222;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.scanner-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    color: white;
+}
+
+.scanner-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.scanner-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.scanner-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.camera-selector {
+    padding: 16px 20px;
+    background-color: #333;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.camera-selector label {
+    color: white;
+    margin: 0;
+}
+
+.camera-select {
+    background-color: #444;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    flex: 1;
+}
+
+#scanner-viewport {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%;
+    background-color: #000;
+}
+
+#scanner-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scan-region-highlight {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: 40%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+}
+
+.torch-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.torch-btn:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.torch-btn.active {
+    background-color: #4A90E2;
+}
+
+.scanner-status {
+    padding: 16px 20px;
+    background-color: #333;
+    color: white;
+    font-size: 14px;
+}
+
+.scanner-status .error {
+    color: #e74c3c;
+}
+
+.manual-entry {
+    padding: 16px 20px;
+    background-color: #333;
+    display: flex;
+    justify-content: center;
+}
+
+.manual-entry-btn {
+    background-color: #444;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.manual-entry-btn:hover {
+    background-color: #555;
+}
+
+.success-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(46, 204, 113, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.success-overlay i {
+    font-size: 64px;
+    color: white;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+</style>
+{% endblock %} 

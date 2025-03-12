@@ -1,0 +1,13 @@
+1:{% extends "base.html" %}
+3:{% block extra_head %}
+612:        display: inline-block;
+1001:{% endblock %}
+1002:{% endblock extra_head %}
+1003:{% block content %}
+1457:{% endblock content %}
+1458:{% endblock content %}
+1459:{% block extra_scripts %}
+1460:{% block extra_scripts %}
+1461:{% block extra_scripts %}
+2278:{% endblock extra_scripts %}
+2280:{% endblock extra_scripts %}

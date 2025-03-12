@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Test - AuraFlow.Ai</title>
+    <link rel="stylesheet" href="/static/css/normalize.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-container">
+            <div class="auth-background">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
+            
+            <div class="auth-box">
+                <h1>CSS Test</h1>
+                <p>This is a test to see if the CSS styles are working.</p>
+                <button class="btn btn-primary">Primary Button</button>
+                <button class="btn btn-secondary">Secondary Button</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification-container" class="notification-container"></div>
+
+    <script>
+        // Test notification
+        function showTestNotification() {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = 'notification success';
+            notification.innerHTML = `
+                <i class="mdi mdi-check-circle"></i>
+                <div class="notification-content">
+                    <div class="notification-title">Success</div>
+                    <div class="notification-message">This is a test notification</div>
+                </div>
+                <button class="notification-close">
+                    <i class="mdi mdi-close"></i>
+                </button>
+            `;
+            container.appendChild(notification);
+        }
+
+        // Show test notification after 1 second
+        setTimeout(showTestNotification, 1000);
+
+        // Test particles
+        class Particle {
+            constructor() {
+                this.x = Math.random() * window.innerWidth;
+                this.y = Math.random() * window.innerHeight;
+                this.size = Math.random() * 5 + 1;
+                this.speedX = Math.random() * 3 - 1.5;
+                this.speedY = Math.random() * 3 - 1.5;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > window.innerWidth) this.x = 0;
+                if (this.x < 0) this.x = window.innerWidth;
+                if (this.y > window.innerHeight) this.y = 0;
+                if (this.y < 0) this.y = window.innerHeight;
+            }
+
+            draw() {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${this.x}px`;
+                particle.style.top = `${this.y}px`;
+                particle.style.width = `${this.size}px`;
+                particle.style.height = `${this.size}px`;
+                return particle;
+            }
+        }
+
+        // Initialize particles
+        const particles = Array.from({ length: 50 }, () => new Particle());
+        const background = document.querySelector('.auth-background');
+
+        function animateParticles() {
+            background.innerHTML = '';
+            particles.forEach(particle => {
+                particle.update();
+                background.appendChild(particle.draw());
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        // Start animation
+        animateParticles();
+    </script>
+</body>
+</html> 

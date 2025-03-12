@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="reports-page">
+    <div class="page-header">
+        <h1>Reports</h1>
+        <p>View and analyze your business data</p>
+    </div>
+    
+    <div class="reports-filters">
+        <div class="filter-group">
+            <label for="date-range">Date Range:</label>
+            <select id="date-range" class="form-control">
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="this-week">This Week</option>
+                <option value="last-week">Last Week</option>
+                <option value="this-month" selected>This Month</option>
+                <option value="last-month">Last Month</option>
+                <option value="this-year">This Year</option>
+                <option value="custom">Custom Range</option>
+            </select>
+        </div>
+        
+        <div class="custom-date-range" style="display: none;">
+            <div class="filter-group">
+                <label for="start-date">Start Date:</label>
+                <input type="date" id="start-date" class="form-control">
+            </div>
+            
+            <div class="filter-group">
+                <label for="end-date">End Date:</label>
+                <input type="date" id="end-date" class="form-control">
+            </div>
+        </div>
+        
+        <button class="btn btn-primary" id="generate-report">Generate Report</button>
+    </div>
+    
+    <div class="reports-dashboard">
+        <div class="report-cards">
+            <div class="report-card">
+                <div class="report-card-header">
+                    <h3>Sales Overview</h3>
+                    <div class="card-actions">
+                        <button class="icon-btn"><i class="mdi mdi-refresh"></i></button>
+                        <button class="icon-btn"><i class="mdi mdi-download"></i></button>
+                    </div>
+                </div>
+                <div class="report-card-body">
+                    <div class="metric-group">
+                        <div class="metric">
+                            <span class="metric-value">₹12,345</span>
+                            <span class="metric-label">Total Sales</span>
+                            <span class="metric-change positive">+15.2%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">432</span>
+                            <span class="metric-label">Orders</span>
+                            <span class="metric-change positive">+8.7%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">₹28.57</span>
+                            <span class="metric-label">Avg. Order Value</span>
+                            <span class="metric-change positive">+5.9%</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-placeholder">
+                            <div class="placeholder-text">Sales Chart</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="report-card">
+                <div class="report-card-header">
+                    <h3>Top Products</h3>
+                    <div class="card-actions">
+                        <button class="icon-btn"><i class="mdi mdi-refresh"></i></button>
+                        <button class="icon-btn"><i class="mdi mdi-download"></i></button>
+                    </div>
+                </div>
+                <div class="report-card-body">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Units Sold</th>
+                                <th>Revenue</th>
+                                <th>% of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Product 1</td>
+                                <td>125</td>
+                                <td>₹2,498.75</td>
+                                <td>20.2%</td>
+                            </tr>
+                            <tr>
+                                <td>Product 2</td>
+                                <td>98</td>
+                                <td>₹979.02</td>
+                                <td>7.9%</td>
+                            </tr>
+                            <tr>
+                                <td>Product 3</td>
+                                <td>87</td>
+                                <td>₹2,608.13</td>
+                                <td>21.1%</td>
+                            </tr>
+                            <tr>
+                                <td>Product 4</td>
+                                <td>65</td>
+                                <td>₹1,299.35</td>
+                                <td>10.5%</td>
+                            </tr>
+                            <tr>
+                                <td>Product 5</td>
+                                <td>54</td>
+                                <td>₹1,079.46</td>
+                                <td>8.7%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-cards">
+            <div class="report-card">
+                <div class="report-card-header">
+                    <h3>Inventory Status</h3>
+                    <div class="card-actions">
+                        <button class="icon-btn"><i class="mdi mdi-refresh"></i></button>
+                        <button class="icon-btn"><i class="mdi mdi-download"></i></button>
+                    </div>
+                </div>
+                <div class="report-card-body">
+                    <div class="chart-container">
+                        <div class="chart-placeholder">
+                            <div class="placeholder-text">Inventory Chart</div>
+                        </div>
+                    </div>
+                    <div class="metric-group">
+                        <div class="metric">
+                            <span class="metric-value">1,245</span>
+                            <span class="metric-label">Total Items</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">32</span>
+                            <span class="metric-label">Low Stock</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">8</span>
+                            <span class="metric-label">Out of Stock</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="report-card">
+                <div class="report-card-header">
+                    <h3>Sales by Category</h3>
+                    <div class="card-actions">
+                        <button class="icon-btn"><i class="mdi mdi-refresh"></i></button>
+                        <button class="icon-btn"><i class="mdi mdi-download"></i></button>
+                    </div>
+                </div>
+                <div class="report-card-body">
+                    <div class="chart-container">
+                        <div class="chart-placeholder">
+                            <div class="placeholder-text">Category Chart</div>
+                        </div>
+                    </div>
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Revenue</th>
+                                <th>% of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Electronics</td>
+                                <td>₹5,432.10</td>
+                                <td>44.0%</td>
+                            </tr>
+                            <tr>
+                                <td>Clothing</td>
+                                <td>₹3,210.45</td>
+                                <td>26.0%</td>
+                            </tr>
+                            <tr>
+                                <td>Food</td>
+                                <td>₹2,109.87</td>
+                                <td>17.1%</td>
+                            </tr>
+                            <tr>
+                                <td>Beverages</td>
+                                <td>₹1,592.58</td>
+                                <td>12.9%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,507 @@
+/**
+ * AuraFlow.Ai - Main Application
+ * Handles application initialization, routing, and UI management
+ */
+
+// Application state
+const App = {
+  // Current route
+  currentRoute: '/',
+  
+  // Route definitions
+  routes: {
+    '/': { title: 'Dashboard', component: 'dashboard' },
+    '/login': { title: 'Login', component: 'login', public: true },
+    '/register': { title: 'Register', component: 'register', public: true },
+    '/forgot-password': { title: 'Forgot Password', component: 'forgot-password', public: true },
+    '/pos': { title: 'Point of Sale', component: 'pos' },
+    '/inventory': { title: 'Inventory', component: 'inventory' },
+    '/suppliers': { title: 'Suppliers', component: 'suppliers' },
+    '/reports': { title: 'Reports', component: 'reports' },
+    '/settings': { title: 'Settings', component: 'settings' },
+    '/profile': { title: 'Profile', component: 'profile' },
+    '/offline': { title: 'Offline', component: 'offline', public: true }
+  },
+  
+  // Component templates
+  components: {},
+  
+  // Initialize the application
+  async init() {
+    console.log('Initializing AuraFlow.Ai application...');
+    
+    // Wait for authentication to initialize
+    await this.waitForAuth();
+    
+    // Initialize UI
+    this.initUI();
+    
+    // Initialize routing
+    this.initRouting();
+    
+    // Initialize sidebar
+    this.initSidebar();
+    
+    // Load initial route
+    this.loadRoute(window.location.pathname);
+    
+    console.log('Application initialized');
+  },
+  
+  // Wait for authentication to initialize
+  waitForAuth() {
+    return new Promise(resolve => {
+      if (window.Auth.isInitialized) {
+        resolve();
+        return;
+      }
+      
+      window.Auth.addEventListener('initialized', () => {
+        resolve();
+      });
+    });
+  },
+  
+  // Initialize UI elements
+  initUI() {
+    // Get app container
+    this.appContainer = document.getElementById('app');
+    
+    // Get main content container
+    this.contentContainer = document.getElementById('main-content');
+    
+    // Get sidebar
+    this.sidebar = document.getElementById('sidebar');
+    
+    // Get loading container
+    this.loadingContainer = document.getElementById('loading-container');
+    
+    // Hide loading container initially
+    if (this.loadingContainer) {
+      this.loadingContainer.style.display = 'none';
+    }
+    
+    // Initialize offline and sync indicators
+    this.initIndicators();
+  },
+  
+  // Initialize indicators
+  initIndicators() {
+    // Create offline indicator if it doesn't exist
+    if (!document.getElementById('offline-indicator')) {
+      const offlineIndicator = document.createElement('div');
+      offlineIndicator.id = 'offline-indicator';
+      offlineIndicator.className = 'offline-indicator';
+      offlineIndicator.innerHTML = '<i class="mdi mdi-wifi-off"></i> You are offline';
+      document.body.appendChild(offlineIndicator);
+    }
+    
+    // Create sync indicator if it doesn't exist
+    if (!document.getElementById('sync-indicator')) {
+      const syncIndicator = document.createElement('div');
+      syncIndicator.id = 'sync-indicator';
+      syncIndicator.className = 'sync-indicator';
+      syncIndicator.innerHTML = '<i class="mdi mdi-sync"></i> Syncing data...';
+      document.body.appendChild(syncIndicator);
+    }
+  },
+  
+  // Initialize sidebar
+  initSidebar() {
+    if (!this.sidebar) return;
+    
+    // Get sidebar toggle button
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    
+    // Add event listener to toggle sidebar
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', () => {
+        this.toggleSidebar();
+      });
+    }
+    
+    // Add event listeners to sidebar links
+    const sidebarLinks = this.sidebar.querySelectorAll('.nav-link');
+    sidebarLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const route = link.getAttribute('href');
+        this.navigateTo(route);
+      });
+    });
+    
+    // Update active link based on current route
+    this.updateActiveSidebarLink();
+    
+    // Update user and tenant info
+    this.updateUserInfo();
+    
+    // Add event listener to logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        this.logout();
+      });
+    }
+  },
+  
+  // Toggle sidebar
+  toggleSidebar() {
+    if (!this.sidebar) return;
+    
+    this.sidebar.classList.toggle('collapsed');
+    this.contentContainer.classList.toggle('expanded');
+    
+    // Store sidebar state in local storage
+    localStorage.setItem('sidebar_collapsed', this.sidebar.classList.contains('collapsed'));
+  },
+  
+  // Update active sidebar link
+  updateActiveSidebarLink() {
+    if (!this.sidebar) return;
+    
+    // Remove active class from all links
+    const sidebarLinks = this.sidebar.querySelectorAll('.nav-link');
+    sidebarLinks.forEach(link => {
+      link.classList.remove('active');
+    });
+    
+    // Add active class to current route link
+    const currentRouteLink = this.sidebar.querySelector(`.nav-link[href="${this.currentRoute}"]`);
+    if (currentRouteLink) {
+      currentRouteLink.classList.add('active');
+    }
+  },
+  
+  // Update user and tenant info
+  updateUserInfo() {
+    const userNameElement = document.getElementById('user-name');
+    const tenantNameElement = document.getElementById('tenant-name');
+    
+    if (userNameElement && window.Auth.currentUser) {
+      userNameElement.textContent = window.Auth.currentUser.name;
+    }
+    
+    if (tenantNameElement && window.Auth.currentTenant) {
+      tenantNameElement.textContent = window.Auth.currentTenant.name;
+    }
+  },
+  
+  // Initialize routing
+  initRouting() {
+    // Handle popstate events (browser back/forward)
+    window.addEventListener('popstate', (event) => {
+      this.loadRoute(window.location.pathname);
+    });
+  },
+  
+  // Navigate to a route
+  navigateTo(path) {
+    // Update browser history
+    window.history.pushState({}, '', path);
+    
+    // Load the route
+    this.loadRoute(path);
+  },
+  
+  // Load a route
+  async loadRoute(path) {
+    // Show loading indicator
+    this.showLoading(true);
+    
+    try {
+      // Set current route
+      this.currentRoute = path;
+      
+      // Get route definition
+      const route = this.routes[path] || { title: 'Not Found', component: 'not-found' };
+      
+      // Check if user has access to this route
+      if (!this.checkRouteAccess(route)) {
+        this.navigateTo('/login');
+        return;
+      }
+      
+      // Update document title
+      document.title = `${route.title} - AuraFlow.Ai`;
+      
+      // Update active sidebar link
+      this.updateActiveSidebarLink();
+      
+      // Load component
+      await this.loadComponent(route.component);
+      
+      // Show/hide sidebar based on whether the route is public
+      this.toggleSidebarVisibility(!route.public);
+      
+      // Update user info if authenticated
+      if (window.Auth.isAuthenticated) {
+        this.updateUserInfo();
+      }
+    } catch (error) {
+      console.error('Error loading route:', error);
+      showNotification('error', 'Failed to load page: ' + error.message);
+    } finally {
+      // Hide loading indicator
+      this.showLoading(false);
+    }
+  },
+  
+  // Check if user has access to a route
+  checkRouteAccess(route) {
+    // Public routes are always accessible
+    if (route.public) {
+      return true;
+    }
+    
+    // Protected routes require authentication
+    return window.Auth.isAuthenticated;
+  },
+  
+  // Toggle sidebar visibility
+  toggleSidebarVisibility(show) {
+    if (!this.sidebar || !this.contentContainer) return;
+    
+    if (show) {
+      this.sidebar.style.display = 'block';
+      this.contentContainer.classList.remove('no-sidebar');
+    } else {
+      this.sidebar.style.display = 'none';
+      this.contentContainer.classList.add('no-sidebar');
+    }
+  },
+  
+  // Show/hide loading indicator
+  showLoading(show) {
+    if (!this.loadingContainer) return;
+    
+    this.loadingContainer.style.display = show ? 'flex' : 'none';
+  },
+  
+  // Load a component
+  async loadComponent(componentName) {
+    try {
+      // Get component content
+      let content = this.getComponentContent(componentName);
+      
+      // If component doesn't exist, fetch it from server
+      if (!content) {
+        content = await this.fetchComponent(componentName);
+      }
+      
+      // Render component
+      this.renderComponent(content);
+      
+      // Initialize component events
+      this.initComponentEvents(componentName);
+    } catch (error) {
+      console.error(`Error loading component ${componentName}:`, error);
+      throw error;
+    }
+  },
+  
+  // Fetch a component from the server
+  async fetchComponent(componentName) {
+    // For now, we'll use placeholder content
+    // In a real app, you would fetch the component from the server
+    
+    let content = '';
+    
+    switch (componentName) {
+      case 'dashboard':
+        content = `
+          <div class="dashboard">
+            <h1>Dashboard</h1>
+            <p>Welcome to AuraFlow.Ai Dashboard</p>
+            <div class="dashboard-widgets">
+              <div class="widget">
+                <h3>Sales Today</h3>
+                <div class="widget-content">
+                  <div class="widget-value">$0.00</div>
+                  <div class="widget-chart"></div>
+                </div>
+              </div>
+              <div class="widget">
+                <h3>Inventory Status</h3>
+                <div class="widget-content">
+                  <div class="widget-value">0 items</div>
+                  <div class="widget-chart"></div>
+                </div>
+              </div>
+              <div class="widget">
+                <h3>Recent Orders</h3>
+                <div class="widget-content">
+                  <div class="widget-value">0 orders</div>
+                  <div class="widget-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        break;
+      
+      case 'pos':
+        content = `
+          <div class="pos">
+            <h1>Point of Sale</h1>
+            <p>POS system coming soon</p>
+          </div>
+        `;
+        break;
+      
+      case 'inventory':
+        content = `
+          <div class="inventory">
+            <h1>Inventory Management</h1>
+            <p>Inventory management system coming soon</p>
+          </div>
+        `;
+        break;
+      
+      case 'suppliers':
+        content = `
+          <div class="suppliers">
+            <h1>Suppliers</h1>
+            <p>Supplier management system coming soon</p>
+          </div>
+        `;
+        break;
+      
+      case 'reports':
+        content = `
+          <div class="reports">
+            <h1>Reports</h1>
+            <p>Reporting system coming soon</p>
+          </div>
+        `;
+        break;
+      
+      case 'settings':
+        content = `
+          <div class="settings">
+            <h1>Settings</h1>
+            <p>Settings page coming soon</p>
+          </div>
+        `;
+        break;
+      
+      case 'profile':
+        content = `
+          <div class="profile">
+            <h1>Profile</h1>
+            <p>Profile page coming soon</p>
+          </div>
+        `;
+        break;
+      
+      case 'not-found':
+        content = `
+          <div class="not-found">
+            <h1>404 - Page Not Found</h1>
+            <p>The page you are looking for does not exist.</p>
+            <a href="/" class="btn btn-primary">Go to Dashboard</a>
+          </div>
+        `;
+        break;
+      
+      case 'offline':
+        content = `
+          <div class="offline">
+            <h1>You are offline</h1>
+            <p>You are currently offline. Some features may not be available.</p>
+            <button id="retry-connection" class="btn btn-primary">Retry Connection</button>
+          </div>
+        `;
+        break;
+      
+      default:
+        content = `
+          <div class="not-found">
+            <h1>Component Not Found</h1>
+            <p>The component "${componentName}" does not exist.</p>
+            <a href="/" class="btn btn-primary">Go to Dashboard</a>
+          </div>
+        `;
+    }
+    
+    // Store component content for future use
+    this.components[componentName] = content;
+    
+    return content;
+  },
+  
+  // Get component content from cache
+  getComponentContent(componentName) {
+    return this.components[componentName] || null;
+  },
+  
+  // Render a component
+  renderComponent(content) {
+    if (!this.contentContainer) return;
+    
+    this.contentContainer.innerHTML = content;
+  },
+  
+  // Initialize component events
+  initComponentEvents(componentName) {
+    switch (componentName) {
+      case 'dashboard':
+        // Initialize dashboard events
+        break;
+      
+      case 'pos':
+        // Initialize POS events
+        break;
+      
+      case 'inventory':
+        // Initialize inventory events
+        break;
+      
+      case 'suppliers':
+        // Initialize suppliers events
+        break;
+      
+      case 'reports':
+        // Initialize reports events
+        break;
+      
+      case 'settings':
+        // Initialize settings events
+        break;
+      
+      case 'profile':
+        // Initialize profile events
+        break;
+      
+      case 'offline':
+        // Initialize offline events
+        const retryButton = document.getElementById('retry-connection');
+        if (retryButton) {
+          retryButton.addEventListener('click', () => {
+            window.location.reload();
+          });
+        }
+        break;
+    }
+  },
+  
+  // Logout user
+  async logout() {
+    try {
+      this.showLoading(true);
+      await window.Auth.logout();
+      this.navigateTo('/login');
+      showNotification('success', 'You have been logged out successfully');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      showNotification('error', 'Failed to logout: ' + error.message);
+    } finally {
+      this.showLoading(false);
+    }
+  }
+};
+
+// Initialize app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  App.init();
+}); 

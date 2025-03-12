@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ai-agent-page">
+    <div class="ai-chat-container">
+        <div class="ai-chat-messages" id="ai-chat-messages">
+            <div class="ai-message ai-message-bot">
+                <div class="ai-message-avatar">
+                    <i class="mdi mdi-robot"></i>
+                </div>
+                <div class="ai-message-content">
+                    <div class="ai-message-text">
+                        <p>Hello! I'm your AI assistant. How can I help you today?</p>
+                    </div>
+                    <div class="ai-message-time">Just now</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ai-chat-input">
+            <form id="ai-chat-form">
+                <div class="ai-input-container">
+                    <input type="text" id="ai-input" placeholder="Type your message here..." autocomplete="off">
+                    <button type="submit" id="ai-send-btn">
+                        <i class="mdi mdi-send"></i>
+                    </button>
+                </div>
+                <div class="ai-suggestions">
+                    <button type="button" class="ai-suggestion-btn" data-text="How do I add a new product?">How do I add a new product?</button>
+                    <button type="button" class="ai-suggestion-btn" data-text="Show me sales reports">Show me sales reports</button>
+                    <button type="button" class="ai-suggestion-btn" data-text="How do I process a refund?">How do I process a refund?</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatMessages = document.getElementById('ai-chat-messages');
+        const chatForm = document.getElementById('ai-chat-form');
+        const chatInput = document.getElementById('ai-input');
+        const suggestionBtns = document.querySelectorAll('.ai-suggestion-btn');
+        
+        // Sample responses for demo
+        const sampleResponses = {
+            'how do i add a new product': 'To add a new product, go to the Inventory section and click on "Add Product". Fill in the product details such as name, price, category, and stock quantity, then click Save.',
+            'show me sales reports': 'You can view sales reports by navigating to the Reports section. There you\'ll find various reports including daily sales, top-selling products, and revenue analysis.',
+            'how do i process a refund': 'To process a refund, go to the POS screen, click on "Orders", find the order you want to refund, and click the "Refund" button. You can choose to refund the entire order or specific items.',
+            'default': 'I\'ll help you with that. Could you provide more details about what you\'re looking for?'
+        };
+        
+        // Handle form submission
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            
+            // Clear input
+            chatInput.value = '';
+            
+            // Get AI response
+            setTimeout(() => {
+                const response = getAIResponse(message);
+                addMessage(response, 'bot');
+            }, 1000);
+        });
+        
+        // Handle suggestion buttons
+        suggestionBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.getAttribute('data-text');
+                chatInput.value = text;
+                chatForm.dispatchEvent(new Event('submit'));
+            });
+        });
+        
+        // Add message to chat
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `ai-message ai-message-${sender}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'ai-message-avatar';
+            
+            const icon = document.createElement('i');
+            icon.className = sender === 'user' ? 'mdi mdi-account' : 'mdi mdi-robot';
+            
+            avatar.appendChild(icon);
+            
+            const content = document.createElement('div');
+            content.className = 'ai-message-content';
+            
+            const messageText = document.createElement('div');
+            messageText.className = 'ai-message-text';
+            messageText.innerHTML = `<p>${text}</p>`;
+            
+            const messageTime = document.createElement('div');
+            messageTime.className = 'ai-message-time';
+            messageTime.textContent = 'Just now';
+            
+            content.appendChild(messageText);
+            content.appendChild(messageTime);
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Get AI response based on user message
+        function getAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Check for specific questions
+            for (const [key, response] of Object.entries(sampleResponses)) {
+                if (lowerMessage.includes(key)) {
+                    return response;
+                }
+            }
+            
+            // Default response
+            return sampleResponses.default;
+        }
+    });
+</script>
+{% endblock %} 

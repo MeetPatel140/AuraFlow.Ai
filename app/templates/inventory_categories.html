@@ -1,0 +1,1270 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - AuraFlow{% endblock %}
+
+{% block content %}
+<div class="categories-page">
+    <div class="page-top-actions">
+        <div class="search-box">
+            <input type="text" id="category-search" placeholder="Search categories...">
+            <i class="mdi mdi-magnify"></i>
+    </div>
+            <button class="btn btn-primary" id="add-category-btn">
+            <i class="mdi mdi-plus"></i>
+            Add Category
+            </button>
+        </div>
+        
+    <div id="categories-grid" class="categories-grid">
+        <!-- Categories will be loaded dynamically -->
+        <div class="loading-placeholder">
+            <i class="mdi mdi-loading mdi-spin"></i>
+            Loading categories...
+                </div>
+                </div>
+                </div>
+
+<!-- Add/Edit Category Form Modal -->
+<div class="modal-overlay" id="category-modal-overlay" style="display: none;">
+    <div class="modal-container">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add Category</h2>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            
+            <form id="category-form">
+                <input type="hidden" id="category-id">
+                
+                <div class="form-group">
+                    <label for="category-name">Category Name <span class="required">*</span></label>
+                    <input type="text" id="category-name" name="name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category-icon">Category Icon</label>
+                    <div class="icon-selector">
+                        <div class="selected-icon">
+                            <i id="selected-icon" class="mdi mdi-shape"></i>
+                </div>
+                        
+                        <div class="icon-search">
+                            <input type="text" id="icon-search" placeholder="Search icons...">
+                            <i class="mdi mdi-magnify"></i>
+                </div>
+                        
+                        <div class="icon-categories">
+                            <button type="button" class="icon-category-btn active" data-category="all">All</button>
+                            <button type="button" class="icon-category-btn" data-category="common">Common</button>
+                            <button type="button" class="icon-category-btn" data-category="products">Products</button>
+                            <button type="button" class="icon-category-btn" data-category="tech">Technology</button>
+                            <button type="button" class="icon-category-btn" data-category="home">Home</button>
+                            <button type="button" class="icon-category-btn" data-category="business">Business</button>
+            </div>
+            
+                        <div class="icon-options">
+                            <!-- Common Icons -->
+                            <div class="icon-option" data-icon="mdi-shape" data-category="common">
+                                <i class="mdi mdi-shape"></i>
+                </div>
+                            <div class="icon-option" data-icon="mdi-tag" data-category="common">
+                                <i class="mdi mdi-tag"></i>
+                </div>
+                            <div class="icon-option" data-icon="mdi-star" data-category="common">
+                                <i class="mdi mdi-star"></i>
+                </div>
+                            <div class="icon-option" data-icon="mdi-heart" data-category="common">
+                                <i class="mdi mdi-heart"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-check" data-category="common">
+                                <i class="mdi mdi-check"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-close" data-category="common">
+                                <i class="mdi mdi-close"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-plus" data-category="common">
+                                <i class="mdi mdi-plus"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-minus" data-category="common">
+                                <i class="mdi mdi-minus"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-account" data-category="common">
+                                <i class="mdi mdi-account"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-cog" data-category="common">
+                                <i class="mdi mdi-cog"></i>
+            </div>
+            
+                            <!-- Product Icons -->
+                            <div class="icon-option" data-icon="mdi-shopping" data-category="products">
+                                <i class="mdi mdi-shopping"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-cart" data-category="products">
+                                <i class="mdi mdi-cart"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-tshirt-crew" data-category="products">
+                    <i class="mdi mdi-tshirt-crew"></i>
+                </div>
+                            <div class="icon-option" data-icon="mdi-shoe-formal" data-category="products">
+                                <i class="mdi mdi-shoe-formal"></i>
+                </div>
+                            <div class="icon-option" data-icon="mdi-hat-fedora" data-category="products">
+                                <i class="mdi mdi-hat-fedora"></i>
+                </div>
+                            <div class="icon-option" data-icon="mdi-spray" data-category="products">
+                                <i class="mdi mdi-spray"></i>
+            </div>
+                            <div class="icon-option" data-icon="mdi-bike" data-category="products">
+                                <i class="mdi mdi-bike"></i>
+                </div>
+                            <div class="icon-option" data-icon="mdi-car" data-category="products">
+                                <i class="mdi mdi-car"></i>
+            </div>
+                            <div class="icon-option" data-icon="mdi-food-apple" data-category="products">
+                                <i class="mdi mdi-food-apple"></i>
+        </div>
+                            <div class="icon-option" data-icon="mdi-food" data-category="products">
+                                <i class="mdi mdi-food"></i>
+    </div>
+                            <div class="icon-option" data-icon="mdi-bottle-wine" data-category="products">
+                                <i class="mdi mdi-bottle-wine"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-beer" data-category="products">
+                                <i class="mdi mdi-beer"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-coffee" data-category="products">
+                                <i class="mdi mdi-coffee"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-silverware" data-category="products">
+                                <i class="mdi mdi-silverware"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-cookie" data-category="products">
+                                <i class="mdi mdi-cookie"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-pizza" data-category="products">
+                                <i class="mdi mdi-pizza"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-cupcake" data-category="products">
+                                <i class="mdi mdi-cupcake"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-cake" data-category="products">
+                                <i class="mdi mdi-cake"></i>
+</div>
+
+                            <!-- Technology Icons -->
+                            <div class="icon-option" data-icon="mdi-laptop" data-category="tech">
+                                <i class="mdi mdi-laptop"></i>
+        </div>
+                            <div class="icon-option" data-icon="mdi-cellphone" data-category="tech">
+                                <i class="mdi mdi-cellphone"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-tablet" data-category="tech">
+                                <i class="mdi mdi-tablet"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-television" data-category="tech">
+                                <i class="mdi mdi-television"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-keyboard" data-category="tech">
+                                <i class="mdi mdi-keyboard"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-mouse" data-category="tech">
+                                <i class="mdi mdi-mouse"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-speaker" data-category="tech">
+                                <i class="mdi mdi-speaker"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-headphones" data-category="tech">
+                                <i class="mdi mdi-headphones"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-printer" data-category="tech">
+                                <i class="mdi mdi-printer"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-camera" data-category="tech">
+                                <i class="mdi mdi-camera"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-gamepad" data-category="tech">
+                                <i class="mdi mdi-gamepad"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-battery" data-category="tech">
+                                <i class="mdi mdi-battery"></i>
+                            </div>
+                            
+                            <!-- Home Icons -->
+                            <div class="icon-option" data-icon="mdi-home" data-category="home">
+                                <i class="mdi mdi-home"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-sofa" data-category="home">
+                                <i class="mdi mdi-sofa"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-table-furniture" data-category="home">
+                                <i class="mdi mdi-table-furniture"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-lamp" data-category="home">
+                                <i class="mdi mdi-lamp"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-ceiling-light" data-category="home">
+                                <i class="mdi mdi-ceiling-light"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-fridge" data-category="home">
+                                <i class="mdi mdi-fridge"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-washing-machine" data-category="home">
+                                <i class="mdi mdi-washing-machine"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-microwave" data-category="home">
+                                <i class="mdi mdi-microwave"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-air-conditioner" data-category="home">
+                                <i class="mdi mdi-air-conditioner"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-thermometer" data-category="home">
+                                <i class="mdi mdi-thermometer"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-shower" data-category="home">
+                                <i class="mdi mdi-shower"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-toilet" data-category="home">
+                                <i class="mdi mdi-toilet"></i>
+                </div>
+                
+                            <!-- Business Icons -->
+                            <div class="icon-option" data-icon="mdi-briefcase" data-category="business">
+                                <i class="mdi mdi-briefcase"></i>
+                        </div>
+                            <div class="icon-option" data-icon="mdi-office-building" data-category="business">
+                                <i class="mdi mdi-office-building"></i>
+                        </div>
+                            <div class="icon-option" data-icon="mdi-domain" data-category="business">
+                                <i class="mdi mdi-domain"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-chart-line" data-category="business">
+                                <i class="mdi mdi-chart-line"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-chart-bar" data-category="business">
+                                <i class="mdi mdi-chart-bar"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-cash" data-category="business">
+                                <i class="mdi mdi-cash"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-credit-card" data-category="business">
+                                <i class="mdi mdi-credit-card"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-currency-usd" data-category="business">
+                                <i class="mdi mdi-currency-usd"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-bank" data-category="business">
+                                <i class="mdi mdi-bank"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-store" data-category="business">
+                                <i class="mdi mdi-store"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-handshake" data-category="business">
+                                <i class="mdi mdi-handshake"></i>
+                            </div>
+                            <div class="icon-option" data-icon="mdi-file-document" data-category="business">
+                                <i class="mdi mdi-file-document"></i>
+                            </div>
+                        </div>
+                        <input type="hidden" id="category-icon-input" name="icon" value="mdi-shape">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category-description">Description</label>
+                    <textarea id="category-description" name="description" class="form-control" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="switch-label">
+                        <span>Active</span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="category-active" name="is_active" checked>
+                            <span class="toggle-slider round"></span>
+        </div>
+                    </label>
+        </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-category">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="save-category">
+                        Save Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DOM elements
+        const categoriesGrid = document.getElementById('categories-grid');
+        const categoryModalOverlay = document.getElementById('category-modal-overlay');
+        const categoryForm = document.getElementById('category-form');
+        const modalTitle = document.getElementById('modal-title');
+        const addCategoryBtn = document.getElementById('add-category-btn');
+        const closeModalBtn = document.getElementById('close-modal');
+        const cancelBtn = document.getElementById('cancel-category');
+        const categorySearch = document.getElementById('category-search');
+        
+        // Load categories
+        function loadCategories() {
+            categoriesGrid.innerHTML = '<div class="loading-placeholder"><i class="mdi mdi-loading mdi-spin"></i> Loading categories...</div>';
+            
+            fetch('/api/categories')
+                .then(response => response.json())
+                .then(categories => {
+                    if (categories.length === 0) {
+                        categoriesGrid.innerHTML = '<div class="empty-state">No categories found. Click "Add Category" to create one.</div>';
+                        return;
+                    }
+                    
+                    categoriesGrid.innerHTML = '';
+                    renderCategories(categories);
+                })
+                .catch(error => {
+                    console.error('Error loading categories:', error);
+                    categoriesGrid.innerHTML = '<div class="error-state">Error loading categories. Please try again.</div>';
+                    
+                    if (window.Notifications) {
+                        window.Notifications.show('Error loading categories', 'error');
+                    }
+                });
+        }
+        
+        // Render category cards
+        function renderCategories(categories) {
+            categories.forEach(category => {
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'category-card';
+                categoryCard.innerHTML = `
+                    <div class="category-card-icon">
+                        <i class="mdi ${category.icon || 'mdi-shape'}"></i>
+                    </div>
+                    <div class="category-card-content">
+                        <h3 class="category-name">${category.name}</h3>
+                        <p class="category-description">${category.description || 'No description'}</p>
+                    </div>
+                    <div class="category-card-actions">
+                        <button class="btn-icon edit-category" title="Edit Category" data-id="${category.id}">
+                            <i class="mdi mdi-pencil"></i>
+                        </button>
+                        <button class="btn-icon delete-category" title="Delete Category" data-id="${category.id}">
+                            <i class="mdi mdi-delete"></i>
+                        </button>
+                    </div>
+                    <div class="category-status-toggle">
+                        <label class="switch-label small">
+                            <span>${category.is_active ? 'Active' : 'Inactive'}</span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" class="toggle-active" data-id="${category.id}" ${category.is_active ? 'checked' : ''}>
+                                <span class="toggle-slider round"></span>
+                            </div>
+                        </label>
+                    </div>
+                `;
+                
+                categoriesGrid.appendChild(categoryCard);
+                
+                // If it has subcategories, add them too
+                if (category.subcategories && category.subcategories.length > 0) {
+                    const subcategoriesHeading = document.createElement('div');
+                    subcategoriesHeading.className = 'subcategories-heading';
+                    subcategoriesHeading.innerHTML = `<span>Subcategories of ${category.name}</span>`;
+                    categoriesGrid.appendChild(subcategoriesHeading);
+                    
+                    renderCategories(category.subcategories);
+                }
+            });
+        }
+            
+            // Show modal
+        function showModal(title = 'Add Category') {
+            console.log('Showing modal with title:', title);
+            modalTitle.textContent = title;
+            categoryModalOverlay.style.display = 'block';
+            categoryForm.reset();
+            document.getElementById('category-id').value = '';
+        }
+        
+        // Hide modal
+        function hideModal() {
+            console.log('Hiding modal');
+            categoryModalOverlay.style.display = 'none';
+            categoryForm.reset();
+        }
+        
+        // Event Listeners
+        addCategoryBtn.addEventListener('click', function() {
+            console.log('Add category button clicked');
+            showModal();
+        });
+        
+        closeModalBtn.addEventListener('click', function() {
+            console.log('Close modal button clicked');
+            hideModal();
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            console.log('Cancel button clicked');
+            hideModal();
+        });
+        
+        // Close modal when clicking outside
+        categoryModalOverlay.addEventListener('click', function(event) {
+            if (event.target === categoryModalOverlay) {
+                console.log('Clicked outside modal');
+                hideModal();
+            }
+        });
+        
+        // Form submission
+        categoryForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const categoryId = document.getElementById('category-id').value;
+            const formData = {
+                name: document.getElementById('category-name').value,
+                description: document.getElementById('category-description').value,
+                is_active: document.getElementById('category-active').checked,
+                icon: document.getElementById('category-icon-input').value
+            };
+            
+            const method = categoryId ? 'PUT' : 'POST';
+            const url = categoryId ? `/api/categories/${categoryId}` : '/api/categories';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+            if (window.Notifications) {
+                        window.Notifications.show(data.message, 'success');
+                    }
+                    hideModal();
+                    loadCategories();
+            } else {
+                    throw new Error(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (window.Notifications) {
+                    window.Notifications.show(error.message || 'Error saving category', 'error');
+                }
+            });
+        });
+        
+        // Edit category
+        categoriesGrid.addEventListener('click', function(event) {
+            const editBtn = event.target.closest('.edit-category');
+            if (!editBtn) return;
+            
+            const categoryId = editBtn.dataset.id;
+            console.log('Edit button clicked for category ID:', categoryId);
+            
+            // Fetch category details - Fix for 405 Method Not Allowed error
+            fetch(`/api/categories/${categoryId}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // If GET doesn't work, try alternative approach
+                    console.log('GET request failed with status:', response.status);
+                    // Try to get the category from the current page data instead
+                    return findCategoryInExistingData(categoryId);
+                }
+                return response.json();
+            })
+            .then(category => {
+                console.log('Category details received:', category);
+                if (!category || !category.id) {
+                    throw new Error('Invalid category data received');
+                }
+                
+                document.getElementById('category-id').value = category.id;
+                document.getElementById('category-name').value = category.name || '';
+                document.getElementById('category-description').value = category.description || '';
+                document.getElementById('category-active').checked = !!category.is_active;
+                
+                // Set the icon
+                const iconValue = category.icon || 'mdi-shape';
+                document.getElementById('category-icon-input').value = iconValue;
+                document.getElementById('selected-icon').className = `mdi ${iconValue}`;
+                
+                // Highlight the selected icon in the options
+                document.querySelectorAll('.icon-option').forEach(option => {
+                    option.classList.remove('active');
+                    if (option.dataset.icon === iconValue) {
+                        option.classList.add('active');
+                    }
+                });
+                
+                // Update modal title for edit
+                modalTitle.textContent = 'Edit Category';
+                
+                // Show the modal
+                categoryModalOverlay.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error loading category details:', error);
+            if (window.Notifications) {
+                    window.Notifications.show('Error loading category details: ' + error.message, 'error');
+                }
+            });
+        });
+        
+        // Helper function to find category in DOM when API fails
+        function findCategoryInExistingData(categoryId) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const categoryCards = document.querySelectorAll('.category-card');
+                    let foundCategory = null;
+                    
+                    categoryCards.forEach(card => {
+                        const editBtn = card.querySelector('.edit-category');
+                        if (editBtn && editBtn.dataset.id === categoryId) {
+                            const nameElement = card.querySelector('.category-name');
+                            const descElement = card.querySelector('.category-description');
+                            const iconElement = card.querySelector('.category-card-icon i');
+                            const activeToggle = card.querySelector('.toggle-active');
+                            
+                            foundCategory = {
+                                id: categoryId,
+                                name: nameElement ? nameElement.textContent : '',
+                                description: descElement ? descElement.textContent.replace('No description', '') : '',
+                                is_active: activeToggle ? activeToggle.checked : true,
+                                icon: iconElement ? iconElement.className.replace('mdi ', '') : 'mdi-shape'
+                            };
+                        }
+                    });
+                    
+                    if (foundCategory) {
+                        resolve(foundCategory);
+                    } else {
+                        reject(new Error('Could not find category data'));
+                    }
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+        
+        // Delete category
+        categoriesGrid.addEventListener('click', function(event) {
+            const deleteBtn = event.target.closest('.delete-category');
+            if (!deleteBtn) return;
+            
+            const categoryId = deleteBtn.dataset.id;
+            
+            if (confirm('Are you sure you want to delete this category?')) {
+                fetch(`/api/categories/${categoryId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (window.Notifications) {
+                            window.Notifications.show(data.message, 'success');
+                        }
+                        loadCategories();
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (window.Notifications) {
+                        window.Notifications.show(error.message || 'Error deleting category', 'error');
+                    }
+                });
+            }
+        });
+        
+        // Toggle category active state
+        categoriesGrid.addEventListener('change', function(event) {
+            const toggle = event.target.closest('.toggle-active');
+            if (!toggle) return;
+            
+            const categoryId = toggle.dataset.id;
+            const isActive = toggle.checked;
+            const statusLabel = toggle.closest('.switch-label').querySelector('span');
+            
+            console.log(`Toggling category ${categoryId} to ${isActive ? 'active' : 'inactive'}`);
+            
+            // Update the status text immediately for better UX
+            if (statusLabel) {
+                statusLabel.textContent = isActive ? 'Active' : 'Inactive';
+            }
+            
+            fetch(`/api/categories/${categoryId}/toggle-status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_active: isActive })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Try alternative endpoint if the first fails
+                    return fetch(`/api/categories/${categoryId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ is_active: isActive })
+                    });
+                }
+                return response;
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (window.Notifications) {
+                        window.Notifications.show(`Category ${isActive ? 'activated' : 'deactivated'} successfully`, 'success');
+                    }
+                } else {
+                    throw new Error(data.message || 'Failed to update category status');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating category status:', error);
+                // Revert toggle if there was an error
+                toggle.checked = !isActive;
+                if (statusLabel) {
+                    statusLabel.textContent = !isActive ? 'Active' : 'Inactive';
+                }
+                
+                if (window.Notifications) {
+                    window.Notifications.show(error.message || 'Error updating category status', 'error');
+                }
+            });
+        });
+        
+        // Search functionality
+        categorySearch.addEventListener('input', function(event) {
+            const searchTerm = event.target.value.toLowerCase();
+            const categoryCards = categoriesGrid.getElementsByClassName('category-card');
+            
+            Array.from(categoryCards).forEach(card => {
+                const categoryName = card.querySelector('.category-name').textContent.toLowerCase();
+                const categoryDesc = card.querySelector('.category-description').textContent.toLowerCase();
+                if (categoryName.includes(searchTerm) || categoryDesc.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Also hide subcategory headings if needed
+            const subcategoryHeadings = categoriesGrid.getElementsByClassName('subcategories-heading');
+            Array.from(subcategoryHeadings).forEach(heading => {
+                const nextElements = [];
+                let nextElement = heading.nextElementSibling;
+                while (nextElement && !nextElement.classList.contains('subcategories-heading')) {
+                    if (nextElement.classList.contains('category-card')) {
+                        nextElements.push(nextElement);
+                    }
+                    nextElement = nextElement.nextElementSibling;
+                }
+                
+                // If all next category cards are hidden, hide the heading too
+                const allHidden = nextElements.every(el => el.style.display === 'none');
+                heading.style.display = allHidden ? 'none' : '';
+            });
+        });
+        
+        // Icon selector
+        const iconOptions = document.querySelectorAll('.icon-option');
+        const selectedIcon = document.getElementById('selected-icon');
+        const iconInput = document.getElementById('category-icon-input');
+        const iconSearch = document.getElementById('icon-search');
+        
+        // Icon selection
+        iconOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const icon = this.dataset.icon;
+                iconInput.value = icon;
+                selectedIcon.className = `mdi ${icon}`;
+                
+                // Remove active class from all options
+                iconOptions.forEach(opt => opt.classList.remove('active'));
+                
+                // Add active class to selected option
+                this.classList.add('active');
+            });
+        });
+        
+        // Icon search functionality
+        iconSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            iconOptions.forEach(option => {
+                const iconName = option.dataset.icon.toLowerCase();
+                if (searchTerm === '' || iconName.includes(searchTerm)) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        });
+        
+        // Icon category filtering
+        const categoryButtons = document.querySelectorAll('.icon-category-btn');
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const category = this.dataset.category;
+                
+                // Remove active class from all category buttons
+                categoryButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Filter icons by category
+                iconOptions.forEach(option => {
+                    if (category === 'all' || option.dataset.category === category) {
+                        option.style.display = '';
+                    } else {
+                        option.style.display = 'none';
+                    }
+            });
+        });
+        });
+        
+        // Initial load
+        loadCategories();
+    });
+</script>
+
+<style>
+    /* Categories Page Styles */
+    .categories-page {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .page-top-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .search-box {
+        position: relative;
+        width: 300px;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 10px 12px 10px 36px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+    
+    /* Category Grid - Updated to show 4 per row */
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+    
+    .category-card {
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        padding: 16px;
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+        position: relative;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        border-color: #4A90E2;
+    }
+    
+    .category-card-icon {
+        font-size: 28px;
+        color: #4A90E2;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(74, 144, 226, 0.1);
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .category-card-content {
+        flex: 1;
+    }
+    
+    .category-card h3 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #2c3e50;
+        padding-right: 60px; /* Space for action buttons */
+    }
+    
+    .category-card p {
+        margin: 0 0 12px 0;
+        color: #6c757d;
+        font-size: 14px;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-height: 40px;
+    }
+    
+    .category-card-actions {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        gap: 8px;
+    }
+    
+    .category-status-toggle {
+        margin-top: 8px;
+    }
+    
+    /* Toggle Switch Styles */
+    .switch-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    .switch-label.small {
+        font-size: 12px;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    
+    .switch-label.small .toggle-switch {
+        width: 40px;
+        height: 20px;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+    }
+    
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+    }
+    
+    .switch-label.small .toggle-slider:before {
+        height: 14px;
+        width: 14px;
+        left: 3px;
+        bottom: 3px;
+    }
+    
+    .toggle-switch input:checked + .toggle-slider {
+        background-color: #2ecc71;
+    }
+    
+    .toggle-switch input:focus + .toggle-slider {
+        box-shadow: 0 0 1px #2ecc71;
+    }
+    
+    .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+    }
+    
+    .switch-label.small .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+    }
+    
+    .toggle-slider.round {
+        border-radius: 34px;
+    }
+    
+    .toggle-slider.round:before {
+        border-radius: 50%;
+    }
+    
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 6px;
+        cursor: pointer;
+        color: #6c757d;
+        transition: all 0.2s;
+    }
+    
+    .btn-icon:hover {
+        background-color: #dee2e6;
+        color: #2c3e50;
+    }
+    
+    .btn-icon.edit-category:hover {
+        background-color: #4A90E2;
+        color: white;
+    }
+    
+    .btn-icon.delete-category:hover {
+        background-color: #e74c3c;
+        color: white;
+    }
+    
+    .subcategories-heading {
+        grid-column: 1 / -1;
+        margin: 12px 0;
+        padding: 8px 16px;
+        background-color: rgba(74, 144, 226, 0.1);
+        border-radius: 8px;
+        color: #4A90E2;
+        font-weight: 500;
+    }
+    
+    /* Icon Selector Styles */
+    .icon-selector {
+        margin-top: 10px;
+    }
+    
+    .selected-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        background-color: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+    }
+    
+    .selected-icon i {
+        font-size: 28px;
+        color: #4A90E2;
+    }
+    
+    .icon-search {
+        position: relative;
+        margin-bottom: 15px;
+    }
+    
+    .icon-search input {
+        width: 100%;
+        padding: 8px 12px 8px 36px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    
+    .icon-search i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+    
+    .icon-categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .icon-category-btn {
+        padding: 6px 12px;
+        border-radius: 20px;
+        background-color: #f5f5f5;
+        border: 1px solid #ddd;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .icon-category-btn:hover {
+        background-color: #e9ecef;
+    }
+    
+    .icon-category-btn.active {
+        background-color: #4A90E2;
+        color: white;
+        border-color: #4A90E2;
+    }
+    
+    .icon-options {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+    
+    .icon-option {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .icon-option:hover {
+        background-color: #e9ecef;
+    }
+    
+    .icon-option.active {
+        background-color: rgba(74, 144, 226, 0.1);
+        border: 1px solid #4A90E2;
+    }
+    
+    .icon-option i {
+        font-size: 20px;
+        color: #495057;
+    }
+    
+    /* Loading and Empty States */
+    .loading-placeholder,
+    .empty-state,
+    .error-state {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+        grid-column: 1 / -1;
+    }
+    
+    .loading-placeholder i {
+        font-size: 24px;
+        margin-bottom: 12px;
+    }
+    
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        padding: 20px;
+    }
+    
+    .modal-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+    
+    .modal-content {
+        background-color: #fff;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .modal-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        color: #2c3e50;
+    }
+    
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6c757d;
+    }
+    
+    /* Form Styles */
+    form {
+        padding: 24px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+    
+    .form-control:focus {
+        border-color: #4A90E2;
+        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        outline: none;
+    }
+    
+    .required {
+        color: #f5222d;
+    }
+    
+    /* Buttons */
+    .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+    }
+    
+    .btn-primary {
+        background-color: #4A90E2;
+        color: #fff;
+    }
+    
+    .btn-primary:hover {
+        background-color: #357ABD;
+    }
+    
+    .btn-secondary {
+        background-color: #e9ecef;
+        color: #495057;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #dee2e6;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 24px;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 1200px) {
+        .categories-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (max-width: 900px) {
+        .categories-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .page-top-actions {
+            flex-direction: column;
+            gap: 12px;
+            align-items: stretch;
+        }
+        
+        .search-box {
+            width: 100%;
+        }
+        
+        .categories-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .modal-container {
+            padding: 12px;
+        }
+    }
+</style>
+{% endblock %} 

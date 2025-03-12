@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pos-container">
+    <div class="pos-sidebar">
+        <div class="pos-categories">
+            <div class="pos-section-header">
+                <h3>Categories</h3>
+            </div>
+            <div class="categories-list" id="categories-list">
+                <div class="category-item active" data-category="all">
+                    <i class="mdi mdi-view-grid"></i>
+                    <span>All Products</span>
+                </div>
+                <!-- Categories will be loaded dynamically -->
+                <div class="category-item skeleton">
+                    <div class="skeleton-circle"></div>
+                    <div class="skeleton-line"></div>
+                </div>
+                <div class="category-item skeleton">
+                    <div class="skeleton-circle"></div>
+                    <div class="skeleton-line"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pos-cart">
+            <div class="pos-section-header">
+                <h3>Current Order</h3>
+                <button class="clear-cart-btn" id="clear-cart-btn">
+                    <i class="mdi mdi-delete"></i>
+                </button>
+            </div>
+            
+            <div class="cart-items" id="cart-items">
+                <div class="empty-cart-message">
+                    <i class="mdi mdi-cart-outline"></i>
+                    <p>Cart is empty</p>
+                    <span>Add products to create an order</span>
+                </div>
+                <!-- Cart items will be added dynamically -->
+            </div>
+            
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="cart-subtotal">₹0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (18%)</span>
+                    <span id="cart-tax">₹0.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span id="cart-total">₹0.00</span>
+                </div>
+                
+                <button class="checkout-btn" id="checkout-btn" disabled>
+                    <i class="mdi mdi-cash-register"></i>
+                    <span>Checkout</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="pos-main">
+        <div class="pos-header">
+            <div class="pos-search">
+                <i class="mdi mdi-magnify"></i>
+                <input type="text" id="product-search" placeholder="Search products...">
+            </div>
+            
+            <div class="pos-actions">
+                <button class="pos-action-btn" id="barcode-btn">
+                    <i class="mdi mdi-barcode-scan"></i>
+                    <span>Scan</span>
+                </button>
+                <button class="pos-action-btn" id="customer-btn">
+                    <i class="mdi mdi-account"></i>
+                    <span>Customer</span>
+                </button>
+                <button class="pos-action-btn" id="discount-btn">
+                    <i class="mdi mdi-percent"></i>
+                    <span>Discount</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="pos-products" id="products-container">
+            <div class="products-loading" id="products-loading">
+                <div class="loading-spinner"></div>
+                <p>Loading products...</p>
+            </div>
+            
+            <div class="no-products-message" id="no-products-message" style="display: none;">
+                <i class="mdi mdi-package-variant"></i>
+                <h3>No Products Found</h3>
+                <p>You haven't added any products to your inventory yet.</p>
+                <a href="/inventory/add" class="btn btn-primary">Add Your First Product</a>
+            </div>
+            
+            <div class="products-grid" id="products-grid">
+                <!-- Products will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize POS
+        initPOS();
+        
+        // Focus on the search input when the page loads
+        const searchInput = document.getElementById('product-search');
+        if (searchInput) {
+            searchInput.focus();
+        }
+        
+        // Also focus when the page:loaded event is triggered (for client-side navigation)
+        document.addEventListener('page:loaded', function(event) {
+            if (event.detail.path === '/pos' || event.detail.path.startsWith('/pos/')) {
+                setTimeout(() => {
+                    const searchInput = document.getElementById('product-search');
+                    if (searchInput) {
+                        searchInput.focus();
+                    }
+                }, 100);
+            }
+        });
+    });
+    
+    function initPOS() {
+        // Simulate loading products
+        setTimeout(() => {
+            // Hide loading spinner
+            document.getElementById('products-loading').style.display = 'none';
+            
+            // Check if products exist (for demo, we'll show no products)
+            const hasProducts = false; // In a real app, this would be determined by API call
+            
+            if (hasProducts) {
+                document.getElementById('products-grid').style.display = 'grid';
+                // Load products (would be an API call in a real app)
+                loadProducts();
+            } else {
+                document.getElementById('no-products-message').style.display = 'flex';
+            }
+        }, 1500);
+    }
+    
+    // Sound effects for POS actions
+    const sounds = {
+        scan: new Audio('/static/sounds/scan.mp3'),
+        success: new Audio('/static/sounds/success.mp3'),
+        error: new Audio('/static/sounds/error.mp3'),
+        cash: new Audio('/static/sounds/cash.mp3')
+    };
+    
+    // Preload sounds
+    for (const sound in sounds) {
+        sounds[sound].load();
+    }
+    
+    // Play sound function
+    function playSound(soundName) {
+        if (sounds[soundName]) {
+            sounds[soundName].currentTime = 0;
+            sounds[soundName].play().catch(e => console.log('Error playing sound:', e));
+        }
+    }
+    
+    // Add event listeners for POS actions
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add to cart button
+        const addButtons = document.querySelectorAll('.add-to-cart-btn');
+        addButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                playSound('scan');
+            });
+        });
+        
+        // Complete sale button
+        const completeButton = document.getElementById('complete-sale-btn');
+        if (completeButton) {
+            completeButton.addEventListener('click', function() {
+                playSound('success');
+            });
+        }
+        
+        // Cash payment button
+        const cashButton = document.getElementById('cash-payment-btn');
+        if (cashButton) {
+            cashButton.addEventListener('click', function() {
+                playSound('cash');
+            });
+        }
+        
+        // Error handling
+        const errorButtons = document.querySelectorAll('.remove-item-btn');
+        errorButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                playSound('error');
+            });
+        });
+    });
+</script>
+{% endblock %}

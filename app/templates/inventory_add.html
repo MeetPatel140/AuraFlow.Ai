@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Product{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventory_add.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="inventory-add-page">
+    <!-- Header Section -->
+    <div class="page-header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="{{ url_for('main.inventory') }}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Inventory
+                </a>
+                <h1>Add New Product</h1>
+            </div>
+            <div class="status-switch">
+                <label class="switch">
+                    <input type="checkbox" id="is_active" name="is_active" checked>
+                    <span class="slider"></span>
+                </label>
+                <span id="statusLabel">Active</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="page-content">
+        <!-- Left Column -->
+        <div class="content-left">
+            <!-- Image Upload Card -->
+            <div class="image-upload-card">
+                <div class="card-header">
+                    <h3>Product Image</h3>
+                    <p>Upload a high-quality image of your product</p>
+                </div>
+                <div class="card-body">
+                    <input type="file" id="productImage" accept="image/*">
+                    <div id="imagePreview" class="preview-container">
+                        <i class="fas fa-box fa-5x text-secondary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="content-right">
+            <form id="productForm" action="{{ url_for('api.inventory.add_product') }}" method="POST">
+                <!-- Basic Information -->
+                <div class="form-card">
+                    <div class="card-header">
+                        <h3>Basic Information</h3>
+                        <p>Enter the essential details about your product</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="name">Product Name</label>
+                            <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" name="category" class="form-control" required>
+                                <option value="">Select a category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sku">SKU</label>
+                            <div class="input-group">
+                                <input type="text" id="sku" name="sku" class="form-control" required>
+                                <button type="button" id="generateSku" class="btn-icon">
+                                    <i class="fas fa-sync"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" class="form-control" rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Barcode Information -->
+                <div class="form-card">
+                    <div class="card-header">
+                        <h3>Barcode Information</h3>
+                        <p>Enter or generate a barcode for your product</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="barcode">Barcode</label>
+                            <div class="input-group">
+                                <input type="text" id="barcode" name="barcode" class="form-control">
+                                <button type="button" id="generate-barcode" class="btn-icon">
+                                    <i class="fas fa-barcode"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="barcode_type">Barcode Type</label>
+                            <select id="barcode_type" name="barcode_type" class="form-control">
+                                <option value="CODE128">Code 128</option>
+                                <option value="EAN13">EAN-13</option>
+                                <option value="UPC">UPC</option>
+                            </select>
+                        </div>
+                        <div id="barcodePreview" class="barcode-preview">
+                            <div class="preview-container">
+                                <i class="fas fa-barcode fa-3x text-secondary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pricing & Inventory -->
+                <div class="form-card">
+                    <div class="card-header">
+                        <h3>Pricing & Inventory</h3>
+                        <p>Set your product's pricing and stock information</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="cost_price">Cost Price</label>
+                            <div class="input-group">
+                                <span class="input-prefix">₹</span>
+                                <input type="number" id="cost_price" name="cost_price" class="form-control" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="price">Selling Price</label>
+                            <div class="input-group">
+                                <span class="input-prefix">₹</span>
+                                <input type="number" id="price" name="price" class="form-control" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="profit_margin">Profit Margin (%)</label>
+                            <input type="number" id="profit_margin" name="profit_margin" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="stock_quantity">Stock Quantity</label>
+                            <input type="number" id="stock_quantity" name="stock_quantity" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reorder_point">Reorder Point</label>
+                            <input type="number" id="reorder_point" name="reorder_point" class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="form-card">
+                    <div class="card-header">
+                        <h3>Additional Information</h3>
+                        <p>Add any extra details about your product</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="weight">Weight (kg)</label>
+                            <input type="number" id="weight" name="weight" class="form-control" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="dimensions">Dimensions (cm)</label>
+                            <div class="dimensions-input">
+                                <input type="number" id="length" name="length" class="form-control" placeholder="Length" step="0.1">
+                                <span class="dimension-separator">×</span>
+                                <input type="number" id="width" name="width" class="form-control" placeholder="Width" step="0.1">
+                                <span class="dimension-separator">×</span>
+                                <input type="number" id="height" name="height" class="form-control" placeholder="Height" step="0.1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="notes">Notes</label>
+                            <textarea id="notes" name="notes" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('main.inventory') }}'">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+<script src="{{ url_for('static', filename='js/inventory_add.js') }}?v=2"></script>
+{% endblock %}
