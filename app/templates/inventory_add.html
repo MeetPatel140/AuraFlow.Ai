@@ -1,205 +1,1514 @@
 {% extends "base.html" %}
+{# Force cache update - {{ range(9999999) | random }} #}
 
 {% block title %}Add New Product{% endblock %}
 
-{% block styles %}
-{{ super() }}
+{% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/inventory_add.css') }}">
+<!-- FilePond Styles -->
+<link href="https://unpkg.com/filepond/dist/filepond.min.css" rel="stylesheet">
+<link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css" rel="stylesheet">
+<link href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.min.css" rel="stylesheet">
+<link href="https://unpkg.com/filepond-plugin-file-poster/dist/filepond-plugin-file-poster.min.css" rel="stylesheet">
+<!-- Custom styles for currency inputs -->
+<style>
+    /* Base input styles - modern redesign */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    select,
+    textarea {
+        display: block;
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #333;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    input:focus,
+    select:focus,
+    textarea:focus {
+        color: #333;
+        background-color: #fff;
+        border-color: #4a90e2;
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+    }
+    
+    /* Placeholder styling */
+    ::placeholder {
+        color: #aaa;
+        opacity: 1;
+    }
+    
+    /* Label styles */
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+    }
+    
+    /* Form group spacing */
+    .form-group {
+        margin-bottom: 24px;
+    }
+    
+    /* Required field indicator */
+    .required {
+        color: #e74c3c;
+        margin-left: 2px;
+    }
+    
+    /* Error message styling */
+    .error-message {
+        color: #e74c3c;
+        font-size: 12px;
+        margin-top: 6px;
+    }
+    
+    /* Help text styling */
+    .form-text {
+        display: block;
+        margin-top: 6px;
+        font-size: 12px;
+        color: #777;
+    }
+    
+    /* Input with icon (for currency) - completely new design */
+    .input-with-icon {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+        background-color: #fff;
+        width: 100%;
+        height: 44px;
+    }
+    
+    .currency-symbol {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+        height: 100%;
+        font-size: 16px;
+        color: #555;
+        background-color: #f8f8f8;
+        border-right: 1px solid #ddd;
+        min-width: 36px;
+    }
+    
+    .input-with-icon input {
+        height: 100%;
+        padding: 0 12px;
+        border: none;
+        background: none;
+        font-size: 15px;
+        flex: 1;
+        outline: none;
+        box-shadow: none;
+        color: #333;
+    }
+    
+    .input-with-icon input::placeholder {
+        color: #aaa;
+    }
+    
+    .input-with-icon:focus-within {
+        border-color: #4a90e2;
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    }
+    
+    /* Input with button */
+    .input-with-button {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .input-with-button input {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-right: none;
+        box-shadow: none;
+    }
+    
+    .input-with-button button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        background-color: #f0f2f5;
+        border: 1px solid #ddd;
+        border-left: none;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .input-with-button button:hover {
+        background-color: #e2e6ea;
+        color: #4a90e2;
+    }
+    
+    /* Dimensions input */
+    .dimensions-input {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .dimension-field {
+        width: 100%;
+    }
+    
+    .dimension-separator {
+        text-align: center;
+        color: #777;
+        font-weight: 500;
+    }
+    
+    /* Toggle switch */
+    .toggle-switch {
+        display: flex;
+        align-items: center;
+    }
+    
+    .toggle-switch input[type="checkbox"] {
+        height: 0;
+        width: 0;
+        visibility: hidden;
+        position: absolute;
+    }
+    
+    .toggle-switch label {
+        cursor: pointer;
+        width: 52px;
+        height: 26px;
+        background: #ddd;
+        display: block;
+        border-radius: 26px;
+        position: relative;
+        margin-right: 12px;
+        margin-bottom: 0;
+        transition: background-color 0.2s ease;
+    }
+    
+    .toggle-switch label:after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border-radius: 20px;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .toggle-switch input:checked + label {
+        background: #4CAF50;
+    }
+    
+    .toggle-switch input:checked + label:after {
+        left: calc(100% - 3px);
+        transform: translateX(-100%);
+    }
+    
+    .toggle-label {
+        font-size: 14px;
+        color: #333;
+        font-weight: 500;
+    }
+    
+    /* Profit margin display */
+    .profit-margin-display {
+        padding: 12px 16px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Barcode preview */
+    .barcode-preview {
+        margin-top: 12px;
+        padding: 16px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Barcode type selector */
+    .barcode-type-selector {
+        display: flex;
+        align-items: center;
+        margin-top: 12px;
+        gap: 12px;
+    }
+    
+    .barcode-type-selector label {
+        margin-bottom: 0;
+        font-size: 14px;
+    }
+    
+    .barcode-type-selector select {
+        width: auto;
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+    
+    /* Adjust these styles for number inputs to prevent the up/down arrows */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+    
+    /* Form sections */
+    .form-section {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        margin-bottom: 28px;
+    }
+    
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    /* Form actions */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        margin-top: 32px;
+    }
+    
+    .btn-primary {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-primary:hover {
+        background-color: #3a7bc8;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-cancel {
+        background-color: #f5f5f5;
+        color: #555;
+        border: 1px solid #ddd;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-cancel:hover {
+        background-color: #e8e8e8;
+        color: #333;
+    }
+</style>
+<!-- JsBarcode - Load early -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<!-- SKU Generator Script - Load early -->
+<script src="{{ url_for('static', filename='js/sku-generator.js') }}"></script>
+<!-- Immediate SKU generation script -->
+<script>
+    // This script runs as soon as it's loaded
+    (function() {
+        console.log('Immediate SKU generation script running');
+        
+        // Global function to update barcode preview
+        window.forceUpdateBarcodePreview = function() {
+            console.log('Force updating barcode preview');
+            const barcodeInput = document.getElementById('product-barcode');
+            const barcodeType = document.getElementById('barcode-type');
+            const previewContainer = document.getElementById('barcode-preview');
+            
+            if (!barcodeInput || !barcodeType || !previewContainer) {
+                console.log('Barcode elements not found for force update');
+                return;
+            }
+            
+            if (barcodeInput.value.trim()) {
+                console.log('Updating barcode preview for:', barcodeInput.value);
+                
+                // Clear previous barcode
+                previewContainer.innerHTML = '';
+                
+                try {
+                    // Create SVG element for the barcode
+                    const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    previewContainer.appendChild(svgElement);
+                    
+                    // Generate barcode if JsBarcode is available
+                    if (typeof JsBarcode === 'function') {
+                        JsBarcode(svgElement, barcodeInput.value, {
+                            format: barcodeType.value,
+                            lineColor: '#000',
+                            width: 2,
+                            height: 50,
+                            displayValue: true,
+                            fontSize: 14,
+                            margin: 10
+                        });
+                    } else {
+                        console.error('JsBarcode not available for preview generation');
+                    }
+                } catch (error) {
+                    console.error('Error updating barcode preview:', error);
+                }
+            }
+        };
+        
+        // Function to check and generate SKU
+        function checkAndGenerateSKU() {
+            const categorySelect = document.getElementById('product-category');
+            const productNameInput = document.getElementById('product-name');
+            const skuInput = document.getElementById('product-sku');
+            
+            if (!categorySelect || !productNameInput || !skuInput) {
+                console.log('Form elements not found yet, will try again');
+                return false;
+            }
+            
+            console.log('Form elements found, checking values');
+            console.log('Category:', categorySelect.value);
+            console.log('Product name:', productNameInput.value);
+            console.log('SKU:', skuInput.value);
+            
+            // If both fields have values and SKU is empty, generate SKU
+            if (categorySelect.value && 
+                productNameInput.value.trim() && 
+                skuInput.value.trim() === '') {
+                
+                console.log('Generating SKU immediately');
+                
+                // Generate SKU
+                const categoryPrefix = categorySelect.value.substring(0, 2).toUpperCase();
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
+                const timestamp = new Date().getTime().toString().slice(-4);
+                
+                const sku = `${categoryPrefix}${randomNum}${productPrefix}${timestamp}`;
+                
+                // Set the SKU value
+                skuInput.value = sku;
+                
+                // Add visual feedback
+                skuInput.style.backgroundColor = '#f0fff4';
+                skuInput.style.borderColor = '#68d391';
+                
+                // Reset the styling after a delay
+                setTimeout(function() {
+                    skuInput.style.backgroundColor = '';
+                    skuInput.style.borderColor = '';
+                }, 1500);
+                
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // Try immediately
+        if (!checkAndGenerateSKU()) {
+            // If not successful, set up a polling mechanism
+            let attempts = 0;
+            const maxAttempts = 20;
+            const pollInterval = 100; // ms
+            
+            const pollForElements = setInterval(function() {
+                attempts++;
+                
+                if (checkAndGenerateSKU() || attempts >= maxAttempts) {
+                    clearInterval(pollForElements);
+                }
+            }, pollInterval);
+            
+            // Also set up event listeners as soon as elements are available
+            const setupListeners = setInterval(function() {
+                const categorySelect = document.getElementById('product-category');
+                const productNameInput = document.getElementById('product-name');
+                
+                if (categorySelect && productNameInput) {
+                    // For category select
+                    categorySelect.addEventListener('change', checkAndGenerateSKU);
+                    
+                    // For product name input
+                    productNameInput.addEventListener('input', checkAndGenerateSKU);
+                    productNameInput.addEventListener('change', checkAndGenerateSKU);
+                    productNameInput.addEventListener('blur', checkAndGenerateSKU);
+                    
+                    clearInterval(setupListeners);
+                }
+                
+                if (attempts >= maxAttempts) {
+                    clearInterval(setupListeners);
+                }
+            }, pollInterval);
+        }
+    })();
+</script>
 {% endblock %}
 
 {% block content %}
 <div class="inventory-add-page">
-    <!-- Header Section -->
     <div class="page-header">
-        <div class="header-content">
-            <div class="header-left">
-                <a href="{{ url_for('main.inventory') }}" class="back-link">
-                    <i class="fas fa-arrow-left"></i> Back to Inventory
-                </a>
-                <h1>Add New Product</h1>
-            </div>
-            <div class="status-switch">
-                <label class="switch">
-                    <input type="checkbox" id="is_active" name="is_active" checked>
-                    <span class="slider"></span>
-                </label>
-                <span id="statusLabel">Active</span>
-            </div>
+        <h1>Add New Product</h1>
+        <div class="breadcrumb">
+            <a href="{{ url_for('main.inventory') }}">Inventory</a> / <span>Add New Product</span>
         </div>
     </div>
     
-    <!-- Main Content -->
-    <div class="page-content">
-        <!-- Left Column -->
-        <div class="content-left">
-            <!-- Image Upload Card -->
-            <div class="image-upload-card">
-                <div class="card-header">
-                    <h3>Product Image</h3>
-                    <p>Upload a high-quality image of your product</p>
+    <div class="notification-container" id="notification-container"></div>
+
+    <!-- Hidden form for SKU generation -->
+    <form id="sku-generator-form" style="display: none;">
+        <input type="hidden" name="category" id="sku-category-input">
+        <input type="hidden" name="product_name" id="sku-product-name-input">
+        <button type="submit" id="sku-submit-button">Generate SKU</button>
+    </form>
+    <script>
+        // Simple SKU generation function using the form
+        function generateSKUViaForm() {
+            // Get values from the main form
+            const category = document.getElementById('product-category').value;
+            const productName = document.getElementById('product-name').value;
+            
+            // Validate inputs
+            if (!category) {
+                alert('Please select a category first');
+                document.getElementById('product-category').focus();
+                return false;
+            }
+            
+            if (!productName) {
+                alert('Please enter a product name first');
+                document.getElementById('product-name').focus();
+                return false;
+            }
+            
+            // Set values in the hidden form
+            document.getElementById('sku-category-input').value = category;
+            document.getElementById('sku-product-name-input').value = productName;
+            
+            // Generate SKU
+            const categoryPrefix = category.substring(0, 2).toUpperCase();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const productPrefix = productName.substring(0, 2).toUpperCase();
+            const timestamp = new Date().getTime().toString().slice(-4);
+            
+            const sku = categoryPrefix + randomNum + productPrefix + timestamp;
+            
+            // Set the SKU in the main form
+            document.getElementById('product-sku').value = sku;
+            
+            // Add visual feedback
+            const skuInput = document.getElementById('product-sku');
+            skuInput.style.backgroundColor = '#f0fff4';
+            skuInput.style.borderColor = '#68d391';
+            
+            // Reset the styling after a delay
+            setTimeout(function() {
+                skuInput.style.backgroundColor = '';
+                skuInput.style.borderColor = '';
+            }, 1500);
+            
+            return false;
+        }
+        
+        // Set up the form submission handler
+        document.getElementById('sku-generator-form').onsubmit = function(e) {
+            e.preventDefault();
+            return generateSKUViaForm();
+        };
+    </script>
+
+    <div class="content-card">
+        <form id="add-product-form" enctype="multipart/form-data">
+            <div class="form-grid">
+                <!-- Left Column - Image Upload and Basic Info -->
+                <div class="form-column">
+                    <div class="form-section">
+                        <div class="section-title">Product Image</div>
+                        <div class="product-image-container">
+                            <label for="direct-file-input" class="product-image-placeholder" id="product-image-placeholder">
+                                <div class="box-icon">
+                                    <i class="fas fa-box"></i>
+                                    <div class="svg-fallback">
+                                        <!-- SVG fallback will be inserted by JS -->
                 </div>
-                <div class="card-body">
-                    <input type="file" id="productImage" accept="image/*">
-                    <div id="imagePreview" class="preview-container">
-                        <i class="fas fa-box fa-5x text-secondary"></i>
                     </div>
+                                <div class="placeholder-text">
+                                    Drag & drop your product image or click to browse
                 </div>
+                                <small class="image-recommendation">Recommended: 300x300px (Max: 2MB)</small>
+                            </label>
+                            <!-- Direct file input that will be triggered by the label -->
+                            <input type="file" id="direct-file-input" name="direct-file-input" accept="image/*" autocomplete="off">
+                            <!-- FilePond input -->
+                            <input type="file" 
+                                class="filepond" 
+                                name="product_image" 
+                                id="product-image"
+                                accept="image/*"
+                                aria-label="Product image upload"
+                                title="Upload product image"
+                                autocomplete="off"
+                            />
             </div>
         </div>
         
-        <!-- Right Column -->
-        <div class="content-right">
-            <form id="productForm" action="{{ url_for('api.inventory.add_product') }}" method="POST">
-                <!-- Basic Information -->
-                <div class="form-card">
-                    <div class="card-header">
-                        <h3>Basic Information</h3>
-                        <p>Enter the essential details about your product</p>
-                    </div>
-                    <div class="card-body">
+                    <div class="form-section">
+                        <div class="section-title">Product Details</div>
                         <div class="form-group">
-                            <label for="name">Product Name</label>
-                            <input type="text" id="name" name="name" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="category">Category</label>
-                            <select id="category" name="category" class="form-control" required>
-                                <option value="">Select a category</option>
-                                {% for category in categories %}
-                                <option value="{{ category.id }}">{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="sku">SKU</label>
-                            <div class="input-group">
-                                <input type="text" id="sku" name="sku" class="form-control" required>
-                                <button type="button" id="generateSku" class="btn-icon">
-                                    <i class="fas fa-sync"></i>
-                                </button>
+                            <label for="product-cost-price">Cost Price <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <div class="currency-symbol">₹</div>
+                                <input type="number" id="product-cost-price" name="cost_price" step="0.01" min="0" required autocomplete="off" placeholder="0.00">
                             </div>
+                            <div class="error-message" id="cost-price-error"></div>
                         </div>
-                        <div class="form-group">
-                            <label for="description">Description</label>
-                            <textarea id="description" name="description" class="form-control" rows="4"></textarea>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Barcode Information -->
-                <div class="form-card">
-                    <div class="card-header">
-                        <h3>Barcode Information</h3>
-                        <p>Enter or generate a barcode for your product</p>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label for="barcode">Barcode</label>
-                            <div class="input-group">
-                                <input type="text" id="barcode" name="barcode" class="form-control">
-                                <button type="button" id="generate-barcode" class="btn-icon">
-                                    <i class="fas fa-barcode"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="barcode_type">Barcode Type</label>
-                            <select id="barcode_type" name="barcode_type" class="form-control">
-                                <option value="CODE128">Code 128</option>
-                                <option value="EAN13">EAN-13</option>
-                                <option value="UPC">UPC</option>
-                            </select>
-                        </div>
-                        <div id="barcodePreview" class="barcode-preview">
-                            <div class="preview-container">
-                                <i class="fas fa-barcode fa-3x text-secondary"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Pricing & Inventory -->
-                <div class="form-card">
-                    <div class="card-header">
-                        <h3>Pricing & Inventory</h3>
-                        <p>Set your product's pricing and stock information</p>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label for="cost_price">Cost Price</label>
-                            <div class="input-group">
-                                <span class="input-prefix">₹</span>
-                                <input type="number" id="cost_price" name="cost_price" class="form-control" step="0.01" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="price">Selling Price</label>
-                            <div class="input-group">
-                                <span class="input-prefix">₹</span>
-                                <input type="number" id="price" name="price" class="form-control" step="0.01" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="profit_margin">Profit Margin (%)</label>
-                            <input type="number" id="profit_margin" name="profit_margin" class="form-control" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="stock_quantity">Stock Quantity</label>
-                            <input type="number" id="stock_quantity" name="stock_quantity" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="reorder_point">Reorder Point</label>
-                            <input type="number" id="reorder_point" name="reorder_point" class="form-control">
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Additional Information -->
-                <div class="form-card">
-                    <div class="card-header">
-                        <h3>Additional Information</h3>
-                        <p>Add any extra details about your product</p>
-                    </div>
-                    <div class="card-body">
                         <div class="form-group">
-                            <label for="weight">Weight (kg)</label>
-                            <input type="number" id="weight" name="weight" class="form-control" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label for="dimensions">Dimensions (cm)</label>
-                            <div class="dimensions-input">
-                                <input type="number" id="length" name="length" class="form-control" placeholder="Length" step="0.1">
-                                <span class="dimension-separator">×</span>
-                                <input type="number" id="width" name="width" class="form-control" placeholder="Width" step="0.1">
-                                <span class="dimension-separator">×</span>
-                                <input type="number" id="height" name="height" class="form-control" placeholder="Height" step="0.1">
+                            <label for="product-mrp">MRP <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <div class="currency-symbol">₹</div>
+                                <input type="number" id="product-mrp" name="mrp" step="0.01" min="0" required autocomplete="off" placeholder="0.00">
                             </div>
+                            <div class="error-message" id="mrp-error"></div>
                         </div>
+
                         <div class="form-group">
-                            <label for="notes">Notes</label>
-                            <textarea id="notes" name="notes" class="form-control" rows="3"></textarea>
+                            <label for="product-selling-price">Selling Price <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <div class="currency-symbol">₹</div>
+                                <input type="number" id="product-selling-price" name="selling_price" step="0.01" min="0" required autocomplete="off" placeholder="0.00">
+                            </div>
+                            <div class="error-message" id="selling-price-error"></div>
+                        </div>
+                
+                        <div class="form-group">
+                            <label>Profit Margin</label>
+                            <div class="profit-margin-display" id="profit-margin-display">
+                                <span class="profit-amount">₹0.00</span>
+                                <span class="profit-percentage">(0%)</span>
+                            </div>
+                            <div class="error-message" id="profit-margin-error"></div>
+                            <small class="form-text text-muted">Automatically calculated based on Cost Price and Selling Price</small>
+                        </div>
+                
+                        <div class="form-group">
+                            <label for="product-stock">Stock Quantity <span class="required">*</span></label>
+                            <input type="number" id="product-stock" name="stock" min="0" required autocomplete="off">
+                            <div class="error-message" id="stock-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-reorder-point">ReStock Threshold</label>
+                            <input type="number" id="product-reorder-point" name="reorder_point" min="0" autocomplete="off">
+                            <div class="error-message" id="reorder-point-error"></div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Form Actions -->
+                <!-- Right Column - Product Details and Additional Info -->
+                <div class="form-column">
+                    <div class="form-section">
+                        <div class="section-title">Basic Information</div>
+                        <div class="form-group">
+                            <label for="product-name">Product Name <span class="required">*</span></label>
+                            <input type="text" id="product-name" name="name" required autocomplete="off" oninput="autoGenerateSKUOnChange(); autoGenerateBarcodeOnChange();">
+                            <div class="error-message" id="name-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-category">Category <span class="required">*</span></label>
+                            <select id="product-category" name="category" required autocomplete="off" onchange="autoGenerateSKUOnChange()">
+                                <option value="">Select a category</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="clothing">Clothing</option>
+                                <option value="home">Home & Kitchen</option>
+                                <option value="books">Books</option>
+                                <option value="toys">Toys & Games</option>
+                                <option value="beauty">Beauty & Personal Care</option>
+                                <option value="sports">Sports & Outdoors</option>
+                                <option value="automotive">Automotive</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <div class="error-message" id="category-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-sku">SKU <span class="required">*</span></label>
+                            <div class="input-with-button">
+                                <input type="text" id="product-sku" name="sku" required autocomplete="off" placeholder="Product SKU">
+                                <button type="button" id="generate-sku" class="btn-secondary generate-sku-button" 
+                                    aria-label="Generate SKU" 
+                                    title="Generate a unique SKU based on category and product name"
+                                    onclick="return generateSKUViaForm();">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <div class="error-message" id="sku-error"></div>
+                            <small class="form-text text-muted">SKU will be auto-generated when you enter a product name and select a category. You can also click <i class="fas fa-sync-alt"></i> to create a new one.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">Additional Information</div>
+                        <div class="form-group">
+                            <label for="product-barcode">Barcode</label>
+                            <div class="input-with-button">
+                                <input type="text" id="product-barcode" name="barcode" autocomplete="off">
+                                <button type="button" id="generate-barcode" class="btn-secondary" onclick="
+                                    // Clear the current value to force regeneration
+                                    document.getElementById('product-barcode').value = '';
+                                    // Call the auto-generate function
+                                    autoGenerateBarcodeOnChange();
+                                "><i class="fas fa-sync-alt"></i></button>
+                            </div>
+                            <div class="barcode-type-selector">
+                                <label for="barcode-type">Type:</label>
+                                <select id="barcode-type" name="barcode_type" autocomplete="off" onchange="autoGenerateBarcodeOnChange()">
+                                    <option value="EAN13">EAN-13</option>
+                                    <option value="CODE128">CODE128</option>
+                                    <option value="UPC">UPC</option>
+                                </select>
+                        </div>
+                            
+                            <div class="barcode-preview" id="barcode-preview"></div>
+                            <div class="error-message" id="barcode-error"></div>
+                            <small class="form-text text-muted">Barcode will be auto-generated when you enter a product name. You can also click <i class="fas fa-sync-alt"></i> to create a new one.</small>
+                            
+                            <!-- Inline script for immediate barcode generation -->
+                            <script>
+                                // Check if we should generate a barcode immediately
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    console.log('Checking for immediate barcode preview');
+                                    
+                                    // Function to update barcode preview
+                                    function updateBarcodePreviewFromInput() {
+                                        const barcodeInput = document.getElementById('product-barcode');
+                                        const barcodeType = document.getElementById('barcode-type');
+                                        const previewContainer = document.getElementById('barcode-preview');
+                                        
+                                        if (!barcodeInput || !barcodeType || !previewContainer) {
+                                            console.log('Barcode elements not found');
+                                            return;
+                                        }
+                                        
+                                        if (barcodeInput.value.trim()) {
+                                            console.log('Updating barcode preview for:', barcodeInput.value);
+                                            
+                                            // Clear previous barcode
+                                            previewContainer.innerHTML = '';
+                                            
+                                            try {
+                                                // Create SVG element for the barcode
+                                                const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                                                previewContainer.appendChild(svgElement);
+                                                
+                                                // Generate barcode if JsBarcode is available
+                                                if (typeof JsBarcode === 'function') {
+                                                    JsBarcode(svgElement, barcodeInput.value, {
+                                                        format: barcodeType.value,
+                                                        lineColor: '#000',
+                                                        width: 2,
+                                                        height: 50,
+                                                        displayValue: true,
+                                                        fontSize: 14,
+                                                        margin: 10
+                                                    });
+                                                } else {
+                                                    console.error('JsBarcode not available for preview generation');
+                                                    // Try to load JsBarcode
+                                                    const script = document.createElement('script');
+                                                    script.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js';
+                                                    script.onload = function() {
+                                                        console.log('JsBarcode loaded, retrying preview');
+                                                        updateBarcodePreviewFromInput();
+                                                    };
+                                                    document.head.appendChild(script);
+                                                }
+                                            } catch (error) {
+                                                console.error('Error updating barcode preview:', error);
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Check immediately
+                                    setTimeout(updateBarcodePreviewFromInput, 200);
+                                    
+                                    // Add input event listener to barcode input
+                                    const barcodeInput = document.getElementById('product-barcode');
+                                    if (barcodeInput) {
+                                        barcodeInput.addEventListener('input', updateBarcodePreviewFromInput);
+                                        barcodeInput.addEventListener('change', updateBarcodePreviewFromInput);
+                                        barcodeInput.addEventListener('paste', function() {
+                                            setTimeout(updateBarcodePreviewFromInput, 10);
+                                        });
+                                    }
+                                    
+                                    // Add change event listener to barcode type
+                                    const barcodeType = document.getElementById('barcode-type');
+                                    if (barcodeType) {
+                                        barcodeType.addEventListener('change', updateBarcodePreviewFromInput);
+                                    }
+                                });
+                            </script>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-weight">Weight (kg)</label>
+                            <input type="number" id="product-weight" name="weight" step="0.01" min="0" autocomplete="off">
+                            <div class="error-message" id="weight-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Dimensions (cm)</label>
+                            <div class="dimensions-input">
+                                <div class="dimension-field">
+                                    <input type="number" id="product-length" name="length" step="0.1" min="0" placeholder="L" autocomplete="off" aria-label="Length">
+                        </div>
+                                <div class="dimension-separator">×</div>
+                                <div class="dimension-field">
+                                    <input type="number" id="product-width" name="width" step="0.1" min="0" placeholder="W" autocomplete="off" aria-label="Width">
+                    </div>
+                                <div class="dimension-separator">×</div>
+                                <div class="dimension-field">
+                                    <input type="number" id="product-height" name="height" step="0.1" min="0" placeholder="H" autocomplete="off" aria-label="Height">
+                </div>
+                    </div>
+                            <div class="error-message" id="dimensions-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-notes">Notes</label>
+                            <textarea id="product-notes" name="notes" rows="3" autocomplete="off"></textarea>
+                            <div class="error-message" id="notes-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-status">Status</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="product-status" name="status" checked>
+                                <label for="product-status"></label>
+                                <span class="toggle-label" id="status-label">Active</span>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('main.inventory') }}'">
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Save Product
-                    </button>
+                <button type="button" id="cancel-button" class="btn-cancel">Cancel</button>
+                <button type="submit" id="submit-button" class="btn-primary">Add Product</button>
                 </div>
             </form>
         </div>
     </div>
-</div>
+
+<!-- Inline script for direct auto-generation -->
+<script>
+    // Direct auto-generation function
+    function autoGenerateSKUOnChange() {
+        console.log('Direct auto-generation function called');
+        
+        const categorySelect = document.getElementById('product-category');
+        const productNameInput = document.getElementById('product-name');
+        const skuInput = document.getElementById('product-sku');
+        
+        if (!categorySelect || !productNameInput || !skuInput) {
+            console.log('Form elements not found');
+            return;
+        }
+        
+        console.log('Category:', categorySelect.value);
+        console.log('Product name:', productNameInput.value);
+        console.log('Current SKU:', skuInput.value);
+        
+        // If both fields have values and SKU is empty, generate SKU
+        if (categorySelect.value && 
+            productNameInput.value.trim() && 
+            skuInput.value.trim() === '') {
+            
+            console.log('Auto-generating SKU directly');
+            
+            // Generate SKU
+            const categoryPrefix = categorySelect.value.substring(0, 2).toUpperCase();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
+            const timestamp = new Date().getTime().toString().slice(-4);
+            
+            const sku = `${categoryPrefix}${randomNum}${productPrefix}${timestamp}`;
+            console.log('Generated SKU:', sku);
+            
+            // Set the SKU value
+            skuInput.value = sku;
+            
+            // Add visual feedback
+            skuInput.style.backgroundColor = '#f0fff4';
+            skuInput.style.borderColor = '#68d391';
+            
+            // Reset the styling after a delay
+            setTimeout(function() {
+                skuInput.style.backgroundColor = '';
+                skuInput.style.borderColor = '';
+            }, 1500);
+        }
+        
+        // Also check if we should auto-generate barcode
+        autoGenerateBarcodeOnChange();
+    }
+    
+    // Direct barcode auto-generation function
+    function autoGenerateBarcodeOnChange() {
+        console.log('Direct barcode auto-generation function called');
+        
+        const productNameInput = document.getElementById('product-name');
+        const barcodeInput = document.getElementById('product-barcode');
+        const barcodeType = document.getElementById('barcode-type');
+        
+        if (!productNameInput || !barcodeInput || !barcodeType) {
+            console.log('Barcode form elements not found');
+            return;
+        }
+        
+        console.log('Product name:', productNameInput.value);
+        console.log('Current barcode:', barcodeInput.value);
+        console.log('Barcode type:', barcodeType.value);
+        
+        // If product name has a value and barcode is empty, generate barcode
+        if (productNameInput.value.trim() && barcodeInput.value.trim() === '') {
+            console.log('Auto-generating barcode directly');
+            
+            // Generate barcode based on type
+            let barcodeValue = '';
+            switch(barcodeType.value) {
+                case 'EAN13':
+                    // Generate 12 digits (13th is check digit, added by JsBarcode)
+                    barcodeValue = Array.from({length: 12}, () => Math.floor(Math.random() * 10)).join('');
+                    break;
+                case 'CODE128':
+                    // Generate alphanumeric code
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                    barcodeValue = Array.from({length: 10}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+                    break;
+                case 'UPC':
+                    // Generate 11 digits (12th is check digit, added by JsBarcode)
+                    barcodeValue = Array.from({length: 11}, () => Math.floor(Math.random() * 10)).join('');
+                    break;
+            }
+            
+            // Set the barcode value
+            barcodeInput.value = barcodeValue;
+            
+            // Add visual feedback
+            barcodeInput.style.backgroundColor = '#f0fff4';
+            barcodeInput.style.borderColor = '#68d391';
+            
+            // Reset the styling after a delay
+            setTimeout(function() {
+                barcodeInput.style.backgroundColor = '';
+                barcodeInput.style.borderColor = '';
+            }, 1500);
+            
+            // Update barcode preview using the global function
+            if (typeof window.forceUpdateBarcodePreview === 'function') {
+                window.forceUpdateBarcodePreview();
+            } else if (typeof window.updateBarcodePreview === 'function') {
+                window.updateBarcodePreview(barcodeValue);
+            } else {
+                // Fallback to direct update if the function isn't available
+                try {
+                    const previewContainer = document.getElementById('barcode-preview');
+                    if (previewContainer) {
+                        // Clear previous barcode
+                        previewContainer.innerHTML = '';
+                        
+                        // Create SVG element for the barcode
+                        const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        previewContainer.appendChild(svgElement);
+                        
+                        // Generate barcode if JsBarcode is available
+                        if (typeof JsBarcode === 'function') {
+                            JsBarcode(svgElement, barcodeValue, {
+                                format: barcodeType.value,
+                                lineColor: '#000',
+                                width: 2,
+                                height: 50,
+                                displayValue: true,
+                                fontSize: 14,
+                                margin: 10
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error updating barcode preview:', error);
+                }
+            }
+        } else if (barcodeInput.value.trim()) {
+            // If there's already a barcode value, just update the preview
+            if (typeof window.forceUpdateBarcodePreview === 'function') {
+                window.forceUpdateBarcodePreview();
+            }
+        }
+    }
+    
+    // Check on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners for product name input to trigger barcode generation
+        const productNameInput = document.getElementById('product-name');
+        if (productNameInput) {
+            ['input', 'change', 'blur'].forEach(function(eventType) {
+                productNameInput.addEventListener(eventType, function() {
+                    setTimeout(autoGenerateBarcodeOnChange, 100);
+                });
+            });
+        }
+        
+        // Add event listener for barcode type change
+        const barcodeType = document.getElementById('barcode-type');
+        if (barcodeType) {
+            barcodeType.addEventListener('change', autoGenerateBarcodeOnChange);
+        }
+        
+        // Check immediately and periodically
+        setTimeout(autoGenerateBarcodeOnChange, 100);
+        setTimeout(autoGenerateBarcodeOnChange, 500);
+        setTimeout(autoGenerateBarcodeOnChange, 1000);
+    });
+</script>
+
+<!-- Direct event listener for auto-generating SKU -->
+<script>
+    // This script will directly monitor the form fields and generate a SKU when both have values
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Setting up direct event listeners for SKU generation');
+        
+        // Check for existing barcode and update preview
+        setTimeout(function() {
+            console.log('Checking for existing barcode on page load');
+            const barcodeInput = document.getElementById('product-barcode');
+            
+            if (barcodeInput && barcodeInput.value.trim()) {
+                console.log('Found existing barcode value:', barcodeInput.value);
+                // Update the preview
+                if (typeof window.forceUpdateBarcodePreview === 'function') {
+                    window.forceUpdateBarcodePreview();
+                }
+            }
+        }, 500);
+        
+        // Function to check and generate SKU
+        function autoGenerateSKU() {
+            const categorySelect = document.getElementById('product-category');
+            const productNameInput = document.getElementById('product-name');
+            const skuInput = document.getElementById('product-sku');
+            
+            if (!categorySelect || !productNameInput || !skuInput) {
+                console.log('Form elements not found');
+                return;
+            }
+            
+            console.log('Checking if we should generate SKU:');
+            console.log('Category:', categorySelect.value);
+            console.log('Product name:', productNameInput.value);
+            console.log('Current SKU:', skuInput.value);
+            
+            // If both fields have values and SKU is empty, generate SKU
+            if (categorySelect.value && 
+                productNameInput.value.trim() && 
+                skuInput.value.trim() === '') {
+                
+                console.log('Auto-generating SKU - conditions met');
+                
+                // Generate SKU
+                const categoryPrefix = categorySelect.value.substring(0, 2).toUpperCase();
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
+                const timestamp = new Date().getTime().toString().slice(-4);
+                
+                const sku = `${categoryPrefix}${randomNum}${productPrefix}${timestamp}`;
+                console.log('Generated SKU:', sku);
+                
+                // Set the SKU value
+                skuInput.value = sku;
+                
+                // Add visual feedback
+                skuInput.style.backgroundColor = '#f0fff4';
+                skuInput.style.borderColor = '#68d391';
+                
+                // Reset the styling after a delay
+                setTimeout(function() {
+                    skuInput.style.backgroundColor = '';
+                    skuInput.style.borderColor = '';
+                }, 1500);
+            }
+        }
+        
+        // Get the form elements
+        const categorySelect = document.getElementById('product-category');
+        const productNameInput = document.getElementById('product-name');
+        
+        if (categorySelect && productNameInput) {
+            // Set up event listeners for both fields
+            
+            // For category select
+            categorySelect.addEventListener('change', function() {
+                console.log('Category changed (direct listener)');
+                autoGenerateSKU();
+            });
+            
+            // For product name input
+            ['input', 'change', 'blur', 'keyup'].forEach(function(eventType) {
+                productNameInput.addEventListener(eventType, function() {
+                    console.log(`Product name ${eventType} event (direct listener)`);
+                    setTimeout(autoGenerateSKU, 50);
+                });
+            });
+            
+            // Check immediately if we already have values
+            setTimeout(autoGenerateSKU, 100);
+            
+            // Also check periodically for the first few seconds
+            for (let i = 1; i <= 10; i++) {
+                setTimeout(autoGenerateSKU, i * 500);
+            }
+            
+            // Set up a MutationObserver to detect changes to the form fields
+            const observer = new MutationObserver(function(mutations) {
+                console.log('Mutation detected in form fields');
+                autoGenerateSKU();
+            });
+            
+            // Observe both fields for changes
+            observer.observe(categorySelect, { attributes: true, childList: true, characterData: true });
+            observer.observe(productNameInput, { attributes: true, childList: true, characterData: true });
+            
+            console.log('Direct event listeners set up successfully');
+        } else {
+            console.error('Could not find form elements for direct event listeners');
+        }
+    });
+</script>
+
+<!-- Ensure SKU button is clickable -->
+<script>
+    // Wait for the DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, ensuring SKU button is clickable');
+        
+        // Get the button
+        var generateButton = document.getElementById('generate-sku');
+        
+        if (generateButton) {
+            console.log('Found generate button, adding click event listener');
+            
+            // Add a click event listener
+            generateButton.addEventListener('click', function(e) {
+                console.log('Generate button clicked via event listener');
+                e.preventDefault();
+                
+                // Try the form method first
+                if (typeof generateSKUViaForm === 'function') {
+                    console.log('Using generateSKUViaForm function');
+                    return generateSKUViaForm();
+                }
+                
+                // Fallback to direct generation
+                console.log('Using direct SKU generation');
+                var category = document.getElementById('product-category').value;
+                var productName = document.getElementById('product-name').value;
+                
+                if (!category) {
+                    alert('Please select a category first');
+                    document.getElementById('product-category').focus();
+                    return false;
+                }
+                
+                if (!productName) {
+                    alert('Please enter a product name first');
+                    document.getElementById('product-name').focus();
+                    return false;
+                }
+                
+                var categoryPrefix = category.substring(0, 2).toUpperCase();
+                var randomNum = Math.floor(1000 + Math.random() * 9000);
+                var productPrefix = productName.substring(0, 2).toUpperCase();
+                var timestamp = new Date().getTime().toString().slice(-4);
+                
+                var sku = categoryPrefix + randomNum + productPrefix + timestamp;
+                document.getElementById('product-sku').value = sku;
+                
+                // Add visual feedback
+                var skuInput = document.getElementById('product-sku');
+                skuInput.style.backgroundColor = '#f0fff4';
+                skuInput.style.borderColor = '#68d391';
+                
+                // Reset the styling after a delay
+                setTimeout(function() {
+                    skuInput.style.backgroundColor = '';
+                    skuInput.style.borderColor = '';
+                }, 1500);
+                
+                return false;
+            });
+            
+            // Also try the direct click method
+            console.log('Trying direct click on generate button');
+            setTimeout(function() {
+                // Try to click the button directly if the SKU field is empty
+                var skuInput = document.getElementById('product-sku');
+                if (skuInput && !skuInput.value) {
+                    // Set test values if needed
+                    var categorySelect = document.getElementById('product-category');
+                    var productNameInput = document.getElementById('product-name');
+                    
+                    if (categorySelect && !categorySelect.value) {
+                        categorySelect.value = 'electronics';
+                    }
+                    
+                    // Removed the default "Test Product" value
+                    // if (productNameInput && !productNameInput.value) {
+                    //     productNameInput.value = 'Test Product';
+                    // }
+                    
+                    // Only click the button if user has entered a product name
+                    if (productNameInput && productNameInput.value.trim()) {
+                        // Try clicking the button
+                        console.log('Clicking generate button directly');
+                        generateButton.click();
+                    }
+                }
+            }, 2000);
+            } else {
+            console.error('Generate button not found');
+            
+            // Try the fallback button
+            var fallbackButton = document.getElementById('direct-sku-button');
+            if (fallbackButton) {
+                console.log('Using fallback button');
+                fallbackButton.style.display = 'block';
+            }
+        }
+    });
+</script>
+
+<!-- Inline script for SKU generation -->
+<script>
+    // Fallback SKU generation function in case the main one doesn't load
+    if (!window.generateSKU) {
+        window.generateSKU = function() {
+            console.log('Fallback SKU generation function called');
+            
+            // Get the required elements
+            const categorySelect = document.getElementById('product-category');
+            const productNameInput = document.getElementById('product-name');
+            const skuInput = document.getElementById('product-sku');
+            
+            // Validate inputs
+            if (!categorySelect || !categorySelect.value) {
+                alert('Please select a category first');
+                if (categorySelect) categorySelect.focus();
+                return false;
+            }
+            
+            if (!productNameInput || !productNameInput.value.trim()) {
+                alert('Please enter a product name first');
+                if (productNameInput) productNameInput.focus();
+                return false;
+            }
+            
+            // Generate a simple SKU
+            const categoryPrefix = categorySelect.value.substring(0, 2).toUpperCase();
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
+            const timestamp = new Date().getTime().toString().slice(-4);
+            
+            const sku = `${categoryPrefix}${randomNum}${productPrefix}${timestamp}`;
+            
+            // Set the SKU value
+            skuInput.value = sku;
+            
+            // Show success message
+            alert('SKU generated successfully: ' + sku);
+            
+            return true;
+        };
+    }
+    
+    // Ensure the button has the correct onclick handler
+    document.addEventListener('DOMContentLoaded', function() {
+        const generateSkuButton = document.getElementById('generate-sku');
+        if (generateSkuButton) {
+            generateSkuButton.onclick = function(e) {
+                e.preventDefault();
+                window.generateSKU();
+                return false;
+            };
+        }
+    });
+</script>
+
+<!-- Initialize Profit Margin Calculation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updateProfitMargin() {
+        const costPriceInput = document.getElementById('product-cost-price');
+        const mrpInput = document.getElementById('product-mrp');
+        const sellingPriceInput = document.getElementById('product-selling-price');
+        const profitDisplay = document.getElementById('profit-margin-display');
+        
+        if (!costPriceInput || !sellingPriceInput || !profitDisplay) {
+            console.error('Required elements for profit margin calculation not found');
+            return;
+        }
+        
+        const profitAmount = profitDisplay.querySelector('.profit-amount');
+        const profitPercentage = profitDisplay.querySelector('.profit-percentage');
+        
+        const costPrice = parseFloat(costPriceInput.value) || 0;
+        const mrp = parseFloat(mrpInput?.value) || 0;
+        const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
+        
+        console.log('Calculating profit margin:', { costPrice, mrp, sellingPrice });
+        
+        if (costPrice > 0 && sellingPrice > 0) {
+            const profit = sellingPrice - costPrice;
+            const percentage = (profit / costPrice) * 100;
+            
+            profitAmount.textContent = `₹${profit.toFixed(2)}`;
+            profitPercentage.textContent = `(${percentage.toFixed(1)}%)`;
+            
+            if (profit < 0) {
+                profitDisplay.className = 'profit-margin-display negative';
+            } else if (percentage < 15) {
+                profitDisplay.className = 'profit-margin-display low';
+            } else if (percentage < 30) {
+                profitDisplay.className = 'profit-margin-display medium';
+            } else {
+                profitDisplay.className = 'profit-margin-display high';
+            }
+        } else {
+            profitAmount.textContent = '₹0.00';
+            profitPercentage.textContent = '(0%)';
+            profitDisplay.className = 'profit-margin-display';
+        }
+    }
+    
+    const priceInputs = [
+        document.getElementById('product-cost-price'),
+        document.getElementById('product-mrp'),
+        document.getElementById('product-selling-price')
+    ];
+    
+    priceInputs.forEach(input => {
+        if (input) {
+            ['input', 'change', 'blur'].forEach(event => {
+                input.addEventListener(event, updateProfitMargin);
+            });
+        }
+    });
+    
+    // Initial calculation
+    updateProfitMargin();
+});
+</script>
 {% endblock %}
 
 {% block scripts %}
-{{ super() }}
-<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
-<script src="{{ url_for('static', filename='js/inventory_add.js') }}?v=2"></script>
+<!-- FilePond Plugins -->
+<script src="https://unpkg.com/filepond-plugin-file-encode/dist/filepond-plugin-file-encode.min.js"></script>
+<script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.min.js"></script>
+<script src="https://unpkg.com/filepond-plugin-image-exif-orientation/dist/filepond-plugin-image-exif-orientation.min.js"></script>
+<script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.js"></script>
+<script src="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.min.js"></script>
+<script src="https://unpkg.com/filepond-plugin-image-transform/dist/filepond-plugin-image-transform.min.js"></script>
+<script src="https://unpkg.com/filepond-plugin-file-poster/dist/filepond-plugin-file-poster.min.js"></script>
+<!-- FilePond Core -->
+<script src="https://unpkg.com/filepond/dist/filepond.min.js"></script>
+<!-- Other Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="{{ url_for('static', filename='js/inventory_add.js') }}"></script>
+
+<!-- JsBarcode initialization script -->
+<script>
+    // Check if JsBarcode is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Checking JsBarcode availability');
+        
+        // Function to check if JsBarcode is available
+        function checkJsBarcode() {
+            if (typeof JsBarcode === 'function') {
+                console.log('JsBarcode is available');
+                return true;
+            } else {
+                console.log('JsBarcode not available yet');
+                return false;
+            }
+        }
+        
+        // Initial check
+        if (!checkJsBarcode()) {
+            // If not available, try to load it again
+            console.log('Attempting to load JsBarcode again');
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js';
+            script.onload = function() {
+                console.log('JsBarcode loaded successfully');
+                // Try to update any existing barcode
+                setTimeout(function() {
+                    const barcodeInput = document.getElementById('product-barcode');
+                    if (barcodeInput && barcodeInput.value) {
+                        updateBarcodePreview(barcodeInput.value);
+                    }
+                }, 100);
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Function to update barcode preview
+        window.updateBarcodePreview = function(value) {
+            try {
+                if (!value) return;
+                
+                const previewContainer = document.getElementById('barcode-preview');
+                const barcodeType = document.getElementById('barcode-type');
+                
+                if (!previewContainer || !barcodeType) return;
+                
+                // Clear previous barcode
+                previewContainer.innerHTML = '';
+                
+                // Create SVG element for the barcode
+                const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                previewContainer.appendChild(svgElement);
+                
+                // Generate barcode if JsBarcode is available
+                if (typeof JsBarcode === 'function') {
+                    console.log('Generating barcode preview for:', value);
+                    JsBarcode(svgElement, value, {
+                        format: barcodeType.value,
+                        lineColor: '#000',
+                        width: 2,
+                        height: 50,
+                        displayValue: true,
+                        fontSize: 14,
+                        margin: 10
+                        });
+                    } else {
+                    console.error('JsBarcode not available for preview generation');
+                    }
+                } catch (error) {
+                console.error('Error updating barcode preview:', error);
+            }
+        };
+        
+        // Add listener to barcode input for live preview
+        const barcodeInput = document.getElementById('product-barcode');
+        if (barcodeInput) {
+            barcodeInput.addEventListener('input', function() {
+                if (this.value) {
+                    updateBarcodePreview(this.value);
+                }
+            });
+        }
+    });
+</script>
+
+<!-- Final barcode preview check -->
+<script>
+    // Final check to ensure barcode preview is shown
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wait for everything to load
+        setTimeout(function() {
+            console.log('Final barcode preview check');
+            const barcodeInput = document.getElementById('product-barcode');
+            
+            if (barcodeInput && barcodeInput.value.trim()) {
+                console.log('Found barcode value in final check:', barcodeInput.value);
+                
+                // Try all available methods to update the preview
+                if (typeof window.forceUpdateBarcodePreview === 'function') {
+                    window.forceUpdateBarcodePreview();
+                } else if (typeof window.updateBarcodePreview === 'function') {
+                    window.updateBarcodePreview(barcodeInput.value);
+                } else {
+                    // Direct update
+                    try {
+                        const previewContainer = document.getElementById('barcode-preview');
+                        const barcodeType = document.getElementById('barcode-type');
+                        
+                        if (previewContainer && barcodeType) {
+                            // Clear previous barcode
+                            previewContainer.innerHTML = '';
+                            
+                            // Create SVG element for the barcode
+                            const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                            previewContainer.appendChild(svgElement);
+                            
+                            // Generate barcode if JsBarcode is available
+                            if (typeof JsBarcode === 'function') {
+                                JsBarcode(svgElement, barcodeInput.value, {
+                                    format: barcodeType.value,
+                                    lineColor: '#000',
+                                    width: 2,
+                                    height: 50,
+                                    displayValue: true,
+                                    fontSize: 14,
+                                    margin: 10
+            });
+        }
+    }
+        } catch (error) {
+                        console.error('Error in final barcode preview update:', error);
+        }
+    }
+            }
+        }, 1000);
+});
+</script>
 {% endblock %}

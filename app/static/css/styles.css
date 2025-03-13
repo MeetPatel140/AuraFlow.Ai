@@ -156,10 +156,11 @@ a:hover {
     text-align: center;
     white-space: nowrap;
     vertical-align: middle;
+    -webkit-user-select: none;
     user-select: none;
     border: 1px solid transparent;
-    padding: var(--spacing-2) var(--spacing-4);
-    font-size: var(--font-size-md);
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
     line-height: 1.5;
     border-radius: var(--border-radius);
     transition: var(--transition-base);
@@ -2416,4 +2417,60 @@ a:hover {
 
 .calculator-overlay.active {
     display: block;
+}
+
+/* Global Currency Input Style */
+.input-with-icon {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #fff;
+    width: 100%;
+    height: 44px;
+}
+
+.currency-symbol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    height: 100%;
+    font-size: 16px;
+    color: #555;
+    background-color: #f8f8f8;
+    border-right: 1px solid #ddd;
+    min-width: 36px;
+}
+
+.input-with-icon input {
+    height: 100%;
+    padding: 0 12px;
+    border: none;
+    background: none;
+    font-size: 15px;
+    flex: 1;
+    outline: none;
+    box-shadow: none;
+    color: #333;
+}
+
+.input-with-icon input::placeholder {
+    color: #aaa;
+}
+
+.input-with-icon:focus-within {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Prevent spinner arrows in number inputs */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
 } 

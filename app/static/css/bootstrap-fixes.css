@@ -1,0 +1,76 @@
+/* Bootstrap compatibility fixes */
+
+/* Fix for 'text-align: -webkit-match-parent' not supported by Safari */
+th {
+    text-align: inherit;
+    text-align: -webkit-match-parent;
+    text-align: match-parent;
+}
+
+/* Fix for 'text-size-adjust' in Bootstrap */
+body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* Fix for 'color-adjust' not supported by Chrome, Chrome Android, Edge */
+.form-check-input {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* Fix for filter and -ms-filter order */
+.mdi-flip-h:before {
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+    -ms-filter: "FlipH";
+    filter: FlipH;
+}
+
+.mdi-flip-v:before {
+    -webkit-transform: scaleY(-1);
+    transform: scaleY(-1);
+    -ms-filter: "FlipV";
+    filter: FlipV;
+}
+
+/* Fix for input fields with black background */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="time"],
+input[type="week"],
+input[type="file"],
+select,
+textarea {
+    background-color: #fff !important;
+    color: #333 !important;
+}
+
+/* Fix for dark mode inputs if they exist */
+.dark-mode input,
+.dark-theme input,
+[data-theme="dark"] input,
+.dark-mode select,
+.dark-theme select,
+[data-theme="dark"] select,
+.dark-mode textarea,
+.dark-theme textarea,
+[data-theme="dark"] textarea {
+    background-color: #fff !important;
+    color: #333 !important;
+}
+
+/* Fix for Bootstrap's text-align order in th elements */
+.table th {
+    text-align: inherit;
+    text-align: -webkit-match-parent;
+    text-align: match-parent;
+} 

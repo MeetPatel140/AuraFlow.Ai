@@ -6,10 +6,17 @@ try:
 except ImportError:
     print("SQLAlchemy patch not found, continuing without it")
 
-from flask import Flask, render_template, send_from_directory, send_file
+from flask import Flask, render_template, send_from_directory, send_file, request
 from app.config.config import config_by_name
 from app.extensions import db, migrate, login_manager, jwt, cors, cache, mail, celery_app
 from app.api import register_blueprints
+from app.utils.cache_utils import versioned_url_for
+from app.utils.cache_middleware import CacheMiddleware
+from werkzeug.serving import WSGIRequestHandler
+
+# Hide server version information
+WSGIRequestHandler.server_version = "Server"
+WSGIRequestHandler.sys_version = ""
 
 def create_app(config_name='development'):
     """Create and configure the Flask application"""
@@ -65,6 +72,12 @@ def create_app(config_name='development'):
     from app.utils.error_handlers import register_error_handlers
     register_error_handlers(app)
     
+    # Override url_for to use versioned URLs for cache busting
+    app.jinja_env.globals['url_for'] = versioned_url_for
+    
+    # Initialize cache middleware
+    CacheMiddleware(app)
+    
     # Add routes for serving static files and PWA assets
     @app.route('/manifest.json')
     def manifest():
@@ -79,6 +92,10 @@ def create_app(config_name='development'):
     @app.route('/static/<path:path>')
     def static_files(path):
         """Serve static files"""
+        # Ignore version parameter if present
+        if '?' in path:
+            path = path.split('?')[0]
+        
         return send_from_directory('app/static', path)
     
     # Create database tables if they don't exist (in development)
