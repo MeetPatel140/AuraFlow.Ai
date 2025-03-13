@@ -700,7 +700,15 @@
                         <div class="section-title">Additional Information</div>
                         <div class="form-group">
                             <label for="product-barcode">Barcode</label>
-                            <div class="input-with-button">
+                            <div class="barcode-type-selector">
+                                <label for="barcode-type">Type:</label>
+                                <select id="barcode-type" name="barcode_type" autocomplete="off" onchange="autoGenerateBarcodeOnChange()">
+                                    <option value="CODE128" selected>CODE128</option>
+                                    <option value="EAN13">EAN-13</option>
+                                    <option value="UPC">UPC</option>
+                                </select>
+                            </div>
+                            <div class="input-with-button" style="margin-top: 12px;">
                                 <input type="text" id="product-barcode" name="barcode" autocomplete="off">
                                 <button type="button" id="generate-barcode" class="btn-secondary" onclick="
                                     // Clear the current value to force regeneration
@@ -709,14 +717,6 @@
                                     autoGenerateBarcodeOnChange();
                                 "><i class="fas fa-sync-alt"></i></button>
                             </div>
-                            <div class="barcode-type-selector">
-                                <label for="barcode-type">Type:</label>
-                                <select id="barcode-type" name="barcode_type" autocomplete="off" onchange="autoGenerateBarcodeOnChange()">
-                                    <option value="EAN13">EAN-13</option>
-                                    <option value="CODE128">CODE128</option>
-                                    <option value="UPC">UPC</option>
-                                </select>
-                        </div>
                             
                             <div class="barcode-preview" id="barcode-preview"></div>
                             <div class="error-message" id="barcode-error"></div>
@@ -910,8 +910,9 @@
         const productNameInput = document.getElementById('product-name');
         const barcodeInput = document.getElementById('product-barcode');
         const barcodeType = document.getElementById('barcode-type');
+        const previewContainer = document.getElementById('barcode-preview');
         
-        if (!productNameInput || !barcodeInput || !barcodeType) {
+        if (!productNameInput || !barcodeInput || !barcodeType || !previewContainer) {
             console.log('Barcode form elements not found');
             return;
         }
@@ -954,45 +955,45 @@
                 barcodeInput.style.backgroundColor = '';
                 barcodeInput.style.borderColor = '';
             }, 1500);
+        }
+        
+        // Always update the barcode preview if there's a value in the input
+        // This ensures the preview is shown both for auto-generated and manually entered barcodes
+        if (barcodeInput.value.trim()) {
+            console.log('Updating barcode preview for:', barcodeInput.value);
             
-            // Update barcode preview using the global function
-            if (typeof window.forceUpdateBarcodePreview === 'function') {
-                window.forceUpdateBarcodePreview();
-            } else if (typeof window.updateBarcodePreview === 'function') {
-                window.updateBarcodePreview(barcodeValue);
-            } else {
-                // Fallback to direct update if the function isn't available
-                try {
-                    const previewContainer = document.getElementById('barcode-preview');
-                    if (previewContainer) {
-                        // Clear previous barcode
-                        previewContainer.innerHTML = '';
-                        
-                        // Create SVG element for the barcode
-                        const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                        previewContainer.appendChild(svgElement);
-                        
-                        // Generate barcode if JsBarcode is available
-                        if (typeof JsBarcode === 'function') {
-                            JsBarcode(svgElement, barcodeValue, {
-                                format: barcodeType.value,
-                                lineColor: '#000',
-                                width: 2,
-                                height: 50,
-                                displayValue: true,
-                                fontSize: 14,
-                                margin: 10
-                            });
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error updating barcode preview:', error);
+            // Clear previous barcode
+            previewContainer.innerHTML = '';
+            
+            try {
+                // Create SVG element for the barcode
+                const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                previewContainer.appendChild(svgElement);
+                
+                // Generate barcode if JsBarcode is available
+                if (typeof JsBarcode === 'function') {
+                    JsBarcode(svgElement, barcodeInput.value, {
+                        format: barcodeType.value,
+                        lineColor: '#000',
+                        width: 2,
+                        height: 50,
+                        displayValue: true,
+                        fontSize: 14,
+                        margin: 10
+                    });
+                } else {
+                    console.error('JsBarcode not available for preview generation');
+                    // Try to load JsBarcode
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js';
+                    script.onload = function() {
+                        console.log('JsBarcode loaded, retrying preview');
+                        autoGenerateBarcodeOnChange();
+                    };
+                    document.head.appendChild(script);
                 }
-            }
-        } else if (barcodeInput.value.trim()) {
-            // If there's already a barcode value, just update the preview
-            if (typeof window.forceUpdateBarcodePreview === 'function') {
-                window.forceUpdateBarcodePreview();
+            } catch (error) {
+                console.error('Error updating barcode preview:', error);
             }
         }
     }
@@ -1015,10 +1016,21 @@
             barcodeType.addEventListener('change', autoGenerateBarcodeOnChange);
         }
         
-        // Check immediately and periodically
+        // Add event listener for barcode input changes
+        const barcodeInput = document.getElementById('product-barcode');
+        if (barcodeInput) {
+            ['input', 'change', 'blur', 'keyup'].forEach(function(eventType) {
+                barcodeInput.addEventListener(eventType, function() {
+                    setTimeout(autoGenerateBarcodeOnChange, 100);
+                });
+            });
+        }
+        
+        // Check immediately and periodically to ensure barcode preview is shown
         setTimeout(autoGenerateBarcodeOnChange, 100);
         setTimeout(autoGenerateBarcodeOnChange, 500);
         setTimeout(autoGenerateBarcodeOnChange, 1000);
+        setTimeout(autoGenerateBarcodeOnChange, 2000);
     });
 </script>
 
@@ -1373,6 +1385,33 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Other Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 <script src="{{ url_for('static', filename='js/inventory_add.js') }}"></script>
+
+<!-- Ensure barcode preview is generated on page load -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Ensuring barcode preview is generated on page load');
+        
+        // Function to generate a barcode if none exists
+        function ensureBarcodeExists() {
+            const productNameInput = document.getElementById('product-name');
+            const barcodeInput = document.getElementById('product-barcode');
+            
+            if (productNameInput && productNameInput.value.trim() && 
+                barcodeInput && !barcodeInput.value.trim()) {
+                console.log('Auto-generating barcode on page load');
+                autoGenerateBarcodeOnChange();
+            } else if (barcodeInput && barcodeInput.value.trim()) {
+                console.log('Updating existing barcode preview on page load');
+                autoGenerateBarcodeOnChange();
+            }
+        }
+        
+        // Try multiple times to ensure the barcode is generated
+        setTimeout(ensureBarcodeExists, 500);
+        setTimeout(ensureBarcodeExists, 1000);
+        setTimeout(ensureBarcodeExists, 2000);
+    });
+</script>
 
 <!-- JsBarcode initialization script -->
 <script>
