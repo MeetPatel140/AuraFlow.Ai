@@ -75,9 +75,17 @@ def register():
         return jsonify({'error': str(e)}), 500
 
 
-@auth_bp.route('/login', methods=['POST'])
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """Login a user"""
+    # Handle GET request - show login page
+    if request.method == 'GET':
+        next_page = request.args.get('next')
+        if not current_user.is_authenticated:
+            return jsonify({'redirect': '/login', 'next': next_page}), 200
+        return jsonify({'redirect': next_page if next_page else '/dashboard'}), 200
+
+    # Handle POST request
     data = request.get_json()
     
     # Check if required fields are present
@@ -111,13 +119,19 @@ def login():
     access_token = create_access_token(identity=user.id)
     refresh_token = create_refresh_token(identity=user.id)
     
-    return jsonify({
+    # Get the next page from the request
+    next_page = request.args.get('next')
+    
+    response_data = {
         'message': 'Login successful',
         'user': user.to_dict(),
         'tenant': tenant.to_dict(),
         'access_token': access_token,
-        'refresh_token': refresh_token
-    }), 200
+        'refresh_token': refresh_token,
+        'redirect': next_page if next_page else '/dashboard'
+    }
+    
+    return jsonify(response_data), 200
 
 
 @auth_bp.route('/logout', methods=['POST'])
@@ -215,4 +229,4 @@ def check_auth():
     else:
         return jsonify({
             'authenticated': False
-        }), 200 
+        }), 200

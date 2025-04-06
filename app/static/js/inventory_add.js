@@ -5,82 +5,90 @@
 
 console.log('Loading inventory_add.js - New SKU Generation Implementation');
 
-// Direct SKU generation function - globally accessible
-window.generateSKU = function(silent = false) {
-    console.log('Direct SKU generation function called');
-    
-    // Get the required elements
-    const categorySelect = document.getElementById('product-category');
-    const productNameInput = document.getElementById('product-name');
-    const skuInput = document.getElementById('product-sku');
-    
-    // Log the current values
-    console.log('Category:', categorySelect ? categorySelect.value : 'not found');
-    console.log('Product name:', productNameInput ? productNameInput.value : 'not found');
-    
-    // Validate inputs
-    if (!categorySelect || !categorySelect.value) {
-        if (!silent) {
-            showNotification('Please select a category first', 'warning');
-            if (categorySelect) categorySelect.focus();
-        }
-        return false;
-    }
-    
-    if (!productNameInput || !productNameInput.value.trim()) {
-        if (!silent) {
-            showNotification('Please enter a product name first', 'warning');
-            if (productNameInput) productNameInput.focus();
-        }
-        return false;
-    }
-    
-    if (!skuInput) {
-        console.error('SKU input field not found');
-        if (!silent) {
-            showNotification('Error: Could not find SKU input field', 'error');
-        }
-        return false;
-    }
-    
-    // If SKU field already has a value and this is an auto-generation, don't overwrite it
-    if (silent && skuInput.value.trim() !== '') {
-        console.log('SKU field already has a value, not overwriting during auto-generation');
-        return true;
-    }
-    
-    // Generate a unique SKU
-    const categoryPrefix = categorySelect.value.substring(0, 2).toUpperCase();
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
-    const timestamp = new Date().getTime().toString().slice(-4);
-    
-    const sku = `${categoryPrefix}${randomNum}${productPrefix}${timestamp}`;
-    console.log('Generated SKU:', sku);
-    
-    // Set the SKU value
-    skuInput.value = sku;
-    
-    // Add visual feedback
-    skuInput.style.backgroundColor = '#f0fff4';
-    skuInput.style.borderColor = '#68d391';
-    
-    // Reset the styling after a delay
-    setTimeout(() => {
-        skuInput.style.backgroundColor = '';
-        skuInput.style.borderColor = '';
-    }, 1500);
-    
-    // Show success message using notification system
-    if (!silent) {
-        showNotification('SKU generated successfully', 'success');
-    }
-    
-    return true;
-};
+console.log('Using SKU generator from external script - should be loaded before inventory_add.js');
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Inventory Add page loaded - DOM Content Loaded Event');
+    
+    // Register FilePond plugins
+    FilePond.registerPlugin(
+        FilePondPluginImagePreview,
+        FilePondPluginFileValidateType,
+        FilePondPluginImageValidateSize
+    );
+    
+    // Get the file input element
+    const fileInput = document.getElementById('product-image');
+    
+    if (fileInput) {
+        console.log('Found file input, initializing FilePond');
+        
+        // Create FilePond instance
+        const pond = FilePond.create(fileInput, {
+            allowMultiple: false,
+            acceptedFileTypes: ['image/*'],
+            imagePreviewHeight: 200,
+            imageCropAspectRatio: '1:1',
+            imageResizeTargetWidth: 800,
+            imageResizeTargetHeight: 800,
+            stylePanelAspectRatio: 1,
+            styleLoadIndicatorPosition: 'center bottom',
+            styleProgressIndicatorPosition: 'right bottom',
+            styleButtonRemoveItemPosition: 'left bottom',
+            styleButtonProcessItemPosition: 'right bottom',
+            instantUpload: false,
+            allowImagePreview: true,
+            imagePreviewMinHeight: 200,
+            imagePreviewMaxHeight: 400,
+            server: {
+                process: '/api/inventory/upload-image',
+                revert: '/api/inventory/delete-image',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
+                onload: (response) => {
+                    try {
+                        const parsedResponse = JSON.parse(response);
+                        if (parsedResponse.error) {
+                            throw new Error(parsedResponse.error);
+                        }
+                        return response;
+                    } catch (error) {
+                        throw new Error('Failed to process server response');
+                    }
+                },
+                onerror: (response) => {
+                    try {
+                        const parsedResponse = JSON.parse(response);
+                        return parsedResponse.error || 'Upload failed';
+                    } catch (error) {
+                        return 'Upload failed';
+                    }
+                }
+            },
+            labelIdle: '<span class="filepond--label-action">Upload Product Image</span><br>Drag & Drop or Browse',
+            onaddfile: (error, file) => {
+                if (error) {
+                    console.error('Error adding file:', error);
+                    showNotification('Error uploading image: ' + (error.message || 'Unknown error'), 'error');
+                    return;
+                }
+                console.log('File added successfully:', file.filename);
+                showNotification('Image selected: ' + file.filename, 'success');
+            },
+            onpreparefile: (file) => {
+                console.log('File preview ready:', file.filename);
+            },
+            onerror: (error, file, status) => {
+                console.error('FilePond error:', error, status);
+                const errorMessage = error?.body?.error || error?.message || 'Unknown error';
+                showNotification('Error: ' + errorMessage, 'error');
+            }
+        });
+        
+        window.productImagePond = pond;
+        console.log('FilePond initialized successfully');
+    }
     
     // Function to check if we should auto-generate SKU
     function checkAutoGenerateSKU() {
@@ -227,244 +235,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
     }
 
-    console.log('Registering FilePond plugins');
-    // Initialize FilePond
-    FilePond.registerPlugin(
-        FilePondPluginFileEncode,
-        FilePondPluginFileValidateType,
-        FilePondPluginImageExifOrientation,
-        FilePondPluginImagePreview,
-        FilePondPluginImageEdit,
-        FilePondPluginImageTransform,
-        FilePondPluginFilePoster
-    );
-
-    console.log('Creating FilePond instance');
-    // Initialize FilePond
-    const pond = FilePond.create(document.getElementById('product-image'), {
-        allowMultiple: false,
-        acceptedFileTypes: ['image/*'],
-        storeAsFile: true,
-        credits: false,
-        instantUpload: false,
-        allowImagePreview: true,
-        imagePreviewHeight: 300,
-        imagePreviewMinHeight: 300,
-        imageCropAspectRatio: '1:1',
-        imageResizeTargetWidth: 300,
-        imageResizeTargetHeight: 300,
-        stylePanelLayout: 'compact',
-        styleLoadIndicatorPosition: 'center bottom',
-        styleButtonRemoveItemPosition: 'top right',
-        styleButtonProcessItemPosition: 'top right',
-        styleButtonEditItemPosition: 'top right',
-        labelIdle: 'Drag & drop your image or <span class="filepond--label-action">Browse</span>',
-        allowBrowse: true,
-        allowImageTransform: true,
-        allowImageEdit: true,
-        imageEditIconEdit: '<i class="fas fa-pencil-alt"></i>',
-        imageTransformOutputQuality: 90,
-        imageTransformOutputMimeType: 'image/jpeg',
-        imagePreviewMarkupShow: true,
-        imagePreviewMaxFileSize: 50000000,
-        // File poster plugin options
-        filePosterMaxHeight: 300,
-        beforeAddFile: (file) => {
-            console.log('beforeAddFile called', file);
-            // Hide the placeholder immediately when a file is about to be added
-            const placeholder = document.getElementById('product-image-placeholder');
-            if (placeholder) {
-                placeholder.style.display = 'none';
-            }
-            return true;
-        },
-        onaddfile: (error, file) => {
-            console.log('onaddfile called', error, file);
-            if (error) {
-                showNotification('Error uploading image: ' + error.message, 'error');
-                // Show the placeholder again if there was an error
-                const placeholder = document.getElementById('product-image-placeholder');
-                if (placeholder) {
-                    placeholder.style.display = 'flex';
-                }
-                return;
-            }
-            // Hide the placeholder when an image is added
-            const placeholder = document.getElementById('product-image-placeholder');
-            if (placeholder) {
-                placeholder.style.display = 'none';
-            }
-            console.log('File added:', file);
-            
-            // Force refresh of the preview
-            setTimeout(() => {
-                const previewContainer = document.querySelector('.filepond--image-preview');
-                if (previewContainer) {
-                    previewContainer.style.display = 'none';
-                    setTimeout(() => {
-                        previewContainer.style.display = 'block';
-                        
-                        // Add edit button if it doesn't exist
-                        if (!document.querySelector('.filepond--action-edit-item')) {
-                            const removeButton = document.querySelector('.filepond--action-remove-item');
-                            if (removeButton) {
-                                const editButton = document.createElement('button');
-                                editButton.className = 'filepond--action-edit-item filepond--action-button';
-                                editButton.innerHTML = '<i class="fas fa-pencil-alt"></i>';
-                                editButton.title = 'Edit Image';
-                                editButton.addEventListener('click', () => {
-                                    // Simple edit functionality - just re-trigger file selection
-                                    document.getElementById('direct-file-input').click();
-                                });
-                                removeButton.parentNode.insertBefore(editButton, removeButton);
-                            }
-                        }
-                        
-                        // Show notification
-                        showNotification('Image preview ready', 'success');
-                    }, 10);
-                }
-            }, 100);
-        },
-        onremovefile: () => {
-            console.log('onremovefile called');
-            // Show the placeholder when the image is removed
-            const placeholder = document.getElementById('product-image-placeholder');
-            if (placeholder) {
-                placeholder.style.display = 'flex';
-            }
-            showNotification('Image removed', 'info');
-        },
-        oninit: () => {
-            console.log('FilePond initialized');
-            
-            // Add a test image for development purposes
-            // Uncommented for testing
-            setTimeout(() => {
-                // Create a dummy file object
-                const dummyFile = {
-                    name: 'test-image.jpg',
-                    size: 1024,
-                    type: 'image/jpeg'
-                };
-                
-                // Create a new file input element
-                const input = document.createElement('input');
-                input.type = 'file';
-                
-                // Create a new File object
-                const file = new File(['dummy content'], 'test-image.jpg', { type: 'image/jpeg' });
-                
-                // Add the file to FilePond
-                pond.addFile(file);
-                
-                // Hide the placeholder
-                const placeholder = document.getElementById('product-image-placeholder');
-                if (placeholder) {
-                    placeholder.style.display = 'none';
-                }
-                
-                // Add edit and delete buttons manually after a delay
-                setTimeout(() => {
-                    const itemContainer = document.querySelector('.filepond--item');
-                    if (itemContainer && !document.querySelector('.filepond--action-edit-item')) {
-                        // Create edit button
-                        const editButton = document.createElement('button');
-                        editButton.className = 'filepond--action-edit-item filepond--action-button';
-                        editButton.innerHTML = '<i class="fas fa-pencil-alt"></i>';
-                        editButton.title = 'Edit Image';
-                        editButton.addEventListener('click', () => {
-                            document.getElementById('direct-file-input').click();
-                        });
-                        
-                        // Create remove button if it doesn't exist
-                        let removeButton = document.querySelector('.filepond--action-remove-item');
-                        if (!removeButton) {
-                            removeButton = document.createElement('button');
-                            removeButton.className = 'filepond--action-remove-item filepond--action-button';
-                            removeButton.innerHTML = '<i class="fas fa-times"></i>';
-                            removeButton.title = 'Remove Image';
-                            removeButton.addEventListener('click', () => {
-                                pond.removeFile();
-                            });
-                            itemContainer.appendChild(removeButton);
-                        }
-                        
-                        // Add edit button before remove button
-                        itemContainer.insertBefore(editButton, removeButton);
-                    }
-                }, 500);
-            }, 1000);
-        }
-    });
-
-    // Make the placeholder clickable to trigger file input
-    const placeholder = document.getElementById('product-image-placeholder');
-    const directFileInput = document.getElementById('direct-file-input');
-    
-    if (placeholder) {
-        placeholder.addEventListener('click', () => {
-            directFileInput.click();
-        });
-    }
-    
-    // Handle the direct file input
-    if (directFileInput) {
-        console.log('Setting up direct file input handler');
-        directFileInput.addEventListener('change', (event) => {
-            console.log('Direct file input changed', event.target.files);
-            if (event.target.files && event.target.files.length > 0) {
-                // Hide the placeholder immediately
-                const placeholder = document.getElementById('product-image-placeholder');
-                if (placeholder) {
-                    placeholder.style.display = 'none';
-                }
-                
-                // Check if we're editing an existing image
-                const isEditing = document.querySelector('.filepond--action-edit-item') !== null;
-                
-                // If editing, remove the current file first
-                if (isEditing && pond.getFile()) {
-                    pond.removeFile();
-                }
-                
-                // Add the file to FilePond
-                console.log('Adding file to FilePond from direct input');
-                pond.addFile(event.target.files[0]);
-                
-                // Force refresh of the preview after a short delay
-                setTimeout(() => {
-                    const previewContainer = document.querySelector('.filepond--image-preview');
-                    if (previewContainer) {
-                        previewContainer.style.display = 'none';
-                        setTimeout(() => {
-                            previewContainer.style.display = 'block';
-                            
-                            // Add edit button if it doesn't exist
-                            if (!document.querySelector('.filepond--action-edit-item')) {
-                                const removeButton = document.querySelector('.filepond--action-remove-item');
-                                if (removeButton) {
-                                    const editButton = document.createElement('button');
-                                    editButton.className = 'filepond--action-edit-item filepond--action-button';
-                                    editButton.innerHTML = '<i class="fas fa-pencil-alt"></i>';
-                                    editButton.title = 'Edit Image';
-                                    editButton.addEventListener('click', () => {
-                                        // Simple edit functionality - just re-trigger file selection
-                                        document.getElementById('direct-file-input').click();
-                                    });
-                                    removeButton.parentNode.insertBefore(editButton, removeButton);
-                                }
-                            }
-                        }, 10);
-                    }
-                }, 300);
-                
-                // Show a notification
-                showNotification(isEditing ? 'Image updated successfully' : 'Image uploaded successfully', 'success');
-            }
-        });
-    }
-
     // Notification System
     function showNotification(message, type = 'info', duration = 5000) {
         const container = document.getElementById('notification-container');
@@ -563,7 +333,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!productName) {
                 if (!silent) {
-                    showNotification('Please enter a product name first', 'warning');
+                    // Removing this notification to prevent duplicate alerts
+                    // showNotification('Please enter a product name first', 'warning');
                     document.getElementById('product-name').focus();
                 }
                 return;
@@ -697,35 +468,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to generate barcode
     function generateBarcode(silent = false) {
-        const barcodeType = document.getElementById('barcode-type').value;
+        console.log('Generating barcode, silent mode:', silent);
+        
+        // Get required elements
+        const categorySelect = document.getElementById('product-category');
+        const productNameInput = document.getElementById('product-name');
         const barcodeInput = document.getElementById('product-barcode');
+        
+        // Log the current values
+        console.log('Category:', categorySelect ? categorySelect.value : 'not found');
+        console.log('Product name:', productNameInput ? productNameInput.value : 'not found');
+        
+        // Validate inputs
+        if (!categorySelect || !categorySelect.value) {
+            if (!silent) {
+                showNotification('Please select a category first', 'warning');
+                if (categorySelect) categorySelect.focus();
+            }
+            return false;
+        }
+        
+        if (!productNameInput || !productNameInput.value.trim()) {
+            // Silently return without showing notification - other validation will handle this
+            if (productNameInput && !silent) productNameInput.focus();
+            return false;
+        }
         
         // If barcode already has a value and this is auto-generation, don't overwrite it
         if (silent && barcodeInput && barcodeInput.value.trim() !== '') {
             console.log('Barcode field already has a value, not overwriting during auto-generation');
-            return;
+            return false;
         }
         
-        let barcodeValue = '';
+        // Generate barcode with format: "BAR-<First2CharactersOfProductName><First2CharactersOfCategory><4DigitsOfCurrentUniqueTimestamp>"
+        const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
+        const categoryPrefix = getCategoryShortCode(categorySelect.value);
+        const timestamp = new Date().getTime().toString().slice(-4);
         
-        // Generate barcode based on type
-        switch(barcodeType) {
-            case 'EAN13':
-                // Generate 12 digits (13th is check digit, added by JsBarcode)
-                barcodeValue = Array.from({length: 12}, () => Math.floor(Math.random() * 10)).join('');
-                break;
-            case 'CODE128':
-                // Generate alphanumeric code
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                barcodeValue = Array.from({length: 10}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-                break;
-            case 'UPC':
-                // Generate 11 digits (12th is check digit, added by JsBarcode)
-                barcodeValue = Array.from({length: 11}, () => Math.floor(Math.random() * 10)).join('');
-                break;
-        }
+        const barcode = `BAR-${productPrefix}${categoryPrefix}${timestamp}`;
+        console.log('Generated barcode:', barcode);
         
-        barcodeInput.value = barcodeValue;
+        // Set the barcode value
+        barcodeInput.value = barcode;
+        
+        // Update the barcode preview
         updateBarcodePreview();
         
         // Add visual feedback
@@ -738,24 +524,58 @@ document.addEventListener('DOMContentLoaded', function() {
             barcodeInput.style.borderColor = '';
         }, 1500);
         
+        // Show notification based on mode - keep only this notification
         if (!silent) {
-            showNotification('Barcode generated successfully', 'success');
-        } else {
-            showNotification('Barcode generated automatically', 'info', 3000);
+            showNotification('Barcode generated successfully: ' + barcode, 'success');
         }
+        
+        return true;
+    }
+    
+    // Helper function to get category short code (same as in sku-generator.js)
+    function getCategoryShortCode(categoryValue) {
+        // Try to extract category name from various formats
+        let categoryName = categoryValue;
+        
+        // If the value is a select option text
+        const categorySelect = document.getElementById('product-category');
+        if (categorySelect) {
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            if (selectedOption) {
+                categoryName = selectedOption.text || categoryName;
+            }
+        }
+        
+        // If the category is a number (ID), try to get the text
+        if (!isNaN(categoryValue) && categorySelect) {
+            // Look for the option with this value
+            const options = categorySelect.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value == categoryValue) {
+                    categoryName = options[i].text;
+                    break;
+                }
+            }
+        }
+        
+        // Extract first 2 characters of category name
+        return categoryName.substring(0, 2).toUpperCase();
     }
     
     // Function to check if we should auto-generate barcode
     function checkAutoGenerateBarcode() {
-        const productNameInputForBarcode = document.getElementById('product-name');
+        const categorySelect = document.getElementById('product-category');
+        const productNameInput = document.getElementById('product-name');
         const barcodeInput = document.getElementById('product-barcode');
         
         console.log('Checking auto-generate barcode conditions...');
-        console.log('Product name value:', productNameInputForBarcode ? productNameInputForBarcode.value : 'not found');
+        console.log('Category value:', categorySelect ? categorySelect.value : 'not found');
+        console.log('Product name value:', productNameInput ? productNameInput.value : 'not found');
         console.log('Barcode value:', barcodeInput ? barcodeInput.value : 'not found');
         
-        // Only proceed if product name has a value and barcode is empty
-        if (productNameInputForBarcode && productNameInputForBarcode.value.trim() && 
+        // Only proceed if both fields have values and barcode is empty
+        if (categorySelect && categorySelect.value && 
+            productNameInput && productNameInput.value.trim() && 
             barcodeInput && barcodeInput.value.trim() === '') {
             
             console.log('Auto-generating barcode - conditions met');
@@ -772,8 +592,10 @@ document.addEventListener('DOMContentLoaded', function() {
         checkAutoGenerateBarcode();
     });
 
-    // Set up auto-generation when product name changes
+    // Set up auto-generation when product name or category changes
     const productNameInputForBarcode = document.getElementById('product-name');
+    const categorySelectForBarcode = document.getElementById('product-category');
+    
     if (productNameInputForBarcode) {
         // Use both input and change events to catch all changes
         let barcodeTypingTimer;
@@ -794,6 +616,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Also check on blur (when field loses focus)
         productNameInputForBarcode.addEventListener('blur', function() {
             console.log('Product name blur event, checking if we should auto-generate barcode');
+            checkAutoGenerateBarcode();
+        });
+    }
+    
+    // Add event listeners for category select (for barcode)
+    if (categorySelectForBarcode) {
+        categorySelectForBarcode.addEventListener('change', function() {
+            console.log('Category changed, checking if we should auto-generate barcode');
             checkAutoGenerateBarcode();
         });
     }
@@ -974,132 +804,120 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusSwitch = document.getElementById('product-status');
     const statusLabel = document.getElementById('status-label');
     
-    statusSwitch.addEventListener('change', function() {
-        statusLabel.textContent = this.checked ? 'Active' : 'Inactive';
-    });
+    if (statusSwitch && statusLabel) {
+        statusSwitch.addEventListener('change', function() {
+            statusLabel.textContent = this.checked ? 'Active' : 'Inactive';
+        });
+    }
 
     // Cancel button
-    document.getElementById('cancel-button').addEventListener('click', function() {
-        if (confirm('Are you sure you want to cancel? All entered data will be lost.')) {
-            window.location.href = '/inventory';
-        }
-    });
-
-    // Form validation and submission
-    const form = document.getElementById('add-product-form');
-    
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        if (validateForm()) {
-            submitForm();
-        }
-    });
-    
-    function validateForm() {
-        let isValid = true;
-        
-        // Clear previous error messages
-        document.querySelectorAll('.error-message').forEach(el => {
-            el.textContent = '';
-        });
-        
-        // Validate required fields
-        const requiredFields = [
-            { id: 'product-name', error: 'name-error', message: 'Product name is required' },
-            { id: 'product-category', error: 'category-error', message: 'Category is required' },
-            { id: 'product-sku', error: 'sku-error', message: 'SKU is required' },
-            { id: 'product-cost-price', error: 'cost-price-error', message: 'Cost price is required' },
-            { id: 'product-selling-price', error: 'selling-price-error', message: 'Selling price is required' },
-            { id: 'product-stock', error: 'stock-error', message: 'Stock quantity is required' }
-        ];
-        
-        requiredFields.forEach(field => {
-            const input = document.getElementById(field.id);
-            if (!input.value.trim()) {
-                document.getElementById(field.error).textContent = field.message;
-                isValid = false;
-                
-                // Add error class to input
-                input.classList.add('error');
-                
-                // Remove error class when input changes
-                input.addEventListener('input', function() {
-                    this.classList.remove('error');
-                    document.getElementById(field.error).textContent = '';
-                }, { once: true });
+    const cancelButton = document.getElementById('cancel-button');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', function() {
+            if (confirm('Are you sure you want to cancel? All entered data will be lost.')) {
+                window.location.href = '/inventory';
             }
         });
-        
-        // Validate prices
-        const costPrice = parseFloat(costPriceInput.value) || 0;
-        const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
-        
-        if (costPrice <= 0 && costPriceInput.value.trim()) {
-            document.getElementById('cost-price-error').textContent = 'Cost price must be greater than zero';
-            costPriceInput.classList.add('error');
-            isValid = false;
-        }
-        
-        if (sellingPrice <= 0 && sellingPriceInput.value.trim()) {
-            document.getElementById('selling-price-error').textContent = 'Selling price must be greater than zero';
-            sellingPriceInput.classList.add('error');
-            isValid = false;
-        }
-        
-        if (sellingPrice < costPrice && sellingPrice > 0 && costPrice > 0) {
-            document.getElementById('selling-price-error').textContent = 'Selling price should be greater than cost price';
-            sellingPriceInput.classList.add('error');
-            isValid = false;
-        }
-        
-        return isValid;
     }
+
+    // Form submission handling
+    const productForm = document.getElementById('product-form');
+    const addProductForm = document.getElementById('add-product-form');
+    const formToUse = productForm || addProductForm;
     
-    function submitForm() {
-        // Show loading state
-        const submitButton = document.getElementById('submit-button');
-        const originalText = submitButton.textContent;
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+    if (formToUse) {
+        console.log('Found product form:', formToUse.id);
+        formToUse.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('Form submitted');
+            
+            try {
+                // Show loading state
+                const submitBtn = document.querySelector('button[type="submit"]');
+                if (!submitBtn) {
+                    console.error('Submit button not found');
+                    showNotification('Error: Could not find submit button', 'error');
+                    return;
+                }
+                
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Saving...';
+                submitBtn.disabled = true;
         
         // Create FormData object
-        const formData = new FormData(form);
-        
-        // Add status value
-        formData.append('status', document.getElementById('product-status').checked ? 1 : 0);
-        
-        // Add image if available
-        if (pond.getFile()) {
-            formData.append('image', pond.getFile().file);
-        }
-        
-        // Send form data to server
-        fetch('/api/inventory/add', {
+                const formData = new FormData(this);
+                
+                // Log form data for debugging
+                console.log('Form data entries:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}: ${value instanceof File ? `File: ${value.name}` : value}`);
+                }
+                
+                // Add the image file if selected via Dropzone
+                const dropzone = window.productImageDropzone;
+                if (dropzone && dropzone.files.length > 0) {
+                    console.log('Found Dropzone files:', dropzone.files.length);
+                    const file = dropzone.files[0];
+                    if (file) {
+                        console.log('Adding image file to form data:', file.name);
+                        formData.append('image', file);
+                    }
+                } else {
+                    console.log('No Dropzone files found');
+                    
+                    // Check if there's a file in the regular input as fallback
+                    const imageInput = document.getElementById('product-image');
+                    if (imageInput && imageInput.files && imageInput.files.length > 0) {
+                        console.log('Found file in regular input:', imageInput.files[0].name);
+                        formData.append('image', imageInput.files[0]);
+                    }
+                }
+
+                // Send POST request
+                console.log('Sending POST request to /api/inventory/add');
+                const response = await fetch('/api/inventory/add', {
             method: 'POST',
             body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
+                });
+
+                console.log('Response status:', response.status);
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Show success notification
+                    console.log('Product added successfully:', data);
             showNotification('Product added successfully!', 'success');
             
-            // Redirect to inventory page after a short delay
+                    // Reset form
+                    this.reset();
+                    
+                    // Reset FilePond
+                    if (dropzone) {
+                        dropzone.removeFiles();
+                    }
+                    
+                    // Redirect to inventory page after 2 seconds
             setTimeout(() => {
                 window.location.href = '/inventory';
-            }, 1500);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error adding product: ' + error.message, 'error');
-            
+                    }, 2000);
+                } else {
+                    // Show error notification
+                    console.error('API error:', data.error || 'Unknown error');
+                    showNotification(data.error || 'Failed to add product', 'error');
+                }
+            } catch (error) {
+                console.error('Error during form submission:', error);
+                showNotification('An error occurred while saving the product', 'error');
+            } finally {
             // Reset button state
-            submitButton.disabled = false;
-            submitButton.textContent = originalText;
+                const submitBtn = document.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                }
+            }
         });
+    } else {
+        console.error('Product form not found with ID "product-form" or "add-product-form"');
     }
-}); 
+});

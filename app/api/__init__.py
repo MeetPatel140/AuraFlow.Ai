@@ -20,6 +20,7 @@ def register_blueprints(app):
     # Register feature blueprints with the API blueprint
     api_bp.register_blueprint(auth_bp)
     api_bp.register_blueprint(pos_bp)
+    # Register inventory blueprint directly with the API blueprint
     api_bp.register_blueprint(inventory_bp)
     api_bp.register_blueprint(supplier_bp)
     api_bp.register_blueprint(dashboard_bp)

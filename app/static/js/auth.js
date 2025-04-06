@@ -16,9 +16,19 @@ document.addEventListener('DOMContentLoaded', function() {
     init: function() {
       console.log('Initializing authentication state...');
       
+      // Check if current page requires authentication
+      const protectedPaths = ['/dashboard', '/inventory', '/pos', '/reports', '/settings', '/suppliers'];
+      const currentPath = window.location.pathname;
+      const requiresAuth = protectedPaths.some(path => currentPath.startsWith(path));
+      
       // Check if token exists in localStorage
       const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
-      if (!token) {
+      if (!token && requiresAuth) {
+        console.log('No authentication token found, redirecting to login...');
+        this.isAuthenticated = false;
+        window.location.href = '/login';
+        return;
+      } else if (!token) {
         console.log('No authentication token found');
         this.isAuthenticated = false;
         return;
@@ -46,6 +56,12 @@ document.addEventListener('DOMContentLoaded', function() {
         this.user = user;
         
         console.log('User authenticated:', user.username || user.email);
+        
+        // Check if on login page but already authenticated
+        if (window.location.pathname === '/login' && this.isAuthenticated) {
+          console.log('Already authenticated, redirecting to dashboard...');
+          window.location.href = '/dashboard';
+        }
       } catch (error) {
         console.error('Error initializing auth state:', error);
         this.isAuthenticated = false;
@@ -111,13 +127,33 @@ document.addEventListener('DOMContentLoaded', function() {
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
       });
       
-      // Redirect to login page
-      window.location.replace('/logout');
+      // Make a logout request to the server and wait for it to complete
+      fetch('/logout', { 
+        method: 'GET',
+        credentials: 'include'
+      })
+      .then(() => {
+        // Redirect to login page after server confirms logout
+        window.location.href = '/login';
+      })
+      .catch(error => {
+        console.error('Error during logout:', error);
+        // Still redirect to login page even if there's an error
+        window.location.href = '/login';
+      });
     }
   };
+  
+  // Setup logout handlers
+  document.querySelectorAll('.logout-btn, .logout-link').forEach(element => {
+    element.addEventListener('click', function(e) {
+      e.preventDefault();
+      window.Auth.logout();
+    });
+  });
   
   // Initialize authentication state
   window.Auth.init();
   
   console.log('Auth module initialized');
-}); 
+});

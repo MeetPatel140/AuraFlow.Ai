@@ -22,17 +22,27 @@
     <link rel="icon" type="image/png" href="/static/images/favicon.png">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}">
+    <link rel="stylesheet" href="{{ versioned_url_for('static', filename='css/normalize.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css?v=5.3.0" 
           integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" 
           crossorigin="anonymous">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-fixes.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/particles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pos.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/inventory.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/inventory_add.css') }}">
+    <link rel="stylesheet" href="{{ versioned_url_for('static', filename='css/bootstrap-fixes.css') }}">
+    <link rel="stylesheet" href="{{ versioned_url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ versioned_url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ versioned_url_for('static', filename='css/dashboard-enhanced.css') }}">
+    <link rel="stylesheet" href="{{ versioned_url_for('static', filename='css/dashboard-fixes.css') }}">
+    <link rel="stylesheet" href="{{ versioned_url_for('static', filename='css/particles.css') }}">
+    <link rel="stylesheet" href="{{ versioned_url_for('static', filename='css/pos.css') }}">
+    <link rel="stylesheet" href="{{ versioned_url_for('static', filename='css/inventory.css') }}">
+    <link rel="stylesheet" href="{{ versioned_url_for('static', filename='css/inventory_add.css') }}">
+    
+    <!-- Chart.js library with integrity check -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.css" 
+          integrity="sha512-vK5r+cnXJNbQUm+MQc1HzzLmT4/iGY0QD1qJkMBuHlAfqiR3G7T5/unlKN5tJYGJJenAI9J8oZwWpo1J7hKx+Q==" 
+          crossorigin="anonymous" referrerpolicy="no-referrer">
+    
+    <!-- Dashboard Loader Script (handles Chart.js with fallbacks) -->
+    <script src="{{ url_for('static', filename='js/dashboard-loader.js') }}"></script>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,6 +68,44 @@
             -webkit-text-fill-color: transparent;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             letter-spacing: -0.5px;
+        }
+        
+        /* Logo styling in sidebar */
+        .sidebar-header {
+            padding: 20px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        
+        .sidebar.collapsed .text-logo {
+            width: 40px;
+            overflow: hidden;
+            font-size: 1.5rem;
+        }
+        
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+            border-radius: 4px;
+        }
+        
+        .sidebar-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
         }
         
         /* Ensure the loading container is visible */
@@ -91,24 +139,22 @@
         
         /* Topbar styling */
         .topbar {
-            height: 60px;
-            background-color: #ffffff;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
             position: fixed;
             top: 0;
             left: 250px;
             right: 0;
-            z-index: 100;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            transition: left 0.3s ease;
+            height: 70px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+            z-index: 10;
         }
         
-        .sidebar.collapsed + .main-content .topbar {
-            left: 70px;
+        .main-content {
+            margin-left: 250px;
         }
         
         .topbar-left {
@@ -395,21 +441,26 @@
         
         /* Sidebar styles */
         .sidebar {
-            width: 250px;
             position: fixed;
-            left: 0;
             top: 0;
-            bottom: 0;
-            background: linear-gradient(to bottom, #2c3e50, #1a252f);
-            color: #ffffff;
-            z-index: 200;
-            transition: width 0.3s ease;
-            display: flex;
-            flex-direction: column;
+            left: 0;
+            height: 100%;
+            width: 250px;
+            background: linear-gradient(to bottom, #1e293b, #111827);
+            color: #fff;
+            z-index: 20;
             overflow-y: auto;
         }
         
+        .sidebar::-webkit-scrollbar {
+            width: 0;
+            background: transparent;
+        }
+        
         .sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
             color: #ffffff;
             text-decoration: none;
         }
@@ -451,11 +502,6 @@
         
         .main-content {
             margin-left: 250px;
-            transition: margin-left 0.3s ease;
-        }
-        
-        .main-content.expanded {
-            margin-left: 70px;
         }
         
         /* Add New dropdown in topbar */
@@ -652,25 +698,31 @@
         }
     </style>
 
-    {% block extra_head %}{% endblock %}
+    <!-- SEO -->
+    {% block seo %}{% endblock %}
+    
+    <!-- Additional styles -->
+    {% block extra_styles %}{% endblock %}
 </head>
-<body>
-    <div id="app" class="{% block body_class %}{% endblock %}">
-        <!-- Global Notification System -->
-        <div id="notification-container" class="notification-container">
-            <!-- Notifications will be dynamically inserted here -->
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Global Loader -->
+    <div class="global-loader" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 15px; color: #333;" id="loader-text">Processing...</p>
         </div>
-        
-        {% block auth_content %}
+    </div>
+    
+    {% block layout %}
+    <!-- Main layout wrapper -->
+    <div class="main-wrapper">
         <!-- Sidebar -->
-        <nav class="sidebar" id="sidebar">
+        <aside id="sidebar" class="sidebar">
+            <!-- Logo -->
             <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <span class="text-logo">AuraFlow.Ai</span>
-                </div>
-                <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle Sidebar">
-                    <i class="mdi mdi-menu"></i>
-                </button>
+                <a href="/dashboard" class="logo">
+                    <div class="text-logo">AuraFlow.Ai</div>
+                </a>
             </div>
             <div class="sidebar-content">
                 <ul class="nav-menu">
@@ -850,7 +902,7 @@
                     </div>
                 </div>
             </div>
-        </nav>
+        </aside>
         
         <!-- Topbar -->
         <div class="topbar">
@@ -953,95 +1005,33 @@
                 {% block content %}{% endblock %}
             </div>
         </main>
+    </div>
         {% endblock %}
         
-        <!-- Loading Spinner -->
-        <div class="loading-container" id="loading-container">
-            <div class="loading-spinner"></div>
-            <p>Loading AuraFlow.Ai...</p>
-        </div>
-        
-        <!-- Calculator Modal -->
-        <div class="calculator-modal" id="calculator-modal">
-            <div class="calculator-header" id="calculator-header">
-                <div class="calculator-title">Calculator</div>
-                <button class="calculator-close" id="calculator-close" title="Close Calculator">
-                    <i class="mdi mdi-close"></i>
-                </button>
-            </div>
-            <div class="calculator-body">
-                <div class="calculator-display" id="calculator-display">0</div>
-                <div class="calculator-buttons">
-                    <button class="calculator-button" data-value="C" title="Clear">C</button>
-                    <button class="calculator-button" data-value="(" title="Open Parenthesis">(</button>
-                    <button class="calculator-button" data-value=")" title="Close Parenthesis">)</button>
-                    <button class="calculator-button operator" data-value="/" title="Divide">/</button>
-                    <button class="calculator-button" data-value="7" title="Seven">7</button>
-                    <button class="calculator-button" data-value="8" title="Eight">8</button>
-                    <button class="calculator-button" data-value="9" title="Nine">9</button>
-                    <button class="calculator-button operator" data-value="*" title="Multiply">×</button>
-                    <button class="calculator-button" data-value="4" title="Four">4</button>
-                    <button class="calculator-button" data-value="5" title="Five">5</button>
-                    <button class="calculator-button" data-value="6" title="Six">6</button>
-                    <button class="calculator-button operator" data-value="-" title="Subtract">-</button>
-                    <button class="calculator-button" data-value="1" title="One">1</button>
-                    <button class="calculator-button" data-value="2" title="Two">2</button>
-                    <button class="calculator-button" data-value="3" title="Three">3</button>
-                    <button class="calculator-button operator" data-value="+" title="Add">+</button>
-                    <button class="calculator-button" data-value="0" title="Zero">0</button>
-                    <button class="calculator-button" data-value="." title="Decimal Point">.</button>
-                    <button class="calculator-button" data-value="backspace" title="Backspace">
-                        <i class="mdi mdi-backspace-outline"></i>
-                    </button>
-                    <button class="calculator-button equals" data-value="=" title="Equals">=</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Notifications Panel -->
-        <div class="notifications-panel" id="notifications-panel">
-            <div class="notifications-header">
-                <div class="notifications-title">Notifications</div>
-                <div class="notifications-actions">
-                    <button class="notifications-action" id="panel-mark-all-read" title="Mark All Notifications as Read">Mark all as read</button>
-                </div>
-            </div>
-            <div class="notifications-list" id="notifications-list">
-                <!-- Notifications will be loaded here -->
-            </div>
-            <div class="notifications-footer">
-                <a href="/notifications">View all notifications</a>
-            </div>
-        </div>
-        
-        <!-- Notification Toast Container -->
-        <div class="notification-container" id="notification-container"></div>
-    </div>
+    <!-- Notification container for toast notifications -->
+    <div id="notification-container" class="notification-container"></div>
     
-    <!-- Service worker registration -->
+    <!-- Disable Service Worker - make app fully online-only -->
     <script>
+        // Unregister any existing service worker
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('ServiceWorker registration failed: ', error);
-                    });
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for (let registration of registrations) {
+                    registration.unregister();
+                    console.log('ServiceWorker unregistered');
+                }
             });
         }
     </script>
     
     <!-- App scripts -->
-    <!-- <script src="/static/js/db.js"></script> -->
-    <!-- <script src="/static/js/api.js"></script> -->
     <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
-    <!-- <script src="/static/js/sync.js"></script> -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/notifications-handler.js') }}"></script>
-    {% if request.path != '/inventory/add' %}
+    
+    <!-- Load inventory.js only on inventory-related pages -->
+    {% if request.path.startswith('/inventory') %}
     <script src="{{ url_for('static', filename='js/inventory.js') }}"></script>
     {% endif %}
     
@@ -1551,14 +1541,18 @@
                 }
                 
                 // Calculator logic
-                let currentInput = '0';
-                let previousInput = '';
-                let operation = null;
+                let currentInput = localStorage.getItem('calculator_input') || '0';
+                let previousInput = localStorage.getItem('calculator_previous') || '';
+                let operation = localStorage.getItem('calculator_operation') || null;
                 let shouldResetDisplay = false;
                 
                 // Update display
                 function updateDisplay() {
                     calculatorDisplay.textContent = currentInput;
+                    // Save state to localStorage
+                    localStorage.setItem('calculator_input', currentInput);
+                    localStorage.setItem('calculator_previous', previousInput);
+                    localStorage.setItem('calculator_operation', operation);
                 }
                 
                 // Handle button clicks
@@ -1598,6 +1592,10 @@
                         currentInput = '0';
                         previousInput = '';
                         operation = null;
+                        // Clear localStorage
+                        localStorage.removeItem('calculator_input');
+                        localStorage.removeItem('calculator_previous');
+                        localStorage.removeItem('calculator_operation');
                     } else if (value === '=') {
                         // Calculate
                         try {
@@ -1638,6 +1636,67 @@
         });
     </script>
     
+    <!-- Add logout functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize logout button
+            const logoutBtn = document.getElementById('dropdown-logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (window.Auth && typeof window.Auth.logout === 'function') {
+                        window.Auth.logout();
+                    } else {
+                        // Fallback to direct API call
+                        fetch('/api/auth/logout', {
+                            method: 'POST',
+                            credentials: 'same-origin'
+                        }).finally(() => {
+                            window.location.href = '/login';
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+    
     {% block extra_scripts %}{% endblock %}
+
+    <!-- Calculator Modal -->
+    <div class="calculator-modal" id="calculator-modal">
+        <div class="calculator-header" id="calculator-header">
+            <div class="calculator-title">Calculator</div>
+            <button class="calculator-close" id="calculator-close">
+                <i class="mdi mdi-close"></i>
+            </button>
+        </div>
+        <div class="calculator-body">
+            <div class="calculator-display" id="calculator-display">0</div>
+            <div class="calculator-buttons">
+                <button class="calculator-button" data-value="C">C</button>
+                <button class="calculator-button" data-value="(">(</button>
+                <button class="calculator-button" data-value=")">)</button>
+                <button class="calculator-button operator" data-value="/">/</button>
+                <button class="calculator-button" data-value="7">7</button>
+                <button class="calculator-button" data-value="8">8</button>
+                <button class="calculator-button" data-value="9">9</button>
+                <button class="calculator-button operator" data-value="*">×</button>
+                <button class="calculator-button" data-value="4">4</button>
+                <button class="calculator-button" data-value="5">5</button>
+                <button class="calculator-button" data-value="6">6</button>
+                <button class="calculator-button operator" data-value="-">-</button>
+                <button class="calculator-button" data-value="1">1</button>
+                <button class="calculator-button" data-value="2">2</button>
+                <button class="calculator-button" data-value="3">3</button>
+                <button class="calculator-button operator" data-value="+">+</button>
+                <button class="calculator-button" data-value="0">0</button>
+                <button class="calculator-button" data-value=".">.</button>
+                <button class="calculator-button" data-value="backspace">
+                    <i class="mdi mdi-backspace"></i>
+                </button>
+                <button class="calculator-button equals" data-value="=">=</button>
+            </div>
+        </div>
+    </div>
 </body>
-</html> 
+</html>

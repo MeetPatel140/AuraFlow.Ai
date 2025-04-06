@@ -129,15 +129,35 @@ function initPasswordToggles() {
 function initFormSubmissions() {
     const forms = document.querySelectorAll('.auth-form');
     
+    // Track if a form is currently being submitted to prevent duplicates
+    let isSubmitting = false;
+    
     // Handle form submissions
     forms.forEach(form => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Prevent multiple submissions
+            if (isSubmitting) {
+                console.log('Form submission in progress, please wait...');
+                return;
+            }
+            
+            isSubmitting = true;
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
             try {
-                showLoading();
+                // Use the window loader if available, but don't use showLoading() to avoid duplicates
+                if (window.Loader) {
+                    window.Loader.show('Processing...');
+                } else {
+                    // Fallback to the auth spinner
+                    const spinner = document.querySelector('.auth-spinner, .global-loader');
+                    if (spinner) {
+                        spinner.style.display = 'flex';
+                    }
+                }
                 
                 switch (form.id) {
                     case 'login-form':
@@ -152,9 +172,17 @@ function initFormSubmissions() {
                 }
             } catch (error) {
                 console.error('Form submission error:', error);
-                showNotification('error', error.message || 'An error occurred');
+                showNotification(error.message || 'An error occurred', 'error');
+                
+                // Ensure loader is hidden
+                if (window.Loader) {
+                    window.Loader.hide();
+                } else {
+                    hideLoading();
+                }
             } finally {
-                hideLoading();
+                // Reset submission flag
+                isSubmitting = false;
             }
         });
     });
@@ -185,65 +213,119 @@ function validatePassword(password) {
 // Handle form submissions
 async function handleLogin(data) {
     try {
-        // Show loading indicator
-        showSpinner();
-        
+        // Prevent setting the loader again if already showing
+        // The global loader has already been shown in the form submission handler
         console.log('Attempting login...');
         
-        // Call login API
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
+        // Call login API with a timeout to handle network issues
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
         
-        // Hide loading indicator
-        hideSpinner();
-        
-        // Handle error response
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Login failed:', errorData);
-            showNotification(errorData.message || 'Login failed. Please check your credentials.', 'error');
-            return;
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(data),
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            // Parse response data first before hiding loading indicators
+            const responseData = await response.json();
+            
+            // Handle error response
+            if (!response.ok) {
+                let errorMessage = 'Login failed. Please check your credentials.';
+                try {
+                    console.error('Login failed:', responseData);
+                    errorMessage = responseData.error || responseData.message || errorMessage;
+                } catch (e) {
+                    console.error('Error parsing error response:', e);
+                }
+                
+                showNotification(errorMessage, 'error');
+                
+                // Hide the loader
+                if (window.Loader) {
+                    window.Loader.hide();
+                } else {
+                    // Hide auth spinner fallback
+                    const spinner = document.querySelector('.auth-spinner, .global-loader');
+                    if (spinner) {
+                        spinner.style.display = 'none';
+                    }
+                }
+                return;
+            }
+            
+            console.log('Login successful:', responseData);
+            
+            // Clear any existing auth data first
+            localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+            localStorage.removeItem('tenant_data');
+            
+            // Store authentication data in localStorage
+            localStorage.setItem('token', responseData.access_token);
+            localStorage.setItem('refresh_token', responseData.refresh_token);
+            localStorage.setItem('user', JSON.stringify(responseData.user));
+            
+            // Set global authentication state
+            if (window.Auth) {
+                window.Auth.isAuthenticated = true;
+                window.Auth.user = responseData.user;
+                if (typeof window.Auth.setAuthenticated === 'function') {
+                    window.Auth.setAuthenticated(true, responseData);
+                }
+            }
+            
+            // Show success notification
+            showNotification('Login successful! Redirecting to dashboard...', 'success');
+            
+            // Redirect to dashboard immediately without hiding loading indicators
+            // This keeps loading visible during redirect
+            window.location.href = '/dashboard';
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            
+            if (fetchError.name === 'AbortError') {
+                console.error('Login request timed out');
+                showNotification('Login request timed out. Please check your connection and try again.', 'error');
+            } else {
+                console.error('Fetch error:', fetchError);
+                showNotification('Network error during login. Please try again.', 'error');
+            }
+            
+            // Hide the loader
+            if (window.Loader) {
+                window.Loader.hide();
+            } else {
+                // Hide auth spinner fallback
+                const spinner = document.querySelector('.auth-spinner, .global-loader');
+                if (spinner) {
+                    spinner.style.display = 'none';
+                }
+            }
         }
-        
-        // Parse response data
-        const responseData = await response.json();
-        console.log('Login successful:', responseData);
-        
-        // Clear any existing auth data first
-        localStorage.removeItem('token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_data');
-        localStorage.removeItem('tenant_data');
-        
-        // Store authentication data in localStorage
-        localStorage.setItem('token', responseData.access_token);
-        localStorage.setItem('refresh_token', responseData.refresh_token);
-        localStorage.setItem('user', JSON.stringify(responseData.user));
-        
-        // Set global authentication state
-        window.Auth = window.Auth || {};
-        window.Auth.isAuthenticated = true;
-        window.Auth.user = responseData.user;
-        
-        // Show success notification
-        showNotification('Login successful! Redirecting to dashboard...', 'success');
-        
-        // Redirect to dashboard after a short delay
-        console.log('Redirecting to dashboard...');
-        setTimeout(() => {
-            // Use location.replace to avoid adding to browser history
-            window.location.replace('/dashboard');
-        }, 1000);
     } catch (error) {
-        // Hide loading indicator
-        hideSpinner();
+        // Hide the loader
+        if (window.Loader) {
+            window.Loader.hide();
+        } else {
+            // Hide auth spinner fallback
+            const spinner = document.querySelector('.auth-spinner, .global-loader');
+            if (spinner) {
+                spinner.style.display = 'none';
+            }
+        }
         
         // Log and show error
         console.error('Login error:', error);
@@ -252,11 +334,18 @@ async function handleLogin(data) {
 }
 
 async function handleRegister(data) {
-    if (data.password !== data.confirm_password) {
-        throw new Error('Passwords do not match');
+    // Show loader with consistent message
+    if (window.Loader) {
+        window.Loader.show('Processing...');
+    } else {
+        showLoading();
     }
-
+    
     try {
+        if (data.password !== data.confirm_password) {
+            throw new Error('Passwords do not match');
+        }
+
         validatePassword(data.password);
 
         // Transform form data to match API requirements
@@ -281,7 +370,7 @@ async function handleRegister(data) {
             throw new Error(errorData.message || 'Registration failed');
         }
 
-        showNotification('success', 'Registration successful! Please check your email to verify your account.');
+        showNotification('Registration successful! Please check your email to verify your account.', 'success');
         
         // Switch to login form
         const loginFormSwitch = document.querySelector('[data-form="login"]');
@@ -290,12 +379,24 @@ async function handleRegister(data) {
         }
     } catch (error) {
         console.error('Registration error:', error);
-        throw new Error(error.message || 'Registration failed');
+        showNotification(error.message || 'Registration failed', 'error');
+    } finally {
+        // Hide loader in all cases
+        if (window.Loader) {
+            window.Loader.hide();
+        } else {
+            hideLoading();
+        }
     }
 }
 
 async function handleForgotPassword(data) {
     try {
+        // Show the global loader with a consistent message
+        if (window.Loader) {
+            window.Loader.show('Processing...');
+        }
+        
         const response = await fetch('/api/auth/forgot-password', {
             method: 'POST',
             headers: {
@@ -311,29 +412,47 @@ async function handleForgotPassword(data) {
 
         showNotification('success', 'Password reset instructions have been sent to your email.');
         
+        // Hide loader
+        if (window.Loader) {
+            window.Loader.hide();
+        }
+        
         // Switch to login form
         const loginFormSwitch = document.querySelector('[data-form="login"]');
         if (loginFormSwitch) {
             loginFormSwitch.click();
         }
     } catch (error) {
+        // Hide loader
+        if (window.Loader) {
+            window.Loader.hide();
+        }
+        
         console.error('Forgot password error:', error);
         throw new Error(error.message || 'Failed to send reset email');
     }
 }
 
-// Loading state
+// Loading state - DEPRECATED, use window.Loader instead
 function showLoading() {
-    const loadingContainer = document.getElementById('loading-container');
-    if (loadingContainer) {
-        loadingContainer.style.display = 'flex';
+    if (window.Loader) {
+        window.Loader.show('Processing...');
+    } else {
+        const loadingContainer = document.querySelector('.global-loader');
+        if (loadingContainer) {
+            loadingContainer.style.display = 'flex';
+        }
     }
 }
 
 function hideLoading() {
-    const loadingContainer = document.getElementById('loading-container');
-    if (loadingContainer) {
-        loadingContainer.style.display = 'none';
+    if (window.Loader) {
+        window.Loader.hide();
+    } else {
+        const loadingContainer = document.querySelector('.global-loader');
+        if (loadingContainer) {
+            loadingContainer.style.display = 'none';
+        }
     }
 }
 
@@ -352,18 +471,29 @@ function showNotification(message, type = 'info') {
     }
 }
 
-// Show loading spinner
+// Show loading spinner - DEPRECATED, use window.Loader instead
 function showSpinner() {
-    const spinner = document.querySelector('.auth-spinner');
-    if (spinner) {
-        spinner.style.display = 'flex';
+    if (window.Loader) {
+        window.Loader.showSigningIn();
+    } else {
+        const spinner = document.querySelector('.auth-spinner, .global-loader');
+        if (spinner) {
+            spinner.style.display = 'flex';
+            spinner.style.opacity = '1';
+            spinner.style.visibility = 'visible';
+        }
     }
 }
 
-// Hide loading spinner
+// Hide loading spinner - DEPRECATED, use window.Loader instead
 function hideSpinner() {
-    const spinner = document.querySelector('.auth-spinner');
-    if (spinner) {
-        spinner.style.display = 'none';
+    if (window.Loader) {
+        window.Loader.hide();
+    } else {
+        const spinner = document.querySelector('.auth-spinner, .global-loader');
+        if (spinner) {
+            spinner.style.display = 'none';
+            spinner.style.opacity = '0';
+        }
     }
 } 

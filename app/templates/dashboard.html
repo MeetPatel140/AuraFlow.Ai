@@ -1,8 +1,57 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
+<!-- Direct Chart.js imports with better fallback strategy -->
+<script>
+    // Function to check if an external resource is available
+    function isResourceAvailable(url, callback) {
+        const request = new XMLHttpRequest();
+        request.open('HEAD', url, true);
+        request.onreadystatechange = function() {
+            if (request.readyState === 4) {
+                callback(request.status === 200);
+            }
+        };
+        request.send();
+    }
+    
+    // Check if CDN is available
+    isResourceAvailable('https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js', function(available) {
+        if (!available) {
+            console.warn('CDN for Chart.js is not available, using local fallback.');
+            
+            // Use local versions instead
+            const localCssLink = document.createElement('link');
+            localCssLink.rel = 'stylesheet';
+            localCssLink.href = "{{ url_for('static', filename='css/chart.min.css') }}";
+            document.head.appendChild(localCssLink);
+            
+            const localScriptTag = document.createElement('script');
+            localScriptTag.src = "{{ url_for('static', filename='js/chart.min.js') }}";
+            document.head.appendChild(localScriptTag);
+            
+            localScriptTag.onload = function() {
+                console.log('Local Chart.js loaded successfully');
+                // Dispatch event that Chart.js is loaded
+                document.dispatchEvent(new Event('chartjs-loaded'));
+            };
+        } else {
+            // CDN is available, use it
+            console.log('CDN for Chart.js is available, using CDN version.');
+        }
+    });
+</script>
+
+<!-- Primary CDN resources with fallbacks handled above -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+<!-- Fallback CSS (loaded directly to ensure styling is preserved even if JS fails) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chart.min.css') }}">
+
+<!-- Additional MDI Icons for dashboard -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css">
+
 <style>
     .dashboard {
         padding: 24px;
@@ -1057,155 +1106,6 @@
         </div>
     </div>
     
-    <!-- Secondary KPI Cards -->
-    <div class="dashboard-stats-secondary">
-        <div class="mini-stat-card">
-            <div class="mini-stat-icon">
-                <i class="mdi mdi-cash-register"></i>
-            </div>
-            <div class="mini-stat-value">₹1,580</div>
-            <div class="mini-stat-label">Avg Order Value</div>
-        </div>
-        
-        <div class="mini-stat-card">
-            <div class="mini-stat-icon">
-                <i class="mdi mdi-cart-outline"></i>
-            </div>
-            <div class="mini-stat-value">42</div>
-            <div class="mini-stat-label">Orders Today</div>
-        </div>
-        
-        <div class="mini-stat-card">
-            <div class="mini-stat-icon">
-                <i class="mdi mdi-account-multiple-plus"></i>
-            </div>
-            <div class="mini-stat-value">12</div>
-            <div class="mini-stat-label">New Customers Today</div>
-        </div>
-        
-        <div class="mini-stat-card">
-            <div class="mini-stat-icon">
-                <i class="mdi mdi-package-variant"></i>
-            </div>
-            <div class="mini-stat-value">312</div>
-            <div class="mini-stat-label">Total Products</div>
-        </div>
-        
-        <div class="mini-stat-card">
-            <div class="mini-stat-icon">
-                <i class="mdi mdi-truck-delivery"></i>
-            </div>
-            <div class="mini-stat-value">24</div>
-            <div class="mini-stat-label">Pending Deliveries</div>
-        </div>
-        
-        <div class="mini-stat-card">
-            <div class="mini-stat-icon">
-                <i class="mdi mdi-star"></i>
-            </div>
-            <div class="mini-stat-value">4.7</div>
-            <div class="mini-stat-label">Avg Rating</div>
-        </div>
-    </div>
-    
-    <div class="business-metrics-grid">
-        <div class="business-metric-card">
-            <div class="business-metric-title">Average Order Processing Time</div>
-            <div class="business-metric-number">15 min</div>
-            <div class="business-metric-subtitle positive">
-                <i class="mdi mdi-arrow-down"></i> 3 min from last month
-            </div>
-        </div>
-        <div class="business-metric-card">
-            <div class="business-metric-title">Cart Abandonment Rate</div>
-            <div class="business-metric-number">21%</div>
-            <div class="business-metric-subtitle positive">
-                <i class="mdi mdi-arrow-down"></i> 4% from last month
-            </div>
-        </div>
-        <div class="business-metric-card">
-            <div class="business-metric-title">Inventory Turnover Rate</div>
-            <div class="business-metric-number">4.8x</div>
-            <div class="business-metric-subtitle positive">
-                <i class="mdi mdi-arrow-up"></i> 0.5x from last quarter
-            </div>
-        </div>
-        <div class="business-metric-card">
-            <div class="business-metric-title">Customer Lifetime Value</div>
-            <div class="business-metric-number">₹15,800</div>
-            <div class="business-metric-subtitle positive">
-                <i class="mdi mdi-arrow-up"></i> ₹1,500 from last year
-            </div>
-        </div>
-        <div class="business-metric-card">
-            <div class="business-metric-title">Gross Profit Margin</div>
-            <div class="business-metric-number">32.5%</div>
-            <div class="business-metric-subtitle positive">
-                <i class="mdi mdi-arrow-up"></i> 1.8% from last quarter
-            </div>
-        </div>
-        <div class="business-metric-card">
-            <div class="business-metric-title">Customer Acquisition Cost</div>
-            <div class="business-metric-number">₹850</div>
-            <div class="business-metric-subtitle positive">
-                <i class="mdi mdi-arrow-down"></i> ₹120 from last quarter
-            </div>
-        </div>
-        <div class="business-metric-card">
-            <div class="business-metric-title">Average Days of Inventory</div>
-            <div class="business-metric-number">24 days</div>
-            <div class="business-metric-subtitle positive">
-                <i class="mdi mdi-arrow-down"></i> 3 days from last quarter
-            </div>
-        </div>
-        <div class="business-metric-card">
-            <div class="business-metric-title">Return Rate</div>
-            <div class="business-metric-number">3.2%</div>
-            <div class="business-metric-subtitle positive">
-                <i class="mdi mdi-arrow-down"></i> 0.5% from last month
-            </div>
-        </div>
-    </div>
-    
-    <!-- Performance Metrics -->
-    <div class="performance-metrics">
-        <div class="metric-card success">
-            <i class="mdi mdi-emoticon-happy-outline"></i>
-            <div class="metric-value">92%</div>
-            <div class="metric-label">Customer Satisfaction</div>
-            <div class="metric-trend trend-up">
-                <i class="mdi mdi-arrow-up"></i> 4% from last month
-            </div>
-        </div>
-        
-        <div class="metric-card warning">
-            <i class="mdi mdi-clock-outline"></i>
-            <div class="metric-value">18min</div>
-            <div class="metric-label">Avg Response Time</div>
-            <div class="metric-trend trend-down">
-                <i class="mdi mdi-arrow-down"></i> 3min from last month
-            </div>
-        </div>
-        
-        <div class="metric-card success">
-            <i class="mdi mdi-cart-check"></i>
-            <div class="metric-value">97%</div>
-            <div class="metric-label">Order Completion Rate</div>
-            <div class="metric-trend trend-up">
-                <i class="mdi mdi-arrow-up"></i> 2% from last month
-            </div>
-        </div>
-        
-        <div class="metric-card success">
-            <i class="mdi mdi-account-multiple-check"></i>
-            <div class="metric-value">72%</div>
-            <div class="metric-label">Customer Retention</div>
-            <div class="metric-trend trend-up">
-                <i class="mdi mdi-arrow-up"></i> 5% from last month
-            </div>
-        </div>
-    </div>
-    
     <!-- Main Charts Row 1 -->
     <div class="dashboard-charts two-column">
         <div class="chart-card">
@@ -1253,1024 +1153,427 @@
             </div>
         </div>
     </div>
-    
-    <!-- Main Charts Row 3 -->
-    <div class="dashboard-charts two-column">
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Sales by Location</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="sales-location-chart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Customer Demographics</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="customer-demographics-chart"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main Charts Row 4 -->
-    <div class="dashboard-charts two-column">
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Inventory Levels</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="inventory-levels-chart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Payment Methods</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="payment-methods-chart"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main Charts Row 5 -->
-    <div class="dashboard-charts two-column">
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Hourly Sales Distribution</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="hourly-sales-chart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Product Performance</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="product-performance-chart"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main Charts Row 6 -->
-    <div class="dashboard-charts two-column">
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Sales Forecast</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="sales-forecast-chart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Marketing ROI</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="marketing-roi-chart"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main Charts Row 7 -->
-    <div class="dashboard-charts two-column">
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Customer Lifetime Value</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="customer-ltv-chart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Supplier Performance</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="supplier-performance-chart"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main Charts Row 8 -->
-    <div class="dashboard-charts">
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Website Traffic Sources</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="traffic-sources-chart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Conversion Funnel</div>
-            </div>
-            <div class="chart-container" style="height: 320px;">
-                <canvas id="conversion-funnel-chart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">Recent Activity</div>
-                <div class="chart-actions">
-                    <div class="activity-filter">
-                        <select id="activity-filter" class="filter-select">
-                            <option value="all">All Activities</option>
-                            <option value="login">Logins</option>
-                            <option value="order">Orders</option>
-                            <option value="inventory">Inventory</option>
-                            <option value="settings">Settings</option>
-                        </select>
-                    </div>
-                    <div class="chart-action">View All</div>
-                </div>
-            </div>
-            <div class="activity-list" style="height: 320px; overflow-y: auto;">
-                <div class="activity-item" data-type="login">
-                    <div class="activity-icon login">
-                        <i class="mdi mdi-login"></i>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Login</div>
-                        <div class="activity-description">Admin logged in from 192.168.1.1</div>
-                        <div class="activity-time">Today, 10:30 AM</div>
-                    </div>
-                </div>
-                
-                <div class="activity-item" data-type="order">
-                    <div class="activity-icon order">
-                        <i class="mdi mdi-cart"></i>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">New Order</div>
-                        <div class="activity-description">Order #12345 was created</div>
-                        <div class="activity-time">Today, 9:45 AM</div>
-                    </div>
-                </div>
-                
-                <div class="activity-item" data-type="inventory">
-                    <div class="activity-icon inventory">
-                        <i class="mdi mdi-package-variant"></i>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Inventory Update</div>
-                        <div class="activity-description">Added 10 units of Smartphone X</div>
-                        <div class="activity-time">Yesterday, 4:20 PM</div>
-                    </div>
-                </div>
-                
-                <div class="activity-item" data-type="settings">
-                    <div class="activity-icon settings">
-                        <i class="mdi mdi-cog"></i>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Settings Changed</div>
-                        <div class="activity-description">Updated tax settings</div>
-                        <div class="activity-time">Yesterday, 2:15 PM</div>
-                    </div>
-                </div>
-                
-                <div class="activity-item" data-type="order">
-                    <div class="activity-icon order">
-                        <i class="mdi mdi-cart"></i>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Order Status</div>
-                        <div class="activity-description">Order #12342 was cancelled</div>
-                        <div class="activity-time">Yesterday, 11:30 AM</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<!-- Dashboard initialization script -->
 <script>
+    // Global variable to track chart initialization status
+    let chartsInitialized = false;
+    let chartLoadAttempts = 0;
+    const MAX_CHART_LOAD_ATTEMPTS = 3;
+    
+    // Check and initialize dashboard when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
-        // Revenue Trends Chart
-        const revenueTrendCtx = document.getElementById('revenue-trend-chart').getContext('2d');
-        const revenueTrendChart = new Chart(revenueTrendCtx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Revenue',
-                    data: [5500, 6200, 4800, 7100, 6800, 8200, 7500],
-                    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-                    borderColor: '#4A90E2',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: function(context) {
-                                return '₹' + context.raw.toLocaleString();
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value.toLocaleString();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Sales by Category Chart
-        const salesCategoryCtx = document.getElementById('sales-category-chart').getContext('2d');
-        const salesCategoryChart = new Chart(salesCategoryCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Electronics', 'Clothing', 'Home & Kitchen', 'Books', 'Others'],
-                datasets: [{
-                    data: [45, 25, 15, 10, 5],
-                    backgroundColor: [
-                        '#4A90E2',
-                        '#50C878',
-                        '#FF8C00',
-                        '#9370DB',
-                        '#FF6B6B'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            padding: 20,
-                            boxWidth: 12
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.raw + '%';
-                            }
-                        }
-                    }
-                },
-                cutout: '70%'
-            }
-        });
-        
-        // Customer Acquisition Chart
-        const customerAcquisitionCtx = document.getElementById('customer-acquisition-chart').getContext('2d');
-        const customerAcquisitionChart = new Chart(customerAcquisitionCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'New Customers',
-                    data: [120, 150, 180, 250, 300, 380],
-                    borderColor: '#50C878',
-                    backgroundColor: 'rgba(80, 200, 120, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-        
-        // Order Status Distribution Chart
-        const orderStatusCtx = document.getElementById('order-status-chart').getContext('2d');
-        const orderStatusChart = new Chart(orderStatusCtx, {
-            type: 'pie',
-            data: {
-                labels: ['Completed', 'Processing', 'Pending', 'Cancelled'],
-                datasets: [{
-                    data: [65, 20, 10, 5],
-                    backgroundColor: [
-                        '#10B981',
-                        '#3B82F6',
-                        '#F59E0B',
-                        '#EF4444'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            padding: 20,
-                            boxWidth: 12
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Sales by Location Chart
-        const salesLocationCtx = document.getElementById('sales-location-chart').getContext('2d');
-        const salesLocationChart = new Chart(salesLocationCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Hyderabad', 'Kolkata'],
-                datasets: [{
-                    label: 'Sales',
-                    data: [12500, 19000, 15500, 9800, 14200, 8500],
-                    backgroundColor: 'rgba(74, 144, 226, 0.7)',
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return '₹' + context.raw.toLocaleString();
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value.toLocaleString();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Customer Demographics Chart
-        const customerDemographicsCtx = document.getElementById('customer-demographics-chart').getContext('2d');
-        const customerDemographicsChart = new Chart(customerDemographicsCtx, {
-            type: 'polarArea',
-            data: {
-                labels: ['18-24', '25-34', '35-44', '45-54', '55+'],
-                datasets: [{
-                    data: [20, 35, 25, 15, 5],
-                    backgroundColor: [
-                        'rgba(74, 144, 226, 0.7)',
-                        'rgba(80, 200, 120, 0.7)',
-                        'rgba(255, 140, 0, 0.7)',
-                        'rgba(147, 112, 219, 0.7)',
-                        'rgba(255, 107, 107, 0.7)'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            boxWidth: 12,
-                            padding: 10
-                        }
-                    }
-                },
-                scales: {
-                    r: {
-                        ticks: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Inventory Levels Chart
-        const inventoryLevelsCtx = document.getElementById('inventory-levels-chart').getContext('2d');
-        const inventoryLevelsChart = new Chart(inventoryLevelsCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Electronics', 'Clothing', 'Home & Kitchen', 'Books', 'Sports', 'Beauty'],
-                datasets: [{
-                    label: 'Current Stock',
-                    data: [250, 420, 180, 310, 150, 220],
-                    backgroundColor: 'rgba(74, 144, 226, 0.7)',
-                    borderWidth: 0
-                }, {
-                    label: 'Reorder Level',
-                    data: [100, 150, 80, 120, 50, 90],
-                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Units'
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Payment Methods Chart
-        const paymentMethodsCtx = document.getElementById('payment-methods-chart').getContext('2d');
-        const paymentMethodsChart = new Chart(paymentMethodsCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['UPI', 'Cards', 'Cash', 'Net Banking', 'Wallets'],
-                datasets: [{
-                    data: [45, 25, 15, 10, 5],
-                    backgroundColor: [
-                        '#4A90E2',
-                        '#50C878',
-                        '#FF8C00',
-                        '#9370DB',
-                        '#FF6B6B'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            boxWidth: 12,
-                            padding: 10
-                        }
-                    }
-                },
-                cutout: '60%'
-            }
-        });
-        
-        // Hourly Sales Distribution Chart
-        const hourlySalesCtx = document.getElementById('hourly-sales-chart').getContext('2d');
-        const hourlySalesChart = new Chart(hourlySalesCtx, {
-            type: 'bar',
-            data: {
-                labels: ['9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM', '6PM'],
-                datasets: [{
-                    label: 'Orders',
-                    data: [12, 19, 15, 25, 22, 18, 20, 23, 17, 15],
-                    backgroundColor: 'rgba(74, 144, 226, 0.7)',
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 5
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Product Performance Chart
-        const productPerformanceCtx = document.getElementById('product-performance-chart').getContext('2d');
-        const productPerformanceChart = new Chart(productPerformanceCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Smartphone X', 'Laptop Pro', 'Wireless Headphones', 'Smart Watch', 'Bluetooth Speaker'],
-                datasets: [{
-                    label: 'Units Sold',
-                    data: [120, 95, 85, 70, 65],
-                    backgroundColor: 'rgba(74, 144, 226, 0.7)',
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-        
-        // Sales Forecast Chart
-        const salesForecastCtx = document.getElementById('sales-forecast-chart').getContext('2d');
-        const salesForecastChart = new Chart(salesForecastCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-                datasets: [{
-                    label: 'Actual Sales',
-                    data: [35000, 42000, 38000, 45000, 48000, 52000, null, null, null],
-                    borderColor: '#4A90E2',
-                    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }, {
-                    label: 'Forecast',
-                    data: [null, null, null, null, null, 52000, 56000, 62000, 68000],
-                    borderColor: '#50C878',
-                    backgroundColor: 'rgba(80, 200, 120, 0.1)',
-                    borderWidth: 2,
-                    borderDash: [5, 5],
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                if (context.raw !== null) {
-                                    return context.dataset.label + ': ₹' + context.raw.toLocaleString();
-                                }
-                                return '';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value.toLocaleString();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Marketing ROI Chart
-        const marketingRoiCtx = document.getElementById('marketing-roi-chart').getContext('2d');
-        const marketingRoiChart = new Chart(marketingRoiCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Social Media', 'Email', 'Search', 'Display Ads', 'Affiliates'],
-                datasets: [{
-                    label: 'ROI (%)',
-                    data: [320, 280, 250, 180, 150],
-                    backgroundColor: [
-                        '#4A90E2',
-                        '#50C878',
-                        '#FF8C00',
-                        '#9370DB',
-                        '#FF6B6B'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'ROI: ' + context.raw + '%';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Customer LTV Chart
-        const customerLtvCtx = document.getElementById('customer-ltv-chart').getContext('2d');
-        const customerLtvChart = new Chart(customerLtvCtx, {
-            type: 'line',
-            data: {
-                labels: ['0-6 months', '6-12 months', '1-2 years', '2-3 years', '3+ years'],
-                datasets: [{
-                    label: 'Customer Lifetime Value',
-                    data: [5000, 8500, 12000, 15800, 18500],
-                    borderColor: '#4A90E2',
-                    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'LTV: ₹' + context.raw.toLocaleString();
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value.toLocaleString();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Supplier Performance Chart
-        const supplierPerformanceCtx = document.getElementById('supplier-performance-chart').getContext('2d');
-        const supplierPerformanceChart = new Chart(supplierPerformanceCtx, {
-            type: 'radar',
-            data: {
-                labels: ['Quality', 'On-time Delivery', 'Price', 'Communication', 'Reliability'],
-                datasets: [{
-                    label: 'Supplier A',
-                    data: [90, 85, 70, 95, 80],
-                    backgroundColor: 'rgba(74, 144, 226, 0.2)',
-                    borderColor: '#4A90E2',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#4A90E2'
-                }, {
-                    label: 'Supplier B',
-                    data: [75, 90, 85, 70, 95],
-                    backgroundColor: 'rgba(80, 200, 120, 0.2)',
-                    borderColor: '#50C878',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#50C878'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        angleLines: {
-                            display: true
-                        },
-                        suggestedMin: 0,
-                        suggestedMax: 100
-                    }
-                }
-            }
-        });
-        
-        // Traffic Sources Chart
-        const trafficSourcesCtx = document.getElementById('traffic-sources-chart').getContext('2d');
-        const trafficSourcesChart = new Chart(trafficSourcesCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Direct', 'Organic Search', 'Social Media', 'Email', 'Referral', 'Paid Ads'],
-                datasets: [{
-                    data: [30, 25, 20, 10, 10, 5],
-                    backgroundColor: [
-                        '#4A90E2',
-                        '#50C878',
-                        '#FF8C00',
-                        '#9370DB',
-                        '#FF6B6B',
-                        '#FFD700'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            boxWidth: 12,
-                            padding: 10
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.raw + '%';
-                            }
-                        }
-                    }
-                },
-                cutout: '60%'
-            }
-        });
-        
-        // Conversion Funnel Chart
-        const conversionFunnelCtx = document.getElementById('conversion-funnel-chart').getContext('2d');
-        const conversionFunnelChart = new Chart(conversionFunnelCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Visitors', 'Product Views', 'Add to Cart', 'Checkout', 'Purchase'],
-                datasets: [{
-                    label: 'Conversion Funnel',
-                    data: [1000, 750, 500, 300, 200],
-                    backgroundColor: [
-                        '#4A90E2',
-                        '#357ABD',
-                        '#2A6099',
-                        '#1F4674',
-                        '#142C4F'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-        
-        // Chart period toggle
-        const chartPeriods = document.querySelectorAll('.chart-period');
-        chartPeriods.forEach(period => {
-            period.addEventListener('click', function() {
-                // Remove active class from all periods
-                chartPeriods.forEach(p => p.classList.remove('active'));
-                
-                // Add active class to clicked period
-                this.classList.add('active');
-                
-                // Get period value
-                const periodValue = this.getAttribute('data-period');
-                
-                // Update chart data based on period
-                let labels, data;
-                
-                switch (periodValue) {
-                    case 'day':
-                        labels = ['9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM'];
-                        data = [1200, 1800, 2200, 3000, 2500, 2200, 3200, 2800, 3100, 2500];
-                        break;
-                    case 'week':
-                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                        data = [5500, 6200, 4800, 7100, 6800, 8200, 7500];
-                        break;
-                    case 'month':
-                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                        data = [22000, 25000, 28000, 24000];
-                        break;
-                    case 'year':
-                        labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                        data = [65000, 72000, 68000, 80000, 75000, 85000, 78000, 76000, 90000, 88000, 92000, 100000];
-                        break;
-                }
-                
-                // Update chart data
-                revenueTrendChart.data.labels = labels;
-                revenueTrendChart.data.datasets[0].data = data;
-                revenueTrendChart.update();
-            });
-        });
-        
-        // Widget actions
-        const widgetActions = document.querySelectorAll('.chart-action');
-        widgetActions.forEach(action => {
-            action.addEventListener('click', function() {
-                const widgetTitle = this.parentElement.parentElement.querySelector('.chart-title').textContent;
-                
-                // Show notification
-                if (window.Notifications) {
-                    window.Notifications.show(`Viewing all ${widgetTitle}`, 'info');
-                }
-            });
-        });
-
-        // Add animation to metrics
-        document.querySelectorAll('.metric-value').forEach(metric => {
-            const value = metric.textContent;
-            metric.textContent = '0';
+        console.log('DOM loaded, checking for Chart.js availability');
+        initChartJsWithRetry();
+    });
+    
+    // Event listener for custom chartjs-loaded event
+    document.addEventListener('chartjs-loaded', function() {
+        console.log('Chart.js loaded event received, initializing dashboard');
+        setTimeout(initChartJsWithRetry, 100); // Short delay to ensure everything is registered
+    });
+    
+    function initChartJsWithRetry() {
+        // Check if Chart.js is loaded
+        if (typeof Chart === 'undefined') {
+            console.warn(`Chart.js not available (attempt ${chartLoadAttempts + 1}/${MAX_CHART_LOAD_ATTEMPTS})`);
             
-            // Animate the number
-            let start = 0;
-            const end = parseFloat(value.replace(/[^\d.-]/g, ''));
-            const duration = 1500;
-            const startTime = performance.now();
-            const unit = value.replace(/[\d.-]/g, '');
-            
-            function animateValue(timestamp) {
-                const runtime = timestamp - startTime;
-                const progress = Math.min(runtime / duration, 1);
-                const currentValue = Math.floor(progress * end);
+            if (chartLoadAttempts < MAX_CHART_LOAD_ATTEMPTS) {
+                chartLoadAttempts++;
                 
-                metric.textContent = currentValue + unit;
+                // Try to load Chart.js again from local source
+                console.log('Attempting to load Chart.js from local source');
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = "{{ url_for('static', filename='js/chart.min.js') }}";
+                document.head.appendChild(fallbackScript);
                 
-                if (runtime < duration) {
-                    requestAnimationFrame(animateValue);
-                } else {
-                    metric.textContent = value;
-                }
-            }
-            
-            requestAnimationFrame(animateValue);
-        });
-        
-        // Add hover effects to charts
-        document.querySelectorAll('.chart-card').forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                const canvas = this.querySelector('canvas');
-                if (canvas) {
-                    const chartInstance = Chart.getChart(canvas);
-                    if (chartInstance) {
-                        chartInstance.update();
-                    }
-                }
-            });
-        });
-        
-        // Initialize all charts with animations
-        const allCharts = [
-            revenueTrendChart,
-            salesCategoryChart,
-            customerAcquisitionChart,
-            orderStatusChart,
-            salesLocationChart,
-            customerDemographicsChart,
-            inventoryLevelsChart,
-            paymentMethodsChart,
-            hourlySalesChart,
-            productPerformanceChart,
-            salesForecastChart,
-            marketingRoiChart,
-            customerLtvChart,
-            supplierPerformanceChart,
-            trafficSourcesChart,
-            conversionFunnelChart
-        ];
-        
-        allCharts.forEach(chart => {
-            if (chart) {
-                chart.options.animation = {
-                    duration: 1500,
-                    easing: 'easeOutQuart'
+                fallbackScript.onload = function() {
+                    console.log('Chart.js loaded from fallback source on attempt', chartLoadAttempts);
+                    setTimeout(initializeDashboard, 300);
                 };
                 
-                // Ensure proper sizing
-                chart.options.maintainAspectRatio = false;
-                chart.options.responsive = true;
-                
-                // Update the chart
-                chart.update();
-            }
-        });
-        
-        // Fix chart sizing on window resize
-        window.addEventListener('resize', function() {
-            allCharts.forEach(chart => {
-                if (chart) {
-                    chart.resize();
-                    chart.update();
-                }
-            });
-        });
-        
-        // Activity Filter Functionality
-        const activityFilter = document.getElementById('activity-filter');
-        if (activityFilter) {
-            activityFilter.addEventListener('change', function() {
-                const filterValue = this.value;
-                const activityItems = document.querySelectorAll('.activity-item');
-                
-                activityItems.forEach(item => {
-                    if (filterValue === 'all' || item.getAttribute('data-type') === filterValue) {
-                        item.classList.remove('hidden');
+                fallbackScript.onerror = function() {
+                    console.error(`Failed to load Chart.js on attempt ${chartLoadAttempts}`);
+                    if (chartLoadAttempts >= MAX_CHART_LOAD_ATTEMPTS) {
+                        showChartError('Failed to load visualization library after multiple attempts');
                     } else {
-                        item.classList.add('hidden');
+                        // Try again with a delay
+                        setTimeout(initChartJsWithRetry, 1000);
                     }
-                });
-            });
+                };
+                
+                return;
+            } else {
+                console.error('Maximum Chart.js load attempts reached. Displaying error.');
+                showChartError('Chart.js could not be loaded after multiple attempts');
+                return;
+            }
         }
         
-        // Add animation to activity items on scroll
-        const activityList = document.querySelector('.activity-list');
-        if (activityList) {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
+        // Chart.js is available, proceed with initialization
+        console.log('Chart.js is available, initializing dashboard');
+        
+        // Set a timeout for chart initialization in case it takes too long
+        const initTimeout = setTimeout(function() {
+            if (!chartsInitialized) {
+                console.error('Chart initialization timed out');
+                showChartError('Chart initialization timed out. Check your internet connection.');
+            }
+        }, 12000); // 12 second timeout (increased for better reliability)
+        
+        // Try to initialize charts
+        try {
+            initializeDashboard();
+            chartsInitialized = true;
+            clearTimeout(initTimeout);
+        } catch (error) {
+            console.error('Error initializing dashboard:', error);
+            showChartError('Error initializing dashboard charts: ' + error.message);
+            clearTimeout(initTimeout);
+        }
+    }
+    
+    // Show error if Chart.js or initialization fails
+    function showChartError(errorMessage = 'Dashboard visualization library failed to load') {
+        // Display error message on the page
+        document.querySelectorAll('.chart-container').forEach(container => {
+            container.innerHTML = `
+                <div class="chart-error">
+                    <i class="mdi mdi-alert-circle"></i>
+                    <p>${errorMessage}</p>
+                    <p style="font-size: 0.875rem; margin-bottom: 15px; color: #666;">Please check your internet connection and try again</p>
+                    <button onclick="retryLoadCharts()">
+                        Retry Loading Charts
+                    </button>
+                </div>
+            `;
+        });
+        
+        // Show notification if available
+        if (window.Notifications) {
+            window.Notifications.show(errorMessage + '. Please refresh the page.', 'error');
+        } else if (window.Notification && typeof window.Notification.show === 'function') {
+            window.Notification.show(errorMessage + '. Please refresh the page.', 'error');
+        }
+    }
+    
+    // Retry function that can be called from UI
+    function retryLoadCharts() {
+        console.log('Manual retry of chart loading initiated');
+        chartLoadAttempts = 0; // Reset counter for manual retry
+        
+        // Clear any existing errors
+        document.querySelectorAll('.chart-container').forEach(container => {
+            container.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; height: 100%; min-height: 200px;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-left: 15px; color: #666;">Loading charts...</p>
+                </div>
+            `;
+        });
+        
+        // Try loading again
+        initChartJsWithRetry();
+    }
+    
+    // Helper function to handle individual chart errors
+    function handleChartError(chartId, error) {
+        console.error(`Error initializing chart ${chartId}:`, error);
+        const container = document.getElementById(chartId);
+        if (container) {
+            const parent = container.closest('.chart-container') || container.parentElement;
+            parent.innerHTML = `
+                <div class="chart-error">
+                    <i class="mdi mdi-chart-line-variant"></i>
+                    <p>Chart could not be loaded</p>
+                    <p style="font-size: 0.875rem; color: #666;">${error.message || 'Unknown error'}</p>
+                    <button onclick="retryLoadCharts()">
+                        Retry
+                    </button>
+                </div>
+            `;
+        }
+    }
+    
+    // Initialize dashboard charts
+    function initializeDashboard() {
+        console.log('Initializing dashboard charts...');
+        
+        // Check again if Chart.js is available
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is not available');
+            showChartError('Chart.js is not available');
+            return;
+        }
+        
+        try {
+            // Clear any existing charts first to prevent conflicts
+            document.querySelectorAll('.chart-container canvas').forEach(canvas => {
+                if (canvas.chart) {
+                    try {
+                        canvas.chart.destroy();
+                    } catch (e) {
+                        console.warn('Error destroying existing chart:', e);
                     }
-                });
-            }, { threshold: 0.1 });
-            
-            document.querySelectorAll('.activity-item').forEach(item => {
-                observer.observe(item);
+                }
             });
             
-            // Add click effect on activity items
-            document.querySelectorAll('.activity-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    this.style.backgroundColor = 'rgba(74, 144, 226, 0.1)';
-                    setTimeout(() => {
-                        this.style.backgroundColor = '';
-                    }, 300);
-                });
+            // Chart.js default configuration
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.font.size = 12;
+            Chart.defaults.color = '#2c3e50';
+            Chart.defaults.plugins.tooltip.padding = 10;
+            Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            Chart.defaults.plugins.tooltip.titleColor = '#ffffff';
+            Chart.defaults.plugins.tooltip.bodyColor = '#ffffff';
+            Chart.defaults.plugins.tooltip.borderWidth = 0;
+            Chart.defaults.plugins.tooltip.borderRadius = 6;
+            Chart.defaults.plugins.tooltip.displayColors = true;
+            Chart.defaults.plugins.tooltip.boxPadding = 6;
+            
+            // Initialize chart objects
+            let revenueTrendChart, salesCategoryChart, customerAcquisitionChart, orderStatusChart;
+            
+            // Revenue Trend Chart
+            try {
+                const revenueTrendCtx = document.getElementById('revenue-trend-chart');
+                if (revenueTrendCtx) {
+                    revenueTrendChart = new Chart(revenueTrendCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                            datasets: [{
+                                label: 'Revenue',
+                                data: [5500, 6200, 4800, 7100, 6800, 8200, 7500],
+                                backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                                borderColor: '#4A90E2',
+                                borderWidth: 2,
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            return '₹' + context.raw.toLocaleString();
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '₹' + value.toLocaleString();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    // Store reference to chart instance on canvas element
+                    revenueTrendCtx.chart = revenueTrendChart;
+                    console.log('Revenue Trend Chart initialized');
+                }
+            } catch (error) {
+                handleChartError('revenue-trend-chart', error);
+            }
+            
+            // Sales by Category Chart
+            try {
+                const salesCategoryCtx = document.getElementById('sales-category-chart');
+                if (salesCategoryCtx) {
+                    salesCategoryChart = new Chart(salesCategoryCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Electronics', 'Clothing', 'Home & Kitchen', 'Books', 'Others'],
+                            datasets: [{
+                                data: [45, 25, 15, 10, 5],
+                                backgroundColor: [
+                                    '#4A90E2',
+                                    '#50C878',
+                                    '#FF8C00',
+                                    '#9370DB',
+                                    '#FF6B6B'
+                                ],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        padding: 20,
+                                        boxWidth: 12
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.label + ': ' + context.raw + '%';
+                                        }
+                                    }
+                                }
+                            },
+                            cutout: '70%'
+                        }
+                    });
+                    // Store reference to chart instance on canvas element
+                    salesCategoryCtx.chart = salesCategoryChart;
+                    console.log('Sales Category Chart initialized');
+                }
+            } catch (error) {
+                handleChartError('sales-category-chart', error);
+            }
+            
+            // Customer Acquisition Chart
+            try {
+                const customerAcquisitionCtx = document.getElementById('customer-acquisition-chart');
+                if (customerAcquisitionCtx) {
+                    customerAcquisitionChart = new Chart(customerAcquisitionCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                            datasets: [{
+                                label: 'New Customers',
+                                data: [120, 150, 180, 125, 160, 210],
+                                backgroundColor: '#4A90E2'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                    // Store reference to chart instance on canvas element
+                    customerAcquisitionCtx.chart = customerAcquisitionChart;
+                    console.log('Customer Acquisition Chart initialized');
+                }
+            } catch (error) {
+                handleChartError('customer-acquisition-chart', error);
+            }
+            
+            // Order Status Chart
+            try {
+                const orderStatusCtx = document.getElementById('order-status-chart');
+                if (orderStatusCtx) {
+                    orderStatusChart = new Chart(orderStatusCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Completed', 'Processing', 'Pending', 'Cancelled'],
+                            datasets: [{
+                                data: [65, 20, 10, 5],
+                                backgroundColor: [
+                                    '#10B981',
+                                    '#3B82F6',
+                                    '#F59E0B',
+                                    '#EF4444'
+                                ],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        padding: 20,
+                                        boxWidth: 12
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    // Store reference to chart instance on canvas element
+                    orderStatusCtx.chart = orderStatusChart;
+                    console.log('Order Status Chart initialized');
+                }
+            } catch (error) {
+                handleChartError('order-status-chart', error);
+            }
+            
+            console.log('Dashboard initialized successfully');
+            chartsInitialized = true;
+            
+        } catch (error) {
+            console.error('Error initializing dashboard:', error);
+            showChartError('Error initializing dashboard: ' + error.message);
+        }
+    }
+    
+    // Handle window resize to make charts responsive
+    window.addEventListener('resize', function() {
+        if (chartsInitialized) {
+            document.querySelectorAll('.chart-container canvas').forEach(canvas => {
+                if (canvas.chart) {
+                    try {
+                        canvas.chart.resize();
+                    } catch (error) {
+                        console.error('Error resizing chart:', error);
+                    }
+                }
             });
         }
     });
+    
+    // Function to update chart data periodically (simulated live data)
+    function updateChartData() {
+        if (!chartsInitialized) return;
+        
+        document.querySelectorAll('.chart-container canvas').forEach(canvas => {
+            if (canvas.chart) {
+                try {
+                    // Add slight random variations to chart data
+                    if (canvas.chart.data && canvas.chart.data.datasets && canvas.chart.data.datasets.length > 0) {
+                        const dataset = canvas.chart.data.datasets[0];
+                        if (dataset.data && Array.isArray(dataset.data)) {
+                            dataset.data = dataset.data.map(value => {
+                                // Add up to 5% random variation
+                                const variation = Math.random() * 0.05 * value;
+                                return Math.max(0, value + (Math.random() > 0.5 ? variation : -variation));
+                            });
+                            canvas.chart.update('none'); // Update without animation
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Error updating chart data:', e);
+                }
+            }
+        });
+        
+        // Schedule next update
+        setTimeout(updateChartData, 30000); // Update every 30 seconds
+    }
+    
+    // Start periodic updates after initial load
+    setTimeout(updateChartData, 15000); // First update after 15 seconds
 </script>
 {% endblock %}

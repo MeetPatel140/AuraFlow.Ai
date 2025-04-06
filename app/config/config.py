@@ -1,5 +1,5 @@
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -8,9 +8,10 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev_key_change_in_production')
     DEBUG = False
     
-    # Database
+    # Flask-SQLAlchemy settings
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///instance/auraflow.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
+
     # JWT settings
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt_dev_key_change_in_production')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
@@ -80,4 +81,4 @@ config_by_name = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig
-} 
+}

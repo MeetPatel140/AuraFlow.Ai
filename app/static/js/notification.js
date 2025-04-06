@@ -34,16 +34,16 @@ window.Notifications = window.Notifications || {
         }
         
         .notification {
-          padding: 15px 20px;
-          border-radius: 8px;
+          padding: 10px 15px;
+          border-radius: 4px;
           background: white;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
           min-width: 300px;
           max-width: 100%;
-          animation: notificationSlideIn 0.3s ease-out;
+          animation: notificationSlideIn 0.3s ease;
           opacity: 0;
           transform: translateX(100%);
         }
@@ -53,63 +53,64 @@ window.Notifications = window.Notifications || {
           transform: translateX(0);
         }
         
-        .notification.success {
-          border-left: 4px solid #28A745;
-        }
-        
-        .notification.error {
-          border-left: 4px solid #DC3545;
-        }
-        
-        .notification.warning {
-          border-left: 4px solid #FFC107;
-        }
-        
+        /* New clean design for all notification types */
+        .notification.success,
+        .notification.error,
+        .notification.warning,
         .notification.info {
-          border-left: 4px solid #17A2B8;
+          border-left: none;
+          border-radius: 4px;
         }
         
         .notification-icon {
-          font-size: 20px;
+          font-size: 18px;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          flex-shrink: 0;
         }
         
         .notification.success .notification-icon {
-          color: #28A745;
+          color: #fff;
+          background-color: #28A745;
         }
         
         .notification.error .notification-icon {
-          color: #DC3545;
+          color: #fff;
+          background-color: #DC3545;
         }
         
         .notification.warning .notification-icon {
-          color: #FFC107;
+          color: #fff;
+          background-color: #FFC107;
         }
         
         .notification.info .notification-icon {
-          color: #17A2B8;
+          color: #fff;
+          background-color: #17A2B8;
         }
         
         .notification-content {
           flex-grow: 1;
-        }
-        
-        .notification-title {
-          font-weight: 600;
-          margin-bottom: 4px;
-        }
-        
-        .notification-message {
           font-size: 14px;
-          color: #6C757D;
+          color: #333;
+          font-weight: 500;
         }
         
         .notification-close {
           background: none;
           border: none;
-          color: #6C757D;
+          color: #aaa;
           cursor: pointer;
           padding: 4px;
-          font-size: 16px;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-left: 5px;
         }
         
         @keyframes notificationSlideIn {
@@ -152,10 +153,17 @@ window.Notifications = window.Notifications || {
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
+    
+    // Use proper icon for each notification type
+    let icon = 'information';
+    if (type === 'success') icon = 'check';
+    else if (type === 'error') icon = 'close';
+    else if (type === 'warning') icon = 'alert';
+    
     notification.innerHTML = `
-      <div class="notification-icon"><i class="mdi mdi-${type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : type === 'warning' ? 'alert' : 'information'}-outline"></i></div>
+      <div class="notification-icon"><i class="mdi mdi-${icon}"></i></div>
       <div class="notification-content">${message}</div>
-      <button class="notification-close">&times;</button>
+      <button class="notification-close"><i class="mdi mdi-close"></i></button>
     `;
     
     // Add to container

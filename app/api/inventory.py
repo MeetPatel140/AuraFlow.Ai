@@ -9,19 +9,66 @@ from app.extensions import db
 from app.models.product import Product
 from app.models.supplier import Supplier
 from app.models.tenant import Tenant
+from app.models.category import Category
 
-inventory_bp = Blueprint('inventory', __name__, url_prefix='/api')
+# Change the URL prefix to /api/inventory
+inventory_bp = Blueprint('inventory', __name__, url_prefix='/api/inventory')
 
-@inventory_bp.route('/inventory', methods=['GET'])
+@inventory_bp.route('/', methods=['GET'])
 @login_required
 def get_inventory():
-    """Get inventory data"""
-    products = Product.query.filter_by(tenant_id=current_user.tenant_id).all()
-    return jsonify({
-        'products': [product.to_dict() for product in products]
-    })
+    """Fetch inventory data for the current user's tenant"""
+    try:
+        # Use a more direct approach with raw SQL to avoid SQLAlchemy ORM issues with missing columns
+        from sqlalchemy import text
+        
+        # Execute a raw SQL query to get only the basic columns we know exist
+        sql = text("""
+            SELECT id, name, sku, price, cost_price, stock_quantity, category, 
+                   image_url, is_active, tenant_id, supplier_id, created_at, updated_at
+            FROM products
+            WHERE tenant_id = :tenant_id
+        """)
+        
+        result = db.session.execute(sql, {"tenant_id": current_user.tenant_id})
+        
+        # Convert result to list of dictionaries
+        products = []
+        for row in result:
+            product = {
+                'id': row.id,
+                'name': row.name,
+                'sku': row.sku,
+                'price': float(row.price) if row.price else 0,
+                'selling_price': float(row.price) if row.price else 0,
+                'cost_price': float(row.cost_price) if row.cost_price else 0,
+                'stock': row.stock_quantity,
+                'stock_quantity': row.stock_quantity,
+                'category': row.category,
+                'category_id': row.category,  # For backward compatibility
+                'image_url': row.image_url,
+                'is_active': row.is_active,
+                'created_at': row.created_at.isoformat() if row.created_at else '',
+                'updated_at': row.updated_at.isoformat() if row.updated_at else ''
+            }
+            products.append(product)
+        
+        # Check if products were found
+        if not products:
+            # Return an empty list instead of 404 to make frontend handling easier
+            return jsonify({"products": [], "message": "No products found"}), 200
+        
+        return jsonify({"products": products, "success": True})
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching inventory: {str(e)}")
+        return jsonify({
+            "message": "Failed to fetch inventory data",
+            "error": str(e),
+            "success": False
+        }), 500
 
-@inventory_bp.route('/inventory/add', methods=['POST'])
+@inventory_bp.route('/add', methods=['POST'])
 @login_required
 def add_product():
     """Add a new product to inventory"""
@@ -30,7 +77,7 @@ def add_product():
         name = request.form.get('name')
         sku = request.form.get('sku')
         barcode = request.form.get('barcode')
-        barcode_type = request.form.get('barcode_type', 'EAN-13')
+        barcode_type = request.form.get('barcode_type', 'CODE128')
         description = request.form.get('description', '')
         category = request.form.get('category')
         brand = request.form.get('brand', '')
@@ -115,7 +162,7 @@ def add_product():
             'message': f"Error adding product: {str(e)}"
         }), 500
 
-@inventory_bp.route('/inventory/delete/<int:product_id>', methods=['DELETE'])
+@inventory_bp.route('/delete/<int:product_id>', methods=['DELETE'])
 @login_required
 def delete_product(product_id):
     """Delete a product from inventory"""
@@ -143,7 +190,7 @@ def delete_product(product_id):
             'message': f"Error deleting product: {str(e)}"
         }), 500
 
-@inventory_bp.route('/inventory/update/<int:product_id>', methods=['PUT'])
+@inventory_bp.route('/update/<int:product_id>', methods=['PUT'])
 @login_required
 def update_product(product_id):
     """Update a product in inventory"""
@@ -228,9 +275,18 @@ def update_product(product_id):
 @login_required
 def get_categories():
     """Get all product categories"""
-    # In a real app, this would fetch from a Category model
-    # For now, return some sample categories
-    categories = [
+    try:
+        # Try to fetch categories from the database
+        categories = Category.query.filter_by(tenant_id=current_user.tenant_id).all()
+        
+        if categories:
+            return jsonify([{
+                "id": category.id,
+                "name": category.name
+            } for category in categories])
+        
+        # If no categories found, return default categories
+        default_categories = [
         {"id": "electronics", "name": "Electronics"},
         {"id": "clothing", "name": "Clothing & Apparel"},
         {"id": "food", "name": "Food & Beverages"},
@@ -241,7 +297,22 @@ def get_categories():
         {"id": "toys", "name": "Toys & Games"}
     ]
     
-    return jsonify(categories)
+        return jsonify(default_categories)
+    except Exception as e:
+        current_app.logger.error(f"Error fetching categories: {str(e)}")
+        # Fallback to default categories
+        default_categories = [
+            {"id": "electronics", "name": "Electronics"},
+            {"id": "clothing", "name": "Clothing & Apparel"},
+            {"id": "food", "name": "Food & Beverages"},
+            {"id": "home", "name": "Home & Kitchen"},
+            {"id": "beauty", "name": "Beauty & Personal Care"},
+            {"id": "sports", "name": "Sports & Outdoors"},
+            {"id": "books", "name": "Books & Stationery"},
+            {"id": "toys", "name": "Toys & Games"}
+        ]
+        
+        return jsonify(default_categories)
 
 @inventory_bp.route('/suppliers', methods=['GET'])
 @login_required
@@ -262,4 +333,29 @@ def get_suppliers():
             for supplier in suppliers
         ]
     
-    return jsonify(suppliers_data) 
+    return jsonify(suppliers_data)
+
+@inventory_bp.route('/<int:product_id>', methods=['GET'])
+@login_required
+def get_product(product_id):
+    """Get a single product's details"""
+    try:
+        product = Product.query.filter_by(id=product_id, tenant_id=current_user.tenant_id).first()
+        
+        if not product:
+            return jsonify({
+                'success': False,
+                'message': 'Product not found'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'product': product.to_dict()
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching product: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f"Error fetching product: {str(e)}"
+        }), 500

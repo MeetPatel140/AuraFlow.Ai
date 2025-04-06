@@ -13,6 +13,7 @@ window.generateSKU = function(silent = false) {
     const categorySelect = document.getElementById('product-category');
     const productNameInput = document.getElementById('product-name');
     const skuInput = document.getElementById('product-sku');
+    const barcodeInput = document.getElementById('product-barcode');
     
     // Log the current values
     console.log('Category:', categorySelect ? categorySelect.value : 'not found');
@@ -21,7 +22,7 @@ window.generateSKU = function(silent = false) {
     // Validate inputs
     if (!categorySelect || !categorySelect.value) {
         if (!silent) {
-            alert('Please select a category first');
+            showNotification('Please select a category first', 'warning');
             if (categorySelect) categorySelect.focus();
         }
         return false;
@@ -29,7 +30,8 @@ window.generateSKU = function(silent = false) {
     
     if (!productNameInput || !productNameInput.value.trim()) {
         if (!silent) {
-            alert('Please enter a product name first');
+            // Removing this notification to avoid duplicates
+            // showNotification('Please enter a product name first', 'warning');
             if (productNameInput) productNameInput.focus();
         }
         return false;
@@ -38,7 +40,7 @@ window.generateSKU = function(silent = false) {
     if (!skuInput) {
         console.error('SKU input field not found');
         if (!silent) {
-            alert('Error: Could not find SKU input field');
+            showNotification('Error: Could not find SKU input field', 'error');
         }
         return false;
     }
@@ -49,17 +51,34 @@ window.generateSKU = function(silent = false) {
         return true;
     }
     
-    // Generate a unique SKU
-    const categoryPrefix = categorySelect.value.substring(0, 2).toUpperCase();
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    // Generate a unique SKU in the format: "SKU-[First2LettersOfProductName][First2LettersOfCategoryName][4DigitTimestamp]"
     const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
+    const categoryPrefix = getCategoryShortCode(categorySelect.value);
     const timestamp = new Date().getTime().toString().slice(-4);
     
-    const sku = `${categoryPrefix}${randomNum}${productPrefix}${timestamp}`;
+    const sku = `SKU-${productPrefix}${categoryPrefix}${timestamp}`;
     console.log('Generated SKU:', sku);
     
     // Set the SKU value
     skuInput.value = sku;
+    
+    // Also set the same value to barcode input
+    if (barcodeInput) {
+        console.log('Found barcode input field, setting value:', sku);
+        barcodeInput.value = sku;
+        
+        // Add visual feedback for barcode input
+        barcodeInput.style.backgroundColor = '#f0fff4';
+        barcodeInput.style.borderColor = '#68d391';
+        
+        // Reset barcode styling after a delay
+        setTimeout(() => {
+            barcodeInput.style.backgroundColor = '';
+            barcodeInput.style.borderColor = '';
+        }, 1500);
+    } else {
+        console.warn('Barcode input field not found');
+    }
     
     // Add visual feedback
     skuInput.style.backgroundColor = '#f0fff4';
@@ -73,11 +92,45 @@ window.generateSKU = function(silent = false) {
     
     // Show success message only if not silent
     if (!silent) {
-        alert('SKU generated successfully: ' + sku);
+        if (typeof showNotification === 'function') {
+            showNotification('SKU generated successfully: ' + sku, 'success');
+        } else {
+            alert('SKU generated successfully: ' + sku);
+        }
     }
     
     return true;
 };
+
+// Helper function to get category short code
+function getCategoryShortCode(categoryValue) {
+    // Try to extract category name from various formats
+    let categoryName = categoryValue;
+    
+    // If the value is a select option text
+    const categorySelect = document.getElementById('product-category');
+    if (categorySelect) {
+        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+        if (selectedOption) {
+            categoryName = selectedOption.text || categoryName;
+        }
+    }
+    
+    // If the category is a number (ID), try to get the text
+    if (!isNaN(categoryValue) && categorySelect) {
+        // Look for the option with this value
+        const options = categorySelect.options;
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value == categoryValue) {
+                categoryName = options[i].text;
+                break;
+            }
+        }
+    }
+    
+    // Extract first 2 characters of category name
+    return categoryName.substring(0, 2).toUpperCase();
+}
 
 // Function to check if we should auto-generate SKU
 function checkAutoGenerateSKU() {
@@ -143,16 +196,6 @@ function checkAutoGenerateSKU() {
             // Check if we already have values that would trigger SKU generation
             setTimeout(checkAutoGenerateSKU, 100);
             
-            // Set up a mutation observer to detect changes to the form fields
-            const observer = new MutationObserver(function(mutations) {
-                console.log('Mutation observed in form fields');
-                setTimeout(checkAutoGenerateSKU, 50);
-            });
-            
-            // Observe both fields for changes to their values
-            observer.observe(categorySelect, { attributes: true, childList: true, characterData: true });
-            observer.observe(productNameInput, { attributes: true, childList: true, characterData: true });
-            
             return true;
         }
         
@@ -166,8 +209,8 @@ function checkAutoGenerateSKU() {
         
         // Set up a polling mechanism to check for the elements
         let attempts = 0;
-        const maxAttempts = 20;
-        const pollInterval = 100; // ms
+        const maxAttempts = 5; // Reduced from 20 to 5
+        const pollInterval = 300; // Increased from 100ms to 300ms
         
         const pollForElements = setInterval(function() {
             attempts++;
@@ -201,13 +244,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         });
         
-        // Also set the onclick attribute directly
-        generateSkuButton.onclick = function(e) {
-            e.preventDefault();
-            window.generateSKU();
-            return false;
-        };
-        
         console.log('Successfully attached event handlers to Generate SKU button');
     } else {
         console.error('Generate SKU button not found in DOM');
@@ -235,24 +271,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 100); // Reduced delay to 100ms for faster response
         });
         
-        productNameInput.addEventListener('change', function() {
-            console.log('Product name change event, checking if we should auto-generate SKU');
-            checkAutoGenerateSKU();
-        });
-        
-        // Also check on blur (when field loses focus)
         productNameInput.addEventListener('blur', function() {
             console.log('Product name blur event, checking if we should auto-generate SKU');
             checkAutoGenerateSKU();
-        });
-        
-        // Add keyup event for more immediate response
-        productNameInput.addEventListener('keyup', function() {
-            console.log('Product name keyup event, checking if we should auto-generate SKU');
-            clearTimeout(productNameInput.autoGenerateTimer);
-            productNameInput.autoGenerateTimer = setTimeout(function() {
-                checkAutoGenerateSKU();
-            }, 100);
         });
     }
     
@@ -261,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up a periodic check for the first few seconds
     let checkCount = 0;
-    const maxChecks = 10;
+    const maxChecks = 5;
     const checkInterval = setInterval(function() {
         checkCount++;
         console.log(`Periodic check for SKU generation (${checkCount}/${maxChecks})`);
@@ -270,5 +291,5 @@ document.addEventListener('DOMContentLoaded', function() {
         if (checkCount >= maxChecks) {
             clearInterval(checkInterval);
         }
-    }, 500);
+    }, 300);
 }); 

@@ -1,16 +1,19 @@
 {% extends "base.html" %}
-{# Force cache update - {{ range(9999999) | random }} #}
 
-{% block title %}Add New Product{% endblock %}
+{% block title %}{% if product %}Edit{% else %}Add New{% endif %} Product{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/inventory_add.css') }}">
-<!-- FilePond Styles -->
-<link href="https://unpkg.com/filepond/dist/filepond.min.css" rel="stylesheet">
-<link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css" rel="stylesheet">
-<link href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.min.css" rel="stylesheet">
-<link href="https://unpkg.com/filepond-plugin-file-poster/dist/filepond-plugin-file-poster.min.css" rel="stylesheet">
-<!-- Custom styles for currency inputs -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Barcode+128&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css">
+
+<!-- Dropzone.js for image upload -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+
+<!-- Barcode libraries -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+<!-- Your existing styles -->
 <style>
     /* Base input styles - modern redesign */
     input[type="text"],
@@ -97,8 +100,8 @@
     }
     
     .currency-symbol {
-        display: flex;
-        align-items: center;
+    display: flex;
+    align-items: center;
         justify-content: center;
         padding: 0 10px;
         height: 100%;
@@ -147,8 +150,8 @@
     }
     
     .input-with-button button {
-        display: flex;
-        align-items: center;
+    display: flex;
+    align-items: center;
         justify-content: center;
         width: 48px;
         background-color: #f0f2f5;
@@ -171,8 +174,8 @@
         display: grid;
         grid-template-columns: 1fr auto 1fr auto 1fr;
         gap: 8px;
-        align-items: center;
-    }
+    align-items: center;
+}
 
     .dimension-field {
         width: 100%;
@@ -184,43 +187,45 @@
         font-weight: 500;
     }
     
-    /* Toggle switch */
+    /* Toggle switch - improved design */
     .toggle-switch {
         display: flex;
         align-items: center;
+        margin-left: 24px;
     }
     
     .toggle-switch input[type="checkbox"] {
         height: 0;
         width: 0;
         visibility: hidden;
-        position: absolute;
+    position: absolute;
     }
     
     .toggle-switch label {
-        cursor: pointer;
-        width: 52px;
+    cursor: pointer;
+        width: 50px;
         height: 26px;
-        background: #ddd;
+        background: #e0e0e0;
         display: block;
         border-radius: 26px;
         position: relative;
-        margin-right: 12px;
+        margin-right: 10px;
         margin-bottom: 0;
-        transition: background-color 0.2s ease;
+        transition: background-color 0.3s ease;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
     }
     
     .toggle-switch label:after {
         content: '';
-        position: absolute;
+    position: absolute;
         top: 3px;
         left: 3px;
         width: 20px;
         height: 20px;
         background: #fff;
         border-radius: 20px;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
     
     .toggle-switch input:checked + label {
@@ -233,9 +238,72 @@
     }
     
     .toggle-label {
-        font-size: 14px;
+        font-size: 15px;
         color: #333;
         font-weight: 500;
+        min-width: 50px;
+    }
+    
+    /* Improved integration of status toggle with buttons */
+    .header-buttons-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    /* Special styling for top buttons */
+    .header-buttons-container .btn-primary {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header-buttons-container .btn-primary:hover {
+        background-color: #3a7bc8;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header-buttons-container .btn-secondary {
+        background-color: #f8f9fa;
+        color: #4a90e2;
+        border: 1px solid #4a90e2;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .header-buttons-container .btn-secondary:hover {
+        background-color: #e9f0f9;
+    }
+    
+    .header-buttons-container .btn-cancel {
+        background-color: #f5f5f5;
+        color: #555;
+        border: 1px solid #ddd;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .header-buttons-container .btn-cancel:hover {
+        background-color: #e8e8e8;
+        color: #333;
     }
     
     /* Profit margin display */
@@ -255,28 +323,32 @@
         padding: 16px;
         background-color: #f9f9f9;
         border: 1px solid #ddd;
-        border-radius: 8px;
+    border-radius: 8px;
         text-align: center;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     
     /* Barcode type selector */
     .barcode-type-selector {
-        display: flex;
-        align-items: center;
-        margin-top: 12px;
-        gap: 12px;
+        margin-bottom: 12px;
     }
     
     .barcode-type-selector label {
-        margin-bottom: 0;
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
         font-size: 14px;
     }
     
     .barcode-type-selector select {
-        width: auto;
-        padding: 8px 12px;
-        border-radius: 6px;
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 14px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        background-color: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     
     /* Adjust these styles for number inputs to prevent the up/down arrows */
@@ -289,13 +361,14 @@
         -moz-appearance: textfield;
     }
     
-    /* Form sections */
+    /* Form sections - with enhanced box design */
     .form-section {
         background-color: #fff;
         border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         padding: 24px;
         margin-bottom: 28px;
+        border: 1px solid #e0e0e0;
     }
     
     .section-title {
@@ -305,26 +378,53 @@
         margin-bottom: 24px;
         padding-bottom: 12px;
         border-bottom: 1px solid #eee;
+        position: relative;
     }
     
-    /* Form actions */
+    .section-title:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: -1px;
+        width: 60px;
+        height: 3px;
+        background-color: #4a90e2;
+        border-radius: 2px;
+    }
+    
+    /* Form actions - updated with right alignment */
     .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 16px;
-        margin-top: 32px;
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+        padding-right: 50px !important;
+        margin-top: 32px !important;
+        gap: 12px !important;
+        position: relative !important;
+    }
+    
+    .form-actions button {
+        margin-left: 8px !important;
+    }
+    
+    /* Add a bit more spacing between buttons */
+    .btn-primary, .btn-secondary, .btn-cancel {
+        margin-right: 0 !important;
     }
     
     .btn-primary {
         background-color: #4a90e2;
-        color: white;
-        border: none;
+    color: white;
+    border: none;
         padding: 12px 24px;
         border-radius: 8px;
-        cursor: pointer;
+    cursor: pointer;
         font-weight: 500;
         transition: background-color 0.2s ease;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     
     .btn-primary:hover {
@@ -341,163 +441,638 @@
         cursor: pointer;
         font-weight: 500;
         transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     
     .btn-cancel:hover {
         background-color: #e8e8e8;
         color: #333;
     }
+    
+    .btn-secondary {
+        background-color: #f8f9fa;
+        color: #4a90e2;
+        border: 1px solid #4a90e2;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #e9f0f9;
+    }
+    
+    .action-buttons-right {
+        display: flex;
+        gap: 12px;
+    }
+    
+    /* Notification styles */
+    .notification-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 350px;
+    }
+    
+    .notification {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateX(120%);
+        transition: transform 0.3s ease;
+        overflow: hidden;
+        opacity: 0;
+    }
+    
+    .notification-show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    
+    .notification-hiding {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    
+    .notification-icon {
+        margin-right: 12px;
+        font-size: 20px;
+    }
+    
+    .notification-content {
+        flex: 1;
+        font-size: 14px;
+    }
+    
+    .notification-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        color: #777;
+        padding: 0;
+        margin-left: 12px;
+    }
+    
+    .notification.success .notification-icon {
+        color: #4CAF50;
+    }
+    
+    .notification.warning .notification-icon {
+        color: #FF9800;
+    }
+    
+    .notification.error .notification-icon {
+        color: #F44336;
+    }
+    
+    .notification.info .notification-icon {
+        color: #2196F3;
+    }
+    
+    /* Improved header design */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .back-link {
+        display: flex;
+        align-items: center;
+        color: #4a90e2;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s ease;
+        font-size: 16px;
+    }
+    
+    .back-link i {
+        margin-right: 8px;
+    }
+    
+    .back-link:hover {
+        color: #3a7bc8;
+    }
+    
+    .status-toggle {
+        display: flex;
+        align-items: center;
+    }
+    
+    .status-label {
+        margin-right: 12px;
+        font-weight: 500;
+        color: #555;
+    }
+    
+    /* Action buttons */
+    .action-buttons-right {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .btn-secondary {
+        background-color: #f8f9fa;
+        color: #4a90e2;
+        border: 1px solid #4a90e2;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #e9f0f9;
+    }
+
+    .product-image-container {
+        margin-top: 20px;
+    }
+
+    .image-upload-wrapper {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .image-upload-box {
+        border: 2px dashed #4A90E2;
+        border-radius: 12px;
+        padding: 40px 20px;
+        text-align: center;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-upload-box:hover {
+        border-color: #357ABD;
+        background-color: #f0f4f8;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+    }
+
+    .image-upload-box.dragover {
+        border-color: #357ABD;
+        background-color: #e8f0fe;
+        transform: scale(1.02);
+    }
+
+    .upload-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+    }
+
+    .upload-icon {
+        font-size: 64px;
+        color: #4A90E2;
+        margin-bottom: 10px;
+    }
+
+    .upload-text {
+        color: #666;
+    }
+
+    .upload-text h3 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 20px;
+    }
+
+    .upload-text p {
+        margin: 8px 0;
+        font-size: 15px;
+    }
+
+    .browse-btn {
+        background-color: #4A90E2;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 15px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 15px auto;
+    }
+
+    .browse-btn:hover {
+        background-color: #357ABD;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+    }
+
+    .file-info {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .file-info p {
+        margin: 5px 0;
+        font-size: 13px;
+        color: #666;
+    }
+
+    /* Image preview styles moved to inventory_add.css */
+
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .preview-header h3 {
+        color: #333;
+        margin: 0;
+        font-size: 18px;
+    }
+
+    .preview-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .preview-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .change-image {
+        background-color: #4A90E2;
+        color: white;
+    }
+
+    .remove-image {
+        background-color: #fff;
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+
+    .preview-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .preview-wrapper {
+        position: relative;
+        width: auto;
+        height: auto;
+        max-width: 500px;
+        max-height: 500px;
+        margin: 0 auto;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        background-color: #f8f9fa;
+    }
+
+    #image-preview {
+        width: auto;
+        height: auto;
+        max-width: 500px;
+        max-height: 500px;
+        min-height: 110px;
+        object-fit: contain;
+        background-color: #fff;
+        display: block; /* Force display */
+        z-index: 1;
+    }
+
+    .preview-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .preview-wrapper:hover .preview-overlay {
+        opacity: 1;
+    }
+
+    .preview-zoom {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .preview-zoom:hover {
+        transform: scale(1.1);
+    }
+
+    .preview-zoom i {
+        font-size: 20px;
+        color: #333;
+    }
+
+    .preview-info {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        margin: 8px 0;
+        font-size: 14px;
+    }
+
+    .info-label {
+        color: #666;
+        font-weight: 500;
+    }
+
+    .info-value {
+        color: #333;
+    }
+
+    /* Modal for image zoom */
+    .image-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.9);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .image-modal img {
+        max-width: 90%;
+        max-height: 90vh;
+        object-fit: contain;
+    }
+
+    .image-modal.active {
+        display: flex;
+    }
+
+    /* Image upload container styles */
+    .image-upload-container {
+        max-width: 100%;
+        margin: 0 auto;
+        position: relative;
+        min-height: 300px !important;
+        display: block !important;
+        z-index: 10;
+    }
+    
+    /* Custom Dropzone styling */
+    .dropzone {
+        min-height: 300px !important;
+        border: 2px dashed #4A90E2 !important;
+        border-radius: 12px !important;
+        background-color: #f8fafc !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        padding: 20px !important;
+    }
+    
+    .dropzone:hover {
+        background-color: #eef2ff !important;
+        border-color: #3b82f6 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    }
+    
+    .dropzone .dz-message {
+        text-align: center !important;
+        padding: 2rem !important;
+        margin: 0 !important;
+    }
+    
+    .dropzone .dz-preview {
+        margin: 16px !important;
+    }
+    
+    .dropzone .dz-preview .dz-image {
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        width: 200px !important;
+        height: 200px !important;
+        position: relative !important;
+        display: block !important;
+        z-index: 10 !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    
+    .dropzone .dz-preview .dz-details {
+        padding: 1rem !important;
+    }
+    
+    .dropzone .dz-preview .dz-progress {
+        height: 10px !important;
+        border-radius: 5px !important;
+        background: rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .dropzone .dz-preview .dz-progress .dz-upload {
+        background: #4A90E2 !important;
+    }
+    
+    .dropzone .dz-preview .dz-error-message {
+        color: #e53e3e !important;
+    }
+    
+    .dropzone .dz-preview .dz-success-mark,
+    .dropzone .dz-preview .dz-error-mark {
+        margin-top: -25px !important;
+    }
+    
+    /* Custom button for change/remove */
+    .dz-remove, .dz-change {
+        display: inline-block !important;
+        margin-top: 8px !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        color: #4A90E2 !important;
+        text-decoration: none !important;
+        padding: 4px 8px !important;
+        border-radius: 4px !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .dz-remove:hover, .dz-change:hover {
+        background-color: #f0f4f8 !important;
+        color: #2563eb !important;
+    }
+    
+    .dz-change {
+        margin-right: 8px !important;
+    }
+    
+    /* Improve layout on mobile devices */
+    @media (max-width: 768px) {
+        .dropzone {
+            min-height: 200px !important;
+        }
+        
+        .dropzone .dz-preview .dz-image {
+            width: 150px !important;
+            height: 150px !important;
+        }
+    }
+        font-size: 3rem;
+        color: #4A90E2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    /* Improve transition effects */
+    .filepond--item {
+        transition: transform 0.3s ease-out;
+    }
+
+    .filepond--item:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Force visibility for FilePond elements */
+    .filepond--hopper {
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: relative !important;
+        min-height: 300px !important;
+    }
+    
+    /* Enforce proper z-index */
+    .filepond--drop-label {
+        z-index: 5 !important;
+    }
+    
+    .filepond--image-preview {
+        z-index: 4 !important;
+    }
+    
+    /* Proper pointer for label action */
+    .filepond--label-action {
+        cursor: pointer !important;
+        color: #4A90E2 !important;
+        text-decoration: underline !important;
+    }
+    
+    /* Make sure the product image container is visible */
+    .product-image-container {
+        display: block !important;
+        min-height: 300px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .bottom-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+        margin-top: 24px !important;
+        padding-right: 0 !important;
+        gap: 12px !important;
+        position: relative !important;
+        max-width: 1200px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    
+    .bottom-actions button {
+        margin-left: 8px !important;
+    }
 </style>
-<!-- JsBarcode - Load early -->
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-<!-- SKU Generator Script - Load early -->
-<script src="{{ url_for('static', filename='js/sku-generator.js') }}"></script>
-<!-- Immediate SKU generation script -->
-<script>
-    // This script runs as soon as it's loaded
-    (function() {
-        console.log('Immediate SKU generation script running');
-        
-        // Global function to update barcode preview
-        window.forceUpdateBarcodePreview = function() {
-            console.log('Force updating barcode preview');
-            const barcodeInput = document.getElementById('product-barcode');
-            const barcodeType = document.getElementById('barcode-type');
-            const previewContainer = document.getElementById('barcode-preview');
-            
-            if (!barcodeInput || !barcodeType || !previewContainer) {
-                console.log('Barcode elements not found for force update');
-                return;
-            }
-            
-            if (barcodeInput.value.trim()) {
-                console.log('Updating barcode preview for:', barcodeInput.value);
-                
-                // Clear previous barcode
-                previewContainer.innerHTML = '';
-                
-                try {
-                    // Create SVG element for the barcode
-                    const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                    previewContainer.appendChild(svgElement);
-                    
-                    // Generate barcode if JsBarcode is available
-                    if (typeof JsBarcode === 'function') {
-                        JsBarcode(svgElement, barcodeInput.value, {
-                            format: barcodeType.value,
-                            lineColor: '#000',
-                            width: 2,
-                            height: 50,
-                            displayValue: true,
-                            fontSize: 14,
-                            margin: 10
-                        });
-                    } else {
-                        console.error('JsBarcode not available for preview generation');
-                    }
-                } catch (error) {
-                    console.error('Error updating barcode preview:', error);
-                }
-            }
-        };
-        
-        // Function to check and generate SKU
-        function checkAndGenerateSKU() {
-            const categorySelect = document.getElementById('product-category');
-            const productNameInput = document.getElementById('product-name');
-            const skuInput = document.getElementById('product-sku');
-            
-            if (!categorySelect || !productNameInput || !skuInput) {
-                console.log('Form elements not found yet, will try again');
-                return false;
-            }
-            
-            console.log('Form elements found, checking values');
-            console.log('Category:', categorySelect.value);
-            console.log('Product name:', productNameInput.value);
-            console.log('SKU:', skuInput.value);
-            
-            // If both fields have values and SKU is empty, generate SKU
-            if (categorySelect.value && 
-                productNameInput.value.trim() && 
-                skuInput.value.trim() === '') {
-                
-                console.log('Generating SKU immediately');
-                
-                // Generate SKU
-                const categoryPrefix = categorySelect.value.substring(0, 2).toUpperCase();
-                const randomNum = Math.floor(1000 + Math.random() * 9000);
-                const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
-                const timestamp = new Date().getTime().toString().slice(-4);
-                
-                const sku = `${categoryPrefix}${randomNum}${productPrefix}${timestamp}`;
-                
-                // Set the SKU value
-                skuInput.value = sku;
-                
-                // Add visual feedback
-                skuInput.style.backgroundColor = '#f0fff4';
-                skuInput.style.borderColor = '#68d391';
-                
-                // Reset the styling after a delay
-                setTimeout(function() {
-                    skuInput.style.backgroundColor = '';
-                    skuInput.style.borderColor = '';
-                }, 1500);
-                
-                return true;
-            }
-            
-            return false;
-        }
-        
-        // Try immediately
-        if (!checkAndGenerateSKU()) {
-            // If not successful, set up a polling mechanism
-            let attempts = 0;
-            const maxAttempts = 20;
-            const pollInterval = 100; // ms
-            
-            const pollForElements = setInterval(function() {
-                attempts++;
-                
-                if (checkAndGenerateSKU() || attempts >= maxAttempts) {
-                    clearInterval(pollForElements);
-                }
-            }, pollInterval);
-            
-            // Also set up event listeners as soon as elements are available
-            const setupListeners = setInterval(function() {
-                const categorySelect = document.getElementById('product-category');
-                const productNameInput = document.getElementById('product-name');
-                
-                if (categorySelect && productNameInput) {
-                    // For category select
-                    categorySelect.addEventListener('change', checkAndGenerateSKU);
-                    
-                    // For product name input
-                    productNameInput.addEventListener('input', checkAndGenerateSKU);
-                    productNameInput.addEventListener('change', checkAndGenerateSKU);
-                    productNameInput.addEventListener('blur', checkAndGenerateSKU);
-                    
-                    clearInterval(setupListeners);
-                }
-                
-                if (attempts >= maxAttempts) {
-                    clearInterval(setupListeners);
-                }
-            }, pollInterval);
-        }
-    })();
-</script>
 {% endblock %}
 
 {% block content %}
 <div class="inventory-add-page">
     <div class="page-header">
-        <h1>Add New Product</h1>
-        <div class="breadcrumb">
-            <a href="{{ url_for('main.inventory') }}">Inventory</a> / <span>Add New Product</span>
+        <div class="header-left">
+            <a href="{{ url_for('main.inventory') }}" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to All Products
+            </a>
+        </div>
+        <div class="header-right">
+            <div class="header-buttons-container">
+                <button type="button" id="top-submit-button" class="btn-primary" onclick="document.getElementById('submit-button').click();">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <button type="button" id="top-submit-and-new-button" class="btn-secondary" onclick="document.getElementById('submit-and-new-button').click();">
+                    <i class="fas fa-plus-circle"></i> Save & Add More
+                </button>
+                <button type="button" id="top-reset-button" class="btn-cancel" onclick="document.getElementById('reset-button').click();">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+            <div class="toggle-switch">
+                <input type="checkbox" id="header-product-status" name="header_status" checked>
+                <label for="header-product-status"></label>
+                <span class="toggle-label" id="header-status-label">Active</span>
+            </div>
         </div>
     </div>
     
@@ -509,104 +1084,902 @@
         <input type="hidden" name="product_name" id="sku-product-name-input">
         <button type="submit" id="sku-submit-button">Generate SKU</button>
     </form>
-    <script>
-        // Simple SKU generation function using the form
-        function generateSKUViaForm() {
-            // Get values from the main form
+<script>
+        // Function to show notifications
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="notification-icon">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                                  type === 'error' ? 'fa-exclamation-circle' : 
+                                  type === 'warning' ? 'fa-exclamation-triangle' : 
+                                  'fa-info-circle'}"></i>
+                </div>
+                <div class="notification-content">${message}</div>
+                <button class="notification-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(notification);
+            
+            // Show animation
+            setTimeout(() => notification.classList.add('notification-show'), 100);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('notification-hiding');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Global barcode update function
+        window.updateBarcodePreview = function() {
+            const barcodeInput = document.getElementById('product-barcode');
+            const barcodeContainer = document.getElementById('barcode-preview');
+            const barcodeType = document.getElementById('barcode-type');
+            
+            if (!barcodeInput || !barcodeContainer) {
+                console.error('Required barcode elements not found for updateBarcodePreview');
+                return;
+            }
+            
+            // If no barcode value, clear the container and return
+            if (!barcodeInput.value.trim()) {
+                barcodeContainer.innerHTML = '';
+                return;
+            }
+            
+            // Get the selected format
+            const format = barcodeType ? barcodeType.value : 'CODE128';
+            
+            try {
+                // Try JsBarcode if available
+                if (typeof JsBarcode === 'function') {
+                    // Clear container
+                    barcodeContainer.innerHTML = '';
+                    
+                    // Create SVG element
+                    const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    barcodeContainer.appendChild(svgElement);
+                    
+                    // Format-specific handling
+                    let formattedValue = barcodeInput.value;
+                    
+                    // For EAN13, ensure 12 or 13 digits
+                    if (format === 'EAN13') {
+                        if (!/^\d{12,13}$/.test(barcodeInput.value)) {
+                            // Pad with zeros or truncate to 12 digits
+                            formattedValue = barcodeInput.value.replace(/\D/g, ''); // Remove non-digits
+                            formattedValue = formattedValue.substring(0, 12).padStart(12, '0');
+                            console.log('Adjusted EAN13 for updateBarcodePreview:', formattedValue);
+                        }
+                    }
+                    // For UPC, ensure 11 or 12 digits
+                    else if (format === 'UPC') {
+                        if (!/^\d{11,12}$/.test(barcodeInput.value)) {
+                            // Pad with zeros or truncate to 11 digits
+                            formattedValue = barcodeInput.value.replace(/\D/g, ''); // Remove non-digits
+                            formattedValue = formattedValue.substring(0, 11).padStart(11, '0');
+                            console.log('Adjusted UPC for updateBarcodePreview:', formattedValue);
+                        }
+                    }
+                    
+                    // Generate barcode
+                    JsBarcode(svgElement, formattedValue, {
+                        format: format,
+                            width: 2,
+                            height: 50,
+                            displayValue: true,
+                            fontSize: 14,
+                            margin: 10
+                        });
+                    console.log('Barcode preview updated successfully using JsBarcode');
+                    return;
+                    }
+                } catch (error) {
+                console.error('JsBarcode failed in updateBarcodePreview:', error);
+                
+                // Try again with CODE128 for special formats
+                try {
+                    if (format === 'EAN13' || format === 'UPC') {
+                        // Clear container
+                        barcodeContainer.innerHTML = '';
+                        
+                        // Create new SVG
+                        const fallbackSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        barcodeContainer.appendChild(fallbackSvg);
+                        
+                        console.log('Trying CODE128 fallback in updateBarcodePreview');
+                        JsBarcode(fallbackSvg, barcodeInput.value, {
+                            format: 'CODE128',
+                            width: 2,
+                            height: 50,
+                            displayValue: true,
+                            fontSize: 14,
+                            margin: 10
+                        });
+                        return;
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback also failed:', fallbackError);
+                }
+            }
+            
+            // Fallback to online API if JsBarcode failed
+            try {
+                // Map format to API format
+                let apiFormat = format.toLowerCase();
+                if (apiFormat === 'ean13') apiFormat = 'ean13';
+                if (apiFormat === 'upc') apiFormat = 'upca';
+                
+                barcodeContainer.innerHTML = `
+                    <img src="https://bwipjs-api.metafloor.com/?bcid=${apiFormat}&text=${encodeURIComponent(barcodeInput.value)}"
+                        alt="${barcodeInput.value}" style="max-width: 100%; height: auto;">
+                    <div style="font-size: 10px; color: #666; text-align: center; margin-top: 5px;">
+                        ${format} format via API fallback
+                    </div>
+                `;
+                console.log('Barcode preview updated successfully using API');
+            } catch (error) {
+                console.error('All barcode methods failed in updateBarcodePreview:', error);
+                
+                // Last resort text fallback
+                barcodeContainer.innerHTML = `
+                    <div style="border: 2px solid #333; padding: 10px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px;">
+                            ${barcodeInput.value}
+                        </div>
+                        <div style="font-size: 12px; color: #666;">
+                            ${format} barcode preview unavailable
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        // Function to generate SKU
+        function generateSKU(updateBarcode = true) {
+            const productName = document.getElementById('product-name').value.trim();
             const category = document.getElementById('product-category').value;
-            const productName = document.getElementById('product-name').value;
+            const skuInput = document.getElementById('product-sku');
+            const barcodeInput = document.getElementById('product-barcode');
             
             // Validate inputs
+            if (!productName) {
+                if (!silent) {
+                    // Removing this notification to avoid duplicates
+                    // showNotification('Please enter a product name first', 'warning');
+                    document.getElementById('product-name').focus();
+                }
+                return;
+            }
+            
             if (!category) {
-                alert('Please select a category first');
+                showNotification('Please select a category first', 'warning');
                 document.getElementById('product-category').focus();
                 return false;
             }
             
-            if (!productName) {
-                alert('Please enter a product name first');
-                document.getElementById('product-name').focus();
-                return false;
+            // Get first 2 letters of product name (uppercase)
+            const productPrefix = productName.substring(0, 2).toUpperCase();
+            
+            // Get first 2 letters of category (uppercase)
+            const categoryPrefix = category.substring(0, 2).toUpperCase();
+            
+            // Get 4 random digits from current timestamp
+            const timestamp = new Date().getTime().toString();
+            const randomDigits = timestamp.substring(timestamp.length - 4);
+            
+            // Combine to create the SKU pattern
+            const sku = `SKU-${productPrefix}${categoryPrefix}${randomDigits}`;
+                
+                // Set the SKU value
+                skuInput.value = sku;
+                
+            // Copy SKU to barcode field if updateBarcode is true
+            if (updateBarcode) {
+                barcodeInput.value = sku;
+                barcodeInput.style.backgroundColor = '#f0fff4';
+                barcodeInput.style.borderColor = '#68d391';
+                setTimeout(() => {
+                    barcodeInput.style.backgroundColor = '';
+                    barcodeInput.style.borderColor = '';
+                }, 1500);
+                
+                // Force update barcode preview immediately
+                setTimeout(() => {
+                    window.updateBarcodePreview();
+                }, 100);
+            }
+
+            // Add visual feedback for SKU
+                skuInput.style.backgroundColor = '#f0fff4';
+                skuInput.style.borderColor = '#68d391';
+            setTimeout(() => {
+                    skuInput.style.backgroundColor = '';
+                    skuInput.style.borderColor = '';
+                }, 1500);
+
+            // Show success notification
+            showNotification(updateBarcode ? 'SKU and Barcode generated successfully' : 'SKU generated successfully', 'success');
+                
+                return true;
             }
             
-            // Set values in the hidden form
-            document.getElementById('sku-category-input').value = category;
-            document.getElementById('sku-product-name-input').value = productName;
-            
-            // Generate SKU
-            const categoryPrefix = category.substring(0, 2).toUpperCase();
-            const randomNum = Math.floor(1000 + Math.random() * 9000);
-            const productPrefix = productName.substring(0, 2).toUpperCase();
-            const timestamp = new Date().getTime().toString().slice(-4);
-            
-            const sku = categoryPrefix + randomNum + productPrefix + timestamp;
-            
-            // Set the SKU in the main form
-            document.getElementById('product-sku').value = sku;
-            
-            // Add visual feedback
-            const skuInput = document.getElementById('product-sku');
-            skuInput.style.backgroundColor = '#f0fff4';
-            skuInput.style.borderColor = '#68d391';
-            
-            // Reset the styling after a delay
-            setTimeout(function() {
-                skuInput.style.backgroundColor = '';
-                skuInput.style.borderColor = '';
-            }, 1500);
-            
+        // Function to generate Barcode only
+        function generateBarcode() {
+            const productName = document.getElementById('product-name').value.trim();
+            const category = document.getElementById('product-category').value;
+            const barcodeInput = document.getElementById('product-barcode');
+            const barcodeType = document.getElementById('barcode-type');
+            const format = barcodeType ? barcodeType.value : 'CODE128';
+
+            // Validate inputs
+            if (!productName) {
+                showNotification('Please enter a product name first', 'warning');
+                document.getElementById('product-name').focus();
             return false;
         }
         
-        // Set up the form submission handler
-        document.getElementById('sku-generator-form').onsubmit = function(e) {
-            e.preventDefault();
-            return generateSKUViaForm();
-        };
+            if (!category) {
+                showNotification('Please select a category first', 'warning');
+                document.getElementById('product-category').focus();
+                return false;
+            }
+
+            // Generate barcode with format-appropriate content
+            let barcode;
+            
+            if (format === 'EAN13') {
+                // For EAN-13, generate a 12-digit number (check digit will be auto-calculated)
+                const timestamp = new Date().getTime().toString();
+                // Use the last 12 digits of the timestamp
+                barcode = timestamp.substring(timestamp.length - 12);
+            } 
+            else if (format === 'UPC') {
+                // For UPC, generate an 11-digit number (check digit will be auto-calculated)
+                const timestamp = new Date().getTime().toString();
+                // Use the last 11 digits of the timestamp
+                barcode = timestamp.substring(timestamp.length - 11);
+            }
+            else {
+                // For CODE128 and other formats, use the alphanumeric format
+                const timestamp = new Date().getTime();
+                const randomDigits = Math.floor(100000 + (timestamp % 900000)).toString();
+                barcode = `BAR-${randomDigits}`;
+            }
+
+            // Set the barcode value
+            barcodeInput.value = barcode;
+            
+            // Add visual feedback
+            barcodeInput.style.backgroundColor = '#f0fff4';
+            barcodeInput.style.borderColor = '#68d391';
+            setTimeout(() => {
+                barcodeInput.style.backgroundColor = '';
+                barcodeInput.style.borderColor = '';
+            }, 1500);
+            
+            // Show success notification with format information
+            showNotification(`${format} barcode generated successfully`, 'success');
+
+            // Force update barcode preview immediately
+            setTimeout(() => {
+                window.updateBarcodePreview();
+            }, 100);
+
+            return true;
+        }
+
+        // Function to check and auto-generate SKU and Barcode
+        function checkAndAutoGenerate() {
+            const productName = document.getElementById('product-name').value.trim();
+            const category = document.getElementById('product-category').value;
+            const skuInput = document.getElementById('product-sku');
+            const barcodeInput = document.getElementById('product-barcode');
+
+            console.log('Auto-generate check - Name:', productName, 'Category:', category, 'SKU:', skuInput.value);
+            
+            // Only generate if both fields have values and neither SKU nor Barcode exists
+            if (productName && category && !skuInput.value) {
+                console.log('Auto-generating SKU/barcode because both name and category are filled');
+                generateSKU(true);
+                return true;
+            }
+            return false;
+        }
+
+        // Function to auto-generate SKU on change
+        function autoGenerateSKUOnChange() {
+            // Immediate check
+            if (!checkAndAutoGenerate()) {
+                // If not generated now, try again after a small delay
+                // This helps with race conditions when both fields are changed at nearly the same time
+                setTimeout(checkAndAutoGenerate, 100);
+            }
+        }
+
+        // Function to auto-generate barcode on change
+        function autoGenerateBarcodeOnChange() {
+            const barcodeInput = document.getElementById('product-barcode');
+            if (barcodeInput && barcodeInput.value.trim()) {
+                console.log('Updating barcode preview from autoGenerateBarcodeOnChange');
+                window.updateBarcodePreview();
+            } else {
+                // Clear the preview if no value
+                const previewContainer = document.getElementById('barcode-preview');
+                if (previewContainer) {
+                    previewContainer.innerHTML = '';
+                }
+            }
+        }
+
+        // Function to generate new barcode - modified to not display notifications
+        // This solves the double notification issue since the button click will also trigger the listener in inventory_add.js
+        function generateNewBarcode() {
+            console.log('HTML template generateNewBarcode called - deferring to JS implementation');
+            // No longer calling generateBarcode directly to avoid duplicate notifications
+            // The click event will be caught by the event listener in inventory_add.js
+            return true;
+        }
+
+        // Add event listeners when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Remove any existing event listeners
+            const generateSkuButton = document.getElementById('generate-sku');
+            const generateBarcodeButton = document.getElementById('generate-barcode');
+            const productNameInput = document.getElementById('product-name');
+            const categorySelect = document.getElementById('product-category');
+            const barcodeTypeSelect = document.getElementById('barcode-type');
+            const barcodeInput = document.getElementById('product-barcode');
+            
+            // Add profit margin calculation
+            const costPriceInput = document.getElementById('product-cost-price');
+            const sellingPriceInput = document.getElementById('product-selling-price');
+            const profitMarginDisplay = document.getElementById('profit-margin-display');
+            
+            // Function to calculate and display profit margin
+            function calculateProfitMargin() {
+                if (!costPriceInput || !sellingPriceInput || !profitMarginDisplay) {
+                    return;
+                }
+                
+                const costPrice = parseFloat(costPriceInput.value) || 0;
+                const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
+                
+                if (costPrice > 0 && sellingPrice > 0) {
+                    const profitAmount = sellingPrice - costPrice;
+                    const profitPercentage = (profitAmount / costPrice) * 100;
+                    
+                    const formattedAmount = new Intl.NumberFormat('en-IN', { 
+                        style: 'currency', 
+                        currency: 'INR',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2 
+                    }).format(profitAmount);
+                    
+                    const formattedPercentage = profitPercentage.toFixed(2);
+                    
+                    // Update the display
+                    const amountSpan = profitMarginDisplay.querySelector('.profit-amount');
+                    const percentageSpan = profitMarginDisplay.querySelector('.profit-percentage');
+                    
+                    if (amountSpan && percentageSpan) {
+                        amountSpan.textContent = formattedAmount;
+                        percentageSpan.textContent = `(${formattedPercentage}%)`;
+                        
+                        // Set color based on profit margin
+                        if (profitAmount > 0) {
+                            amountSpan.style.color = '#4CAF50'; // Green for profit
+                            percentageSpan.style.color = '#4CAF50';
+                        } else if (profitAmount < 0) {
+                            amountSpan.style.color = '#F44336'; // Red for loss
+                            percentageSpan.style.color = '#F44336';
+                        } else {
+                            amountSpan.style.color = '#333'; // Default for zero
+                            percentageSpan.style.color = '#333';
+                        }
+                    }
+                } else {
+                    // Reset if inputs are not valid
+                    const amountSpan = profitMarginDisplay.querySelector('.profit-amount');
+                    const percentageSpan = profitMarginDisplay.querySelector('.profit-percentage');
+                    
+                    if (amountSpan && percentageSpan) {
+                        amountSpan.textContent = '₹0.00';
+                        percentageSpan.textContent = '(0%)';
+                        amountSpan.style.color = '#333';
+                        percentageSpan.style.color = '#333';
+                    }
+                }
+            }
+            
+            // Add event listeners for price inputs
+            if (costPriceInput) {
+                costPriceInput.addEventListener('input', calculateProfitMargin);
+            }
+            
+            if (sellingPriceInput) {
+                sellingPriceInput.addEventListener('input', calculateProfitMargin);
+            }
+
+            // Add input event listener to barcode input for real-time preview
+            if (barcodeInput) {
+                barcodeInput.addEventListener('input', function() {
+                    if (this.value.trim()) {
+                        window.updateBarcodePreview();
+                    } else {
+                        const previewContainer = document.getElementById('barcode-preview');
+                        if (previewContainer) {
+                            previewContainer.innerHTML = '';
+                        }
+                    }
+                });
+            }
+
+            // Add click event listener to the generate SKU button
+            if (generateSkuButton) {
+                generateSkuButton.removeEventListener('click', () => generateSKU(false));
+                generateSkuButton.addEventListener('click', () => generateSKU(false));
+            }
+
+            // Add click event listener to the generate Barcode button
+            if (generateBarcodeButton) {
+                generateBarcodeButton.removeEventListener('click', generateBarcode);
+                generateBarcodeButton.addEventListener('click', generateBarcode);
+            }
+
+            // Add input/change event listeners for auto-generation
+            if (productNameInput) {
+                productNameInput.removeEventListener('input', checkAndAutoGenerate);
+                productNameInput.removeEventListener('change', checkAndAutoGenerate);
+                productNameInput.addEventListener('input', checkAndAutoGenerate);
+                productNameInput.addEventListener('change', checkAndAutoGenerate);
+            }
+
+            if (categorySelect) {
+                categorySelect.removeEventListener('change', checkAndAutoGenerate);
+                categorySelect.addEventListener('change', checkAndAutoGenerate);
+            }
+
+            if (barcodeTypeSelect) {
+                barcodeTypeSelect.removeEventListener('change', autoGenerateBarcodeOnChange);
+                barcodeTypeSelect.addEventListener('change', autoGenerateBarcodeOnChange);
+            }
+
+            // Check for existing barcode value and generate preview if exists
+            if (barcodeInput && barcodeInput.value) {
+                updateBarcodePreview();
+            }
+        });
     </script>
 
     <div class="content-card">
-        <form id="add-product-form" enctype="multipart/form-data">
+        <form id="product-form" action="/api/inventory/add" method="POST" enctype="multipart/form-data" class="inventory-form">
             <div class="form-grid">
                 <!-- Left Column - Image Upload and Basic Info -->
                 <div class="form-column">
                     <div class="form-section">
                         <div class="section-title">Product Image</div>
                         <div class="product-image-container">
-                            <label for="direct-file-input" class="product-image-placeholder" id="product-image-placeholder">
-                                <div class="box-icon">
-                                    <i class="fas fa-box"></i>
-                                    <div class="svg-fallback">
-                                        <!-- SVG fallback will be inserted by JS -->
-                </div>
+                            <div class="image-upload-container">
+                                <!-- Hidden file input for form submission -->
+                                <input type="file" name="product_image" id="product-image-hidden" accept="image/*" style="display: none !important;" />
+                                
+                                <!-- New image uploader -->
+                                <input type="file" id="image-uploader" accept="image/*" style="display: none;" />
+                                
+                                <div id="image-preview-area" class="image-preview-area">
+                                    <!-- Image preview - moved to the top -->
+                                    <div id="image-preview" class="image-preview" style="display: none;">
+                                        <div class="preview-wrapper">
+                                            <img id="preview-img" src="" alt="Preview" />
+                                            <div class="preview-overlay">
+                                                <div class="preview-actions">
+                                                    <button type="button" id="change-image-btn" class="preview-btn">Change</button>
+                                                    <button type="button" id="remove-image-btn" class="preview-btn preview-btn-remove">Remove</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="image-details" class="image-details" style="display: none;">
+                                            <div class="detail-item">
+                                                <span class="detail-label">Filename:</span>
+                                                <span id="image-filename" class="detail-value"></span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label">Size:</span>
+                                                <span id="image-size" class="detail-value"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Upload placeholder - shown when no image is selected -->
+                                    <div id="upload-placeholder" class="upload-placeholder">
+                                        <div class="upload-icon-container">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                        </div>
+                                        <div class="upload-text-container">
+                                            <h3 class="upload-title">Upload Product Image</h3>
+                                            <p class="upload-text">Drag & Drop your image here</p>
+                                            <p class="upload-subtext">or click to browse files</p>
+                                            <p class="upload-formats">Supported formats: JPG, PNG, GIF (Max: 5MB)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Custom styles for image uploader -->
+                                <style>
+                                    /* Image uploader container styles */
+                                    .image-upload-container {
+                                        max-width: 100%;
+                                        margin: 0 auto;
+                                        position: relative;
+                                        min-height: 450px !important;
+                                        display: block !important;
+                                    }
+
+                                    /* Image preview area */
+                                    .image-preview-area {
+                                        width: 100%;
+                                        min-height: 450px;
+                                        position: relative;
+                                    }
+
+                                    /* Upload placeholder */
+                                    .upload-placeholder {
+                                        min-height: 450px !important;
+                                        border: 2px dashed #4A90E2 !important;
+                                        border-radius: 12px !important;
+                                        background-color: #f8fafc !important;
+                                        display: flex !important;
+                                        flex-direction: column !important;
+                                        align-items: center !important;
+                                        justify-content: center !important;
+                                        cursor: pointer !important;
+                                        transition: all 0.3s ease !important;
+                                        padding: 16px !important;
+                                        position: relative !important;
+                                        overflow: hidden !important;
+                                    }
+
+                                    /* Highlight effect for drag and drop */
+                                    .upload-placeholder.highlight {
+                                        background-color: #eef2ff !important;
+                                        border-color: #3b82f6 !important;
+                                        transform: translateY(-2px) !important;
+                                        box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1), 0 4px 8px -4px rgba(0, 0, 0, 0.06) !important;
+                                    }
+                                    
+                                    /* Add subtle background pattern */
+                                    .upload-placeholder::before {
+                                        content: '' !important;
+                                        position: absolute !important;
+                                        top: 0 !important;
+                                        left: 0 !important;
+                                        right: 0 !important;
+                                        bottom: 0 !important;
+                                        background-image: radial-gradient(circle, #e0e7ff 1px, transparent 1px) !important;
+                                        background-size: 20px 20px !important;
+                                        opacity: 0.3 !important;
+                                        z-index: 0 !important;
+                                    }
+
+                                    /* Ensure content stays above the pattern */
+                                    .upload-icon-container, .upload-text-container {
+                                        position: relative !important;
+                                        z-index: 1 !important;
+                                    }
+
+                                    /* Hover effect for the upload placeholder */
+                                    .upload-placeholder:hover {
+                                        background-color: #eef2ff !important;
+                                        border-color: #3b82f6 !important;
+                                        transform: translateY(-2px) !important;
+                                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+                                    }
+
+                                    /* Style the upload icon container */
+                                    .upload-icon-container {
+                                        background-color: #e0e7ff !important;
+                                        padding: 1.5rem !important;
+                                        border-radius: 50% !important;
+                                        margin-bottom: 1.5rem !important;
+                                        box-shadow: 0 0 0 8px rgba(224, 231, 255, 0.3) !important;
+                                        position: relative !important;
+                                        transition: all 0.3s ease !important;
+                                    }
+
+                                    .upload-placeholder:hover .upload-icon-container {
+                                        transform: translateY(-5px) !important;
+                                        box-shadow: 0 0 0 12px rgba(224, 231, 255, 0.2) !important;
+                                    }
+
+                                    /* Style the upload icon with pulse animation */
+                                    .upload-icon-container i {
+                                        font-size: 2.5rem !important;
+                                        color: #4f46e5 !important;
+                                        animation: pulse 2s infinite !important;
+                                        display: block !important;
+                                    }
+
+                                    @keyframes pulse {
+                                        0% { transform: scale(1); opacity: 1; }
+                                        50% { transform: scale(1.1); opacity: 0.8; }
+                                        100% { transform: scale(1); opacity: 1; }
+                                    }
+
+                                    /* Style the upload text container */
+                                    .upload-text-container {
+                                        display: flex !important;
+                                        flex-direction: column !important;
+                                        gap: 0.5rem !important;
+                                    }
+
+                                    /* Style the title */
+                                    .upload-title {
+                                        font-size: 1.5rem !important;
+                                        font-weight: 600 !important;
+                                        color: #1f2937 !important;
+                                        margin: 0 !important;
+                                    }
+
+                                    /* Style the main text */
+                                    .upload-text {
+                                        font-size: 1.1rem !important;
+                                        color: #4b5563 !important;
+                                        margin: 0.25rem 0 !important;
+                                    }
+
+                                    /* Style the subtext */
+                                    .upload-subtext {
+                                        font-size: 1rem !important;
+                                        color: #4f46e5 !important;
+                                        font-weight: 500 !important;
+                                        margin: 0.25rem 0 !important;
+                                        cursor: pointer !important;
+                                    }
+
+                                    /* Style the formats text */
+                                    .upload-formats {
+                                        font-size: 0.875rem !important;
+                                        color: #6b7280 !important;
+                                        margin-top: 0.5rem !important;
+                                    }
+
+                                    /* Image preview styles */
+                                    .image-preview {
+                                        width: 100%;
+                                        min-height: 350px;
+                                        display: flex;
+                                        flex-direction: column;
+                                        align-items: center;
+                                        justify-content: center;
+                                        padding: 20px;
+                                        background-color: #f8fafc !important;
+                                        border: 2px solid #e5e7eb !important;
+                                        border-radius: 16px !important;
+                                        transition: all 0.3s ease !important;
+                                        margin-bottom: 15px;
+                                        position: relative;
+                                        z-index: 10;
+                                    }
+
+                                    /* Preview wrapper */
+                                    .preview-wrapper {
+                                        position: relative;
+                                        width: 100%;
+                                        max-width: 350px;
+                                        height: 250px;
+                                        border-radius: 12px;
+                                        overflow: hidden;
+                                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.05);
+                                        margin-bottom: 15px;
+                                        transition: transform 0.3s ease, box-shadow 0.3s ease;
+                                        border: 3px solid white;
+                                    }
+                                    
+                                    .preview-wrapper:hover {
+                                        transform: scale(1.02);
+                                        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1), 0 12px 28px rgba(0, 0, 0, 0.05);
+                                    }
+
+                                    /* Preview image */
+                                    .preview-wrapper img {
+                                        width: 100%;
+                                        height: 100%;
+                                        object-fit: contain;
+                                        display: block;
+                                        border-radius: 8px;
+                                    }
+
+                                    /* Preview overlay */
+                                    .preview-overlay {
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        width: 100%;
+                                        height: 100%;
+                                        background-color: rgba(0, 0, 0, 0.6);
+                                        background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7));
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        opacity: 0;
+                                        transition: opacity 0.3s ease, transform 0.3s ease;
+                                        border-radius: 12px;
+                                        transform: translateY(10px);
+                                        backdrop-filter: blur(2px);
+                                    }
+
+                                    .preview-wrapper:hover .preview-overlay {
+                                        opacity: 1;
+                                        transform: translateY(0);
+                                    }
+
+                                    /* Preview actions */
+                                    .preview-actions {
+                                        display: flex;
+                                        gap: 12px;
+                                        animation: scaleIn 0.3s ease-out;
+                                    }
+
+                                    @keyframes scaleIn {
+                                        from { transform: scale(0.9); opacity: 0; }
+                                        to { transform: scale(1); opacity: 1; }
+                                    }
+
+                                    /* Preview buttons */
+                                    .preview-btn {
+                                        background-color: white;
+                                        color: #4A90E2;
+                                        border: none;
+                                        border-radius: 6px;
+                                        padding: 10px 16px;
+                                        font-size: 14px;
+                                        font-weight: 600;
+                                        cursor: pointer;
+                                        transition: all 0.2s ease;
+                                        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        letter-spacing: 0.3px;
+                                    }
+
+                                    .preview-btn:before {
+                                        content: '';
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        width: 100%;
+                                        height: 100%;
+                                        background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 80%);
+                                        opacity: 0;
+                                        transition: opacity 0.3s ease;
+                                        pointer-events: none;
+                                    }
+
+                                    .preview-btn:hover {
+                                        transform: translateY(-3px);
+                                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                                        background-color: #f8f9fa;
+                                    }
+
+                                    .preview-btn:hover:before {
+                                        opacity: 1;
+                                    }
+
+                                    .preview-btn:active {
+                                        transform: translateY(-1px);
+                                        box-shadow: 0 2px 3px rgba(0, 0, 0, 0.15);
+                                    }
+
+                                    .preview-btn-remove {
+                                        color: #e53e3e;
+                                        background-color: rgba(254, 242, 242, 0.9);
+                                    }
+
+                                    .preview-btn-remove:hover {
+                                        background-color: #fff5f5;
+                                        color: #dc2626;
+                                    }
+
+                                    /* Image details */
+                                    .image-details {
+                                        width: 100%;
+                                        max-width: 250px;
+                                        background-color: #f8f9fa;
+                                        border-radius: 8px;
+                                        padding: 16px 20px;
+                                        margin-top: 15px;
+                                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                                        border: 1px solid #e5e7eb;
+                                        transition: all 0.3s ease;
+                                        animation: fadeIn 0.5s ease-out;
+                                        min-height: 80px;
+                                    }
+
+                                    @keyframes fadeIn {
+                                        from { opacity: 0; transform: translateY(10px); }
+                                        to { opacity: 1; transform: translateY(0); }
+                                    }
+
+                                    .image-details:hover {
+                                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                                        background-color: #f0f4f8;
+                                        transform: translateY(-2px);
+                                    }
+
+                                    .detail-item {
+                                        display: flex;
+                                        justify-content: space-between;
+                                        margin: 8px 0;
+                                        font-size: 14px;
+                                        line-height: 1.5;
+                                        padding-bottom: 6px;
+                                        border-bottom: 1px dashed rgba(203, 213, 225, 0.5);
+                                    }
+
+                                    .detail-item:last-child {
+                                        border-bottom: none;
+                                        padding-bottom: 0;
+                                    }
+
+                                    .detail-label {
+                                        color: #6b7280;
+                                        font-weight: 500;
+                                        margin-right: 8px;
+                                        display: flex;
+                                        align-items: center;
+                                    }
+
+                                    .detail-value {
+                                        color: #1f2937;
+                                        font-weight: 500;
+                                        max-width: 170px;
+                                        white-space: nowrap;
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                        text-align: right;
+                                        background-color: rgba(224, 231, 255, 0.3);
+                                        padding: 4px 10px;
+                                        border-radius: 4px;
+                                        font-size: 13px;
+                                        line-height: 1.4;
+                                    }
+                                    
+                                    /* Make sure the product image container is visible */
+                                    .product-image-container {
+                                        display: block !important;
+                                        min-height: 300px !important;
+                                        margin-bottom: 20px !important;
+                                    }
+                                    
+                                    /* Responsive styles */
+                                    @media (max-width: 768px) {
+                                        .preview-wrapper {
+                                            width: 200px;
+                                            height: 200px;
+                                        }
+                                        
+                                        .image-details {
+                                            max-width: 200px;
+                                        }
+                                    }
+                                </style>
+                        </div>
                     </div>
-                                <div class="placeholder-text">
-                                    Drag & drop your product image or click to browse
                 </div>
-                                <small class="image-recommendation">Recommended: 300x300px (Max: 2MB)</small>
-                            </label>
-                            <!-- Direct file input that will be triggered by the label -->
-                            <input type="file" id="direct-file-input" name="direct-file-input" accept="image/*" autocomplete="off">
-                            <!-- FilePond input -->
-                            <input type="file" 
-                                class="filepond" 
-                                name="product_image" 
-                                id="product-image"
-                                accept="image/*"
-                                aria-label="Product image upload"
-                                title="Upload product image"
-                                autocomplete="off"
-                            />
-            </div>
-        </div>
-        
+                
                     <div class="form-section">
-                        <div class="section-title">Product Details</div>
+                        <div class="section-title">Pricing Details</div>
                         <div class="form-group">
                             <label for="product-cost-price">Cost Price <span class="required">*</span></label>
                             <div class="input-with-icon">
                                 <div class="currency-symbol">₹</div>
-                                <input type="number" id="product-cost-price" name="cost_price" step="0.01" min="0" required autocomplete="off" placeholder="0.00">
+                                <input type="number" id="product-cost-price" name="cost_price" step="0.01" min="0" required autocomplete="off" tabindex="5" placeholder="0.00">
                             </div>
                             <div class="error-message" id="cost-price-error"></div>
                         </div>
@@ -615,7 +1988,7 @@
                             <label for="product-mrp">MRP <span class="required">*</span></label>
                             <div class="input-with-icon">
                                 <div class="currency-symbol">₹</div>
-                                <input type="number" id="product-mrp" name="mrp" step="0.01" min="0" required autocomplete="off" placeholder="0.00">
+                                <input type="number" id="product-mrp" name="mrp" step="0.01" min="0" required autocomplete="off" tabindex="6" placeholder="0.00">
                             </div>
                             <div class="error-message" id="mrp-error"></div>
                         </div>
@@ -624,49 +1997,52 @@
                             <label for="product-selling-price">Selling Price <span class="required">*</span></label>
                             <div class="input-with-icon">
                                 <div class="currency-symbol">₹</div>
-                                <input type="number" id="product-selling-price" name="selling_price" step="0.01" min="0" required autocomplete="off" placeholder="0.00">
-                            </div>
-                            <div class="error-message" id="selling-price-error"></div>
+                                <input type="number" id="product-selling-price" name="selling_price" step="0.01" min="0" required autocomplete="off" tabindex="7" placeholder="0.00">
                         </div>
+                            <div class="error-message" id="selling-price-error"></div>
+                            </div>
                 
                         <div class="form-group">
                             <label>Profit Margin</label>
                             <div class="profit-margin-display" id="profit-margin-display">
                                 <span class="profit-amount">₹0.00</span>
                                 <span class="profit-percentage">(0%)</span>
-                            </div>
+                    </div>
                             <div class="error-message" id="profit-margin-error"></div>
                             <small class="form-text text-muted">Automatically calculated based on Cost Price and Selling Price</small>
-                        </div>
-                
-                        <div class="form-group">
-                            <label for="product-stock">Stock Quantity <span class="required">*</span></label>
-                            <input type="number" id="product-stock" name="stock" min="0" required autocomplete="off">
-                            <div class="error-message" id="stock-error"></div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="product-reorder-point">ReStock Threshold</label>
-                            <input type="number" id="product-reorder-point" name="reorder_point" min="0" autocomplete="off">
-                            <div class="error-message" id="reorder-point-error"></div>
-                        </div>
                     </div>
                 </div>
                 
+                    <div class="form-section">
+                        <div class="section-title">Stock Details</div>
+                        <div class="form-group">
+                            <label for="product-stock">Stock Quantity <span class="required">*</span></label>
+                            <input type="number" id="product-stock" name="stock" min="0" required autocomplete="off" tabindex="8">
+                            <div class="error-message" id="stock-error"></div>
+                    </div>
+
+                        <div class="form-group">
+                            <label for="product-reorder-point">ReStock Threshold</label>
+                            <input type="number" id="product-reorder-point" name="reorder_point" min="0" autocomplete="off" tabindex="9">
+                            <div class="error-message" id="reorder-point-error"></div>
+                        </div>
+                            </div>
+                        </div>
+
                 <!-- Right Column - Product Details and Additional Info -->
                 <div class="form-column">
                     <div class="form-section">
                         <div class="section-title">Basic Information</div>
                         <div class="form-group">
                             <label for="product-name">Product Name <span class="required">*</span></label>
-                            <input type="text" id="product-name" name="name" required autocomplete="off" oninput="autoGenerateSKUOnChange(); autoGenerateBarcodeOnChange();">
+                            <input type="text" id="product-name" name="name" required autocomplete="off" autofocus tabindex="1" oninput="autoGenerateSKUOnChange(); autoGenerateBarcodeOnChange();">
                             <div class="error-message" id="name-error"></div>
                         </div>
 
                         <div class="form-group">
                             <label for="product-category">Category <span class="required">*</span></label>
-                            <select id="product-category" name="category" required autocomplete="off" onchange="autoGenerateSKUOnChange()">
-                                <option value="">Select a category</option>
+                            <select id="product-category" name="category" required autocomplete="off" tabindex="2" onchange="autoGenerateSKUOnChange()">
+                                <option value="" selected>Select a category</option>
                                 <option value="electronics">Electronics</option>
                                 <option value="clothing">Clothing</option>
                                 <option value="home">Home & Kitchen</option>
@@ -683,11 +2059,11 @@
                         <div class="form-group">
                             <label for="product-sku">SKU <span class="required">*</span></label>
                             <div class="input-with-button">
-                                <input type="text" id="product-sku" name="sku" required autocomplete="off" placeholder="Product SKU">
+                                <input type="text" id="product-sku" name="sku" required autocomplete="off" tabindex="3" placeholder="Product SKU">
                                 <button type="button" id="generate-sku" class="btn-secondary generate-sku-button" 
                                     aria-label="Generate SKU" 
-                                    title="Generate a unique SKU based on category and product name"
-                                    onclick="return generateSKUViaForm();">
+                                    tabindex="4"
+                                    title="Generate a unique SKU based on category and product name">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
                             </div>
@@ -697,112 +2073,34 @@
                     </div>
 
                     <div class="form-section">
-                        <div class="section-title">Additional Information</div>
+                        <div class="section-title">Barcode Details</div>
                         <div class="form-group">
-                            <label for="product-barcode">Barcode</label>
                             <div class="barcode-type-selector">
-                                <label for="barcode-type">Type:</label>
-                                <select id="barcode-type" name="barcode_type" autocomplete="off" onchange="autoGenerateBarcodeOnChange()">
-                                    <option value="CODE128" selected>CODE128</option>
-                                    <option value="EAN13">EAN-13</option>
-                                    <option value="UPC">UPC</option>
+                                <label for="barcode-type">Type</label>
+                                <select id="barcode-type" name="barcode_type" autocomplete="off" tabindex="10" onchange="autoGenerateBarcodeOnChange()">
+                                    <option value="CODE128" selected>CODE128 (default, recommended)</option>
+                                    <option value="EAN13">EAN-13 (requires 12-13 numeric digits)</option>
+                                    <option value="UPC">UPC (requires 11-12 numeric digits)</option>
                                 </select>
-                            </div>
+                        </div>
+                            
+                            <label for="product-barcode" style="margin-top: 12px;">Barcode</label>
                             <div class="input-with-button" style="margin-top: 12px;">
-                                <input type="text" id="product-barcode" name="barcode" autocomplete="off">
-                                <button type="button" id="generate-barcode" class="btn-secondary" onclick="
-                                    // Clear the current value to force regeneration
-                                    document.getElementById('product-barcode').value = '';
-                                    // Call the auto-generate function
-                                    autoGenerateBarcodeOnChange();
-                                "><i class="fas fa-sync-alt"></i></button>
-                            </div>
+                                <input type="text" id="product-barcode" name="barcode" autocomplete="off" tabindex="11">
+                                <button type="button" id="generate-barcode" class="btn-secondary" tabindex="-1"><i class="fas fa-sync-alt"></i></button>
+                        </div>
                             
                             <div class="barcode-preview" id="barcode-preview"></div>
                             <div class="error-message" id="barcode-error"></div>
-                            <small class="form-text text-muted">Barcode will be auto-generated when you enter a product name. You can also click <i class="fas fa-sync-alt"></i> to create a new one.</small>
-                            
-                            <!-- Inline script for immediate barcode generation -->
-                            <script>
-                                // Check if we should generate a barcode immediately
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    console.log('Checking for immediate barcode preview');
-                                    
-                                    // Function to update barcode preview
-                                    function updateBarcodePreviewFromInput() {
-                                        const barcodeInput = document.getElementById('product-barcode');
-                                        const barcodeType = document.getElementById('barcode-type');
-                                        const previewContainer = document.getElementById('barcode-preview');
-                                        
-                                        if (!barcodeInput || !barcodeType || !previewContainer) {
-                                            console.log('Barcode elements not found');
-                                            return;
-                                        }
-                                        
-                                        if (barcodeInput.value.trim()) {
-                                            console.log('Updating barcode preview for:', barcodeInput.value);
-                                            
-                                            // Clear previous barcode
-                                            previewContainer.innerHTML = '';
-                                            
-                                            try {
-                                                // Create SVG element for the barcode
-                                                const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                                                previewContainer.appendChild(svgElement);
-                                                
-                                                // Generate barcode if JsBarcode is available
-                                                if (typeof JsBarcode === 'function') {
-                                                    JsBarcode(svgElement, barcodeInput.value, {
-                                                        format: barcodeType.value,
-                                                        lineColor: '#000',
-                                                        width: 2,
-                                                        height: 50,
-                                                        displayValue: true,
-                                                        fontSize: 14,
-                                                        margin: 10
-                                                    });
-                                                } else {
-                                                    console.error('JsBarcode not available for preview generation');
-                                                    // Try to load JsBarcode
-                                                    const script = document.createElement('script');
-                                                    script.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js';
-                                                    script.onload = function() {
-                                                        console.log('JsBarcode loaded, retrying preview');
-                                                        updateBarcodePreviewFromInput();
-                                                    };
-                                                    document.head.appendChild(script);
-                                                }
-                                            } catch (error) {
-                                                console.error('Error updating barcode preview:', error);
-                                            }
-                                        }
-                                    }
-                                    
-                                    // Check immediately
-                                    setTimeout(updateBarcodePreviewFromInput, 200);
-                                    
-                                    // Add input event listener to barcode input
-                                    const barcodeInput = document.getElementById('product-barcode');
-                                    if (barcodeInput) {
-                                        barcodeInput.addEventListener('input', updateBarcodePreviewFromInput);
-                                        barcodeInput.addEventListener('change', updateBarcodePreviewFromInput);
-                                        barcodeInput.addEventListener('paste', function() {
-                                            setTimeout(updateBarcodePreviewFromInput, 10);
-                                        });
-                                    }
-                                    
-                                    // Add change event listener to barcode type
-                                    const barcodeType = document.getElementById('barcode-type');
-                                    if (barcodeType) {
-                                        barcodeType.addEventListener('change', updateBarcodePreviewFromInput);
-                                    }
-                                });
-                            </script>
+                            <small class="form-text text-muted">Barcode will be auto-generated when you enter a product name and select a category. You can also click <i class="fas fa-sync-alt"></i> to create a new one.</small>
+                        </div>
                         </div>
 
+                    <div class="form-section">
+                        <div class="section-title">Additional Details</div>
                         <div class="form-group">
                             <label for="product-weight">Weight (kg)</label>
-                            <input type="number" id="product-weight" name="weight" step="0.01" min="0" autocomplete="off">
+                            <input type="number" id="product-weight" name="weight" step="0.01" min="0" autocomplete="off" tabindex="12">
                             <div class="error-message" id="weight-error"></div>
                         </div>
 
@@ -810,15 +2108,15 @@
                             <label>Dimensions (cm)</label>
                             <div class="dimensions-input">
                                 <div class="dimension-field">
-                                    <input type="number" id="product-length" name="length" step="0.1" min="0" placeholder="L" autocomplete="off" aria-label="Length">
+                                    <input type="number" id="product-length" name="length" step="0.1" min="0" placeholder="L" autocomplete="off" tabindex="13" aria-label="Length">
                         </div>
                                 <div class="dimension-separator">×</div>
                                 <div class="dimension-field">
-                                    <input type="number" id="product-width" name="width" step="0.1" min="0" placeholder="W" autocomplete="off" aria-label="Width">
+                                    <input type="number" id="product-width" name="width" step="0.1" min="0" placeholder="W" autocomplete="off" tabindex="14" aria-label="Width">
                     </div>
                                 <div class="dimension-separator">×</div>
                                 <div class="dimension-field">
-                                    <input type="number" id="product-height" name="height" step="0.1" min="0" placeholder="H" autocomplete="off" aria-label="Height">
+                                    <input type="number" id="product-height" name="height" step="0.1" min="0" placeholder="H" autocomplete="off" tabindex="15" aria-label="Height">
                 </div>
                     </div>
                             <div class="error-message" id="dimensions-error"></div>
@@ -826,728 +2124,730 @@
 
                         <div class="form-group">
                             <label for="product-notes">Notes</label>
-                            <textarea id="product-notes" name="notes" rows="3" autocomplete="off"></textarea>
+                            <textarea id="product-notes" name="notes" rows="3" autocomplete="off" tabindex="16"></textarea>
                             <div class="error-message" id="notes-error"></div>
                         </div>
-
-                        <div class="form-group">
-                            <label for="product-status">Status</label>
-                            <div class="toggle-switch">
-                                <input type="checkbox" id="product-status" name="status" checked>
-                                <label for="product-status"></label>
-                                <span class="toggle-label" id="status-label">Active</span>
                             </div>
                         </div>
                         </div>
+        </form>
                     </div>
+    
+    <!-- Buttons moved outside the content-card div but still within the inventory-add-page -->
+    <div class="form-actions bottom-actions">
+        <button type="button" onclick="submitForm('save')" class="btn-primary">
+            <i class="fas fa-save"></i> Save
+        </button>
+        <button type="button" onclick="submitForm('save-and-new')" class="btn-secondary">
+            <i class="fas fa-plus-circle"></i> Save & Add More
+        </button>
+        <button type="reset" form="product-form" class="btn-cancel">
+            <i class="fas fa-undo"></i> Reset
+        </button>
                 </div>
                 
-                <div class="form-actions">
-                <button type="button" id="cancel-button" class="btn-cancel">Cancel</button>
-                <button type="submit" id="submit-button" class="btn-primary">Add Product</button>
+    <!-- Hidden form action buttons that will be triggered by the external buttons -->
+    <div style="display: none;">
+        <button type="submit" form="add-product-form" id="submit-button"></button>
+        <button type="button" form="add-product-form" id="submit-and-new-button"></button>
+        <button type="reset" form="add-product-form" id="reset-button"></button>
                 </div>
-            </form>
         </div>
-    </div>
 
-<!-- Inline script for direct auto-generation -->
+<!-- Custom script to handle the "Save & Add More" button functionality -->
 <script>
-    // Direct auto-generation function
-    function autoGenerateSKUOnChange() {
-        console.log('Direct auto-generation function called');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the submit-and-new button
+        const submitAndNewButton = document.getElementById('submit-and-new-button');
         
-        const categorySelect = document.getElementById('product-category');
-        const productNameInput = document.getElementById('product-name');
-        const skuInput = document.getElementById('product-sku');
-        
-        if (!categorySelect || !productNameInput || !skuInput) {
-            console.log('Form elements not found');
-            return;
+        if (submitAndNewButton) {
+            submitAndNewButton.addEventListener('click', function() {
+                // Add a hidden field to indicate "save and add more"
+                const form = document.getElementById('add-product-form');
+                if (form) {
+                    let hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'save_and_more';
+                    hiddenInput.value = 'true';
+                    form.appendChild(hiddenInput);
+                    
+                    // Submit the form
+                    form.submit();
+                }
+            });
         }
+});
+</script>
+
+<!-- Final barcode initialization to ensure it always works -->
+<script>
+    // This script runs at the very end to ensure barcode preview works
+    (function() {
+        const DEBUG = true;
+        if (DEBUG) console.log("Final barcode initialization check");
         
-        console.log('Category:', categorySelect.value);
-        console.log('Product name:', productNameInput.value);
-        console.log('Current SKU:', skuInput.value);
-        
-        // If both fields have values and SKU is empty, generate SKU
-        if (categorySelect.value && 
-            productNameInput.value.trim() && 
-            skuInput.value.trim() === '') {
+        // Function to clean up any existing barcode preview and setup proper initialization
+        function cleanupBarcodePreview() {
+            const barcodeInput = document.getElementById('product-barcode');
+            const previewContainer = document.getElementById('barcode-preview');
             
-            console.log('Auto-generating SKU directly');
-            
-            // Generate SKU
-            const categoryPrefix = categorySelect.value.substring(0, 2).toUpperCase();
-            const randomNum = Math.floor(1000 + Math.random() * 9000);
-            const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
-            const timestamp = new Date().getTime().toString().slice(-4);
-            
-            const sku = `${categoryPrefix}${randomNum}${productPrefix}${timestamp}`;
-            console.log('Generated SKU:', sku);
-            
-            // Set the SKU value
-            skuInput.value = sku;
-            
-            // Add visual feedback
-            skuInput.style.backgroundColor = '#f0fff4';
-            skuInput.style.borderColor = '#68d391';
-            
-            // Reset the styling after a delay
-            setTimeout(function() {
-                skuInput.style.backgroundColor = '';
-                skuInput.style.borderColor = '';
-            }, 1500);
-        }
-        
-        // Also check if we should auto-generate barcode
-        autoGenerateBarcodeOnChange();
-    }
-    
-    // Direct barcode auto-generation function
-    function autoGenerateBarcodeOnChange() {
-        console.log('Direct barcode auto-generation function called');
-        
-        const productNameInput = document.getElementById('product-name');
-        const barcodeInput = document.getElementById('product-barcode');
-        const barcodeType = document.getElementById('barcode-type');
-        const previewContainer = document.getElementById('barcode-preview');
-        
-        if (!productNameInput || !barcodeInput || !barcodeType || !previewContainer) {
-            console.log('Barcode form elements not found');
-            return;
-        }
-        
-        console.log('Product name:', productNameInput.value);
-        console.log('Current barcode:', barcodeInput.value);
-        console.log('Barcode type:', barcodeType.value);
-        
-        // If product name has a value and barcode is empty, generate barcode
-        if (productNameInput.value.trim() && barcodeInput.value.trim() === '') {
-            console.log('Auto-generating barcode directly');
-            
-            // Generate barcode based on type
-            let barcodeValue = '';
-            switch(barcodeType.value) {
-                case 'EAN13':
-                    // Generate 12 digits (13th is check digit, added by JsBarcode)
-                    barcodeValue = Array.from({length: 12}, () => Math.floor(Math.random() * 10)).join('');
-                    break;
-                case 'CODE128':
-                    // Generate alphanumeric code
-                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                    barcodeValue = Array.from({length: 10}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-                    break;
-                case 'UPC':
-                    // Generate 11 digits (12th is check digit, added by JsBarcode)
-                    barcodeValue = Array.from({length: 11}, () => Math.floor(Math.random() * 10)).join('');
-                    break;
+            if (barcodeInput && previewContainer) {
+                if (DEBUG) console.log("Found barcode elements in final cleanup");
+                
+                // Clear the preview container to remove any auto-generated content
+                previewContainer.innerHTML = '';
+                
+                // Make sure the input value is empty if it was a test value
+                if (barcodeInput.value && barcodeInput.value.startsWith('TEST-')) {
+                    if (DEBUG) console.log("Removing test barcode value:", barcodeInput.value);
+                    barcodeInput.value = '';
+                }
             }
-            
-            // Set the barcode value
-            barcodeInput.value = barcodeValue;
-            
-            // Add visual feedback
-            barcodeInput.style.backgroundColor = '#f0fff4';
-            barcodeInput.style.borderColor = '#68d391';
-            
-            // Reset the styling after a delay
-            setTimeout(function() {
-                barcodeInput.style.backgroundColor = '';
-                barcodeInput.style.borderColor = '';
-            }, 1500);
         }
         
-        // Always update the barcode preview if there's a value in the input
-        // This ensures the preview is shown both for auto-generated and manually entered barcodes
-        if (barcodeInput.value.trim()) {
-            console.log('Updating barcode preview for:', barcodeInput.value);
-            
-            // Clear previous barcode
-            previewContainer.innerHTML = '';
+        // Run immediately and also after a delay to catch late-loaded elements
+        cleanupBarcodePreview();
+        setTimeout(cleanupBarcodePreview, 500);
+        setTimeout(cleanupBarcodePreview, 1000);
+    })();
+</script>
+
+<!-- Barcode Direct Fix -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script>
+    // Super direct fix for barcode preview
+    document.addEventListener('DOMContentLoaded', function() {
+        // Make absolutely sure JsBarcode is loaded
+        if (typeof JsBarcode !== 'function') {
+            console.error('JsBarcode not loaded, injecting it directly');
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js';
+            script.onload = setupBarcodeListeners;
+            document.head.appendChild(script);
+        } else {
+            console.log('JsBarcode loaded, setting up listeners');
+            setTimeout(setupBarcodeListeners, 500);
+        }
+        
+        function setupBarcodeListeners() {
+            try {
+                // Get the essential elements
+                const barcodeInput = document.getElementById('product-barcode');
+                const previewContainer = document.getElementById('barcode-preview');
+                
+                if (!barcodeInput || !previewContainer) {
+                    console.error('Required barcode elements not found for listener setup');
+                    return;
+                }
+                
+                // Clear any existing content in the preview container
+                previewContainer.innerHTML = '';
+                
+                // Setup listeners only, don't generate a test barcode
+                console.log('Setting up barcode input and type change listeners');
+                
+                // Also set up the change listener for future changes
+                barcodeInput.addEventListener('input', function() {
+                    if (this.value.trim()) {
+                        generateBarcode(this.value);
+                    } else {
+                        previewContainer.innerHTML = '';
+                    }
+                });
+                
+                // Also listen for barcode type changes
+                const barcodeType = document.getElementById('barcode-type');
+                if (barcodeType) {
+                    barcodeType.addEventListener('change', function() {
+                        if (barcodeInput.value.trim()) {
+                            generateBarcode(barcodeInput.value);
+                        }
+                    });
+                }
+                
+                // Helper function to generate barcode
+                function generateBarcode(value) {
+                    // Get the selected format
+                    const format = barcodeType ? barcodeType.value : 'CODE128';
+                    
+                    // Clear container
+                    previewContainer.innerHTML = '';
+                    
+                    // Create a new SVG element
+                    const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    previewContainer.appendChild(svgElement);
+                    
+                    // Format-specific handling
+                    let formattedValue = value;
+                    
+                    // For EAN13, ensure 12 or 13 digits (check digit is auto-calculated if 12 digits)
+                    if (format === 'EAN13') {
+                        if (!/^\d{12,13}$/.test(value)) {
+                            // Pad with zeros or truncate to 12 digits
+                            formattedValue = value.replace(/\D/g, ''); // Remove non-digits
+                            formattedValue = formattedValue.substring(0, 12).padStart(12, '0');
+                            console.log('Reformatted EAN13 value:', formattedValue);
+                        }
+                    }
+                    
+                    // For UPC, ensure exactly 11 or 12 digits (check digit is auto-calculated if 11 digits)
+                    else if (format === 'UPC') {
+                        if (!/^\d{11,12}$/.test(value)) {
+                            // Pad with zeros or truncate to 11 digits
+                            formattedValue = value.replace(/\D/g, ''); // Remove non-digits
+                            formattedValue = formattedValue.substring(0, 11).padStart(11, '0');
+                            console.log('Reformatted UPC value:', formattedValue);
+                        }
+                    }
+                    
+                    // Direct generation with error handling
+                    try {
+                        JsBarcode(svgElement, formattedValue, {
+                            format: format,
+                            width: 2,
+                            height: 50,
+                            displayValue: true,
+                            fontSize: 14,
+                            margin: 10
+                        });
+                        console.log('Barcode generated successfully');
+                    } catch (error) {
+                        console.error('Error in barcode generation:', error, 'format:', format);
+                        
+                        // Try alternative approach for EAN13/UPC
+                        try {
+                            if (format === 'EAN13' || format === 'UPC') {
+                                console.log('Trying fallback to CODE128 format');
+                                previewContainer.innerHTML = '';
+                                const svg2 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                                previewContainer.appendChild(svg2);
+                                JsBarcode(svg2, value, {
+                                    format: 'CODE128',
+                                    width: 2,
+                                    height: 50,
+                                    displayValue: true,
+                                    fontSize: 14,
+                                    margin: 10
+                                });
+                                return;
+                            }
+                        } catch (secondError) {
+                            console.error('Fallback also failed:', secondError);
+                        }
+                        
+                        // If JsBarcode fails, try API
+                        try {
+                            // Map format to API format name
+                            let apiFormat = format.toLowerCase();
+                            if (apiFormat === 'ean13') apiFormat = 'ean13';
+                            if (apiFormat === 'upc') apiFormat = 'upca';
+                            
+                            previewContainer.innerHTML = `
+                                <img src="https://bwipjs-api.metafloor.com/?bcid=${apiFormat}&text=${encodeURIComponent(formattedValue)}"
+                                    alt="${value}" style="max-width: 100%; height: auto;">
+                                <div style="font-size: 10px; color: #666; text-align: center; margin-top: 5px;">
+                                    ${format} format using API fallback
+                                </div>
+                            `;
+                            return;
+                        } catch (apiError) {
+                            console.error('API fallback failed:', apiError);
+                        }
+                        
+                        // If all else fails, create a visual barcode manually
+                        previewContainer.innerHTML = `
+                            <div style="font-family: 'Libre Barcode 128', monospace; font-size: 60px; text-align: center; margin: 20px 0;">
+                                ${value}
+                            </div>
+                            <div style="text-align: center; font-size: 14px; margin-top: 5px;">
+                                ${value}
+                            </div>
+                            <div style="font-size: 12px; color: #666; text-align: center; margin-top: 5px;">
+                                ${format} format visualization (fallback)
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Critical error in barcode listener setup:', error);
+            }
+        }
+    });
+</script>
+
+<!-- Final emergency fix - works even if DOMContentLoaded has already fired -->
+<script>
+    (function() {
+        // This will execute immediately to clean up any test barcodes
+        setTimeout(function() {
+            try {
+                var barcodeInput = document.getElementById('product-barcode');
+                var previewContainer = document.getElementById('barcode-preview');
+                
+                if (barcodeInput && previewContainer) {
+                    console.log('Emergency cleanup check');
+                    
+                    // Clear any preview container content 
+                    previewContainer.innerHTML = '';
+                    
+                    // Remove any test value
+                    if (barcodeInput.value && barcodeInput.value.startsWith('TEST-')) {
+                        console.log('Removing emergency test value');
+                        barcodeInput.value = '';
+                    }
+                }
+            } catch (error) {
+                console.error('Emergency cleanup failed:', error);
+            }
+        }, 1000);
+    })();
+</script>
+
+<!-- Inline direct barcode generation script - executed at end of page -->
+<script>
+// Final cleanup and listener setup - doesn't rely on any other code
+(function() {
+    console.log('Running final cleanup and listener setup script');
+    
+    // Using setTimeout to ensure DOM is ready
+    setTimeout(function() {
+        // Get required elements
+        var input = document.getElementById('product-barcode');
+        var container = document.getElementById('barcode-preview');
+        
+        if (!input || !container) {
+            console.error('Critical elements not found for final cleanup');
+            return;
+        }
+        
+        // Clear any existing content
+        container.innerHTML = '';
+        
+        // Remove any test barcode value
+        if (input.value && input.value.startsWith('TEST-')) {
+            console.log('Clearing test barcode value from final script');
+            input.value = '';
+        }
+        
+        // Setup event listener for input changes
+        input.addEventListener('input', function() {
+            if (this.value.trim()) {
+                updateBarcodeWithFormat(this.value, container);
+            } else {
+                container.innerHTML = '';
+            }
+        });
+        
+        // Setup event listener for barcode type changes
+        var barcodeType = document.getElementById('barcode-type');
+        if (barcodeType) {
+            barcodeType.addEventListener('change', function() {
+                if (input.value.trim()) {
+                    updateBarcodeWithFormat(input.value, container, this.value);
+                }
+            });
+        }
+        
+        // Helper function to update barcode with format
+        function updateBarcodeWithFormat(value, container, formatOverride) {
+            var format = formatOverride || (barcodeType ? barcodeType.value : 'CODE128');
             
             try {
-                // Create SVG element for the barcode
-                const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                previewContainer.appendChild(svgElement);
-                
-                // Generate barcode if JsBarcode is available
+                // Generate with JsBarcode if available
                 if (typeof JsBarcode === 'function') {
-                    JsBarcode(svgElement, barcodeInput.value, {
-                        format: barcodeType.value,
-                        lineColor: '#000',
+                    container.innerHTML = '';
+                    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    container.appendChild(svg);
+                    
+                    // Format-specific handling
+                    var formattedValue = value;
+                    
+                    // For EAN13, ensure 12 or 13 digits (check digit is auto-calculated if 12 digits)
+                    if (format === 'EAN13') {
+                        if (!/^\d{12,13}$/.test(value)) {
+                            // Pad with zeros or truncate to 12 digits
+                            formattedValue = value.replace(/\D/g, ''); // Remove non-digits
+                            formattedValue = formattedValue.substring(0, 12).padStart(12, '0');
+                            console.log('Reformatted EAN13 value:', formattedValue);
+                        }
+                    }
+                    
+                    // For UPC, ensure exactly 11 or 12 digits (check digit is auto-calculated if 11 digits)
+                    else if (format === 'UPC') {
+                        if (!/^\d{11,12}$/.test(value)) {
+                            // Pad with zeros or truncate to 11 digits
+                            formattedValue = value.replace(/\D/g, ''); // Remove non-digits
+                            formattedValue = formattedValue.substring(0, 11).padStart(11, '0');
+                            console.log('Reformatted UPC value:', formattedValue);
+                        }
+                    }
+                    
+                    // Generate barcode
+                    JsBarcode(svg, formattedValue, {
+                        format: format,
                         width: 2,
                         height: 50,
                         displayValue: true,
                         fontSize: 14,
                         margin: 10
                     });
-                } else {
-                    console.error('JsBarcode not available for preview generation');
-                    // Try to load JsBarcode
-                    const script = document.createElement('script');
-                    script.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js';
-                    script.onload = function() {
-                        console.log('JsBarcode loaded, retrying preview');
-                        autoGenerateBarcodeOnChange();
-                    };
-                    document.head.appendChild(script);
+                    return;
                 }
             } catch (error) {
-                console.error('Error updating barcode preview:', error);
-            }
-        }
-    }
-    
-    // Check on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add event listeners for product name input to trigger barcode generation
-        const productNameInput = document.getElementById('product-name');
-        if (productNameInput) {
-            ['input', 'change', 'blur'].forEach(function(eventType) {
-                productNameInput.addEventListener(eventType, function() {
-                    setTimeout(autoGenerateBarcodeOnChange, 100);
-                });
-            });
-        }
-        
-        // Add event listener for barcode type change
-        const barcodeType = document.getElementById('barcode-type');
-        if (barcodeType) {
-            barcodeType.addEventListener('change', autoGenerateBarcodeOnChange);
-        }
-        
-        // Add event listener for barcode input changes
-        const barcodeInput = document.getElementById('product-barcode');
-        if (barcodeInput) {
-            ['input', 'change', 'blur', 'keyup'].forEach(function(eventType) {
-                barcodeInput.addEventListener(eventType, function() {
-                    setTimeout(autoGenerateBarcodeOnChange, 100);
-                });
-            });
-        }
-        
-        // Check immediately and periodically to ensure barcode preview is shown
-        setTimeout(autoGenerateBarcodeOnChange, 100);
-        setTimeout(autoGenerateBarcodeOnChange, 500);
-        setTimeout(autoGenerateBarcodeOnChange, 1000);
-        setTimeout(autoGenerateBarcodeOnChange, 2000);
-    });
-</script>
-
-<!-- Direct event listener for auto-generating SKU -->
-<script>
-    // This script will directly monitor the form fields and generate a SKU when both have values
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Setting up direct event listeners for SKU generation');
-        
-        // Check for existing barcode and update preview
-        setTimeout(function() {
-            console.log('Checking for existing barcode on page load');
-            const barcodeInput = document.getElementById('product-barcode');
-            
-            if (barcodeInput && barcodeInput.value.trim()) {
-                console.log('Found existing barcode value:', barcodeInput.value);
-                // Update the preview
-                if (typeof window.forceUpdateBarcodePreview === 'function') {
-                    window.forceUpdateBarcodePreview();
+                console.error('JsBarcode failed in final script:', error, 'format:', format, 'value:', value);
+                
+                // Try alternative approach with different options
+                try {
+                    container.innerHTML = '';
+                    var svg2 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    container.appendChild(svg2);
+                    
+                    // For EAN13/UPC failures, fall back to CODE128
+                    if (format === 'EAN13' || format === 'UPC') {
+                        console.log('Retrying with CODE128 format');
+                        JsBarcode(svg2, value, {
+                            format: 'CODE128',
+                            width: 2,
+                            height: 50,
+                            displayValue: true,
+                            fontSize: 14,
+                            margin: 10
+                        });
+                        return;
+                    }
+                } catch (secondError) {
+                    console.error('Second attempt also failed:', secondError);
                 }
             }
-        }, 500);
-        
-        // Function to check and generate SKU
-        function autoGenerateSKU() {
-            const categorySelect = document.getElementById('product-category');
-            const productNameInput = document.getElementById('product-name');
-            const skuInput = document.getElementById('product-sku');
             
-            if (!categorySelect || !productNameInput || !skuInput) {
-                console.log('Form elements not found');
+            // Fallback methods if JsBarcode fails
+            try {
+                // Use online API with appropriate format
+                var apiFormat = format.toLowerCase();
+                if (apiFormat === 'ean13') apiFormat = 'ean13';
+                if (apiFormat === 'upc') apiFormat = 'upca';
+                
+                container.innerHTML = `
+                    <img src="https://bwipjs-api.metafloor.com/?bcid=${apiFormat}&text=${encodeURIComponent(value)}"
+                        alt="${value}" style="max-width: 100%; height: auto;">
+                    <div style="font-size: 10px; color: #666; text-align: center; margin-top: 5px;">
+                        ${format} format using API fallback
+                    </div>
+                `;
+            } catch (error) {
+                console.error('All barcode methods failed in final script:', error);
+                
+                // Last resort fallback to plain text
+                container.innerHTML = `
+                    <div style="border: 2px solid #333; padding: 10px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px;">
+                            ${value}
+                        </div>
+                        <div style="font-size: 12px; color: #666;">
+                            ${format} barcode preview unavailable
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }, 1000);
+})();
+</script>
+
+<!-- Image Uploader Initialization -->
+<script>
+    // Initialize the new image uploader when DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Setting up new image uploader');
+        
+        // Get DOM elements
+        const imageUploader = document.getElementById('image-uploader');
+        const previewArea = document.getElementById('image-preview-area');
+        const uploadPlaceholder = document.getElementById('upload-placeholder');
+        const imagePreview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+        const changeBtn = document.getElementById('change-image-btn');
+        const removeBtn = document.getElementById('remove-image-btn');
+        const hiddenInput = document.getElementById('product-image-hidden');
+        const imageDetails = document.getElementById('image-details');
+        const imageFilename = document.getElementById('image-filename');
+        const imageSize = document.getElementById('image-size');
+        
+        // Current selected file
+        let currentFile = null;
+        
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Show image preview
+        function showImagePreview(file) {
+            // Create file reader to read the file
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Set the image source
+                previewImg.src = e.target.result;
+                
+                // Show preview and hide placeholder
+                uploadPlaceholder.style.display = 'none';
+                imagePreview.style.display = 'flex';
+                
+                // Update file details
+                imageFilename.textContent = file.name;
+                imageSize.textContent = formatFileSize(file.size);
+                imageDetails.style.display = 'block';
+                
+                // Store the file for form submission
+                currentFile = file;
+                
+                // Update hidden input for form submission
+                if (hiddenInput) {
+                    try {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        hiddenInput.files = dataTransfer.files;
+                    } catch (error) {
+                        console.error('Error setting file to hidden input:', error);
+                    }
+                }
+                
+                // Show success notification
+                showNotification('Image added successfully', 'success');
+            };
+            
+            reader.onerror = function() {
+                showNotification('Error reading the image file', 'error');
+            };
+            
+            // Read the file as data URL
+            reader.readAsDataURL(file);
+        }
+        
+        // Reset the image uploader
+        function resetImageUploader() {
+            // Hide preview and show placeholder
+            uploadPlaceholder.style.display = 'flex';
+            imagePreview.style.display = 'none';
+            imageDetails.style.display = 'none';
+            
+            // Clear the image
+            previewImg.src = '';
+            
+            // Clear the file
+            currentFile = null;
+            
+            // Clear the hidden input
+            if (hiddenInput) {
+                hiddenInput.value = '';
+            }
+        }
+        
+        // Handle file selection
+        function handleFileSelect(e) {
+            const files = e.target.files || e.dataTransfer.files;
+            
+            if (!files.length) return;
+            
+            const file = files[0];
+            
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                showNotification('Please select an image file', 'error');
                 return;
             }
             
-            console.log('Checking if we should generate SKU:');
-            console.log('Category:', categorySelect.value);
-            console.log('Product name:', productNameInput.value);
-            console.log('Current SKU:', skuInput.value);
-            
-            // If both fields have values and SKU is empty, generate SKU
-            if (categorySelect.value && 
-                productNameInput.value.trim() && 
-                skuInput.value.trim() === '') {
-                
-                console.log('Auto-generating SKU - conditions met');
-                
-                // Generate SKU
-                const categoryPrefix = categorySelect.value.substring(0, 2).toUpperCase();
-                const randomNum = Math.floor(1000 + Math.random() * 9000);
-                const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
-                const timestamp = new Date().getTime().toString().slice(-4);
-                
-                const sku = `${categoryPrefix}${randomNum}${productPrefix}${timestamp}`;
-                console.log('Generated SKU:', sku);
-                
-                // Set the SKU value
-                skuInput.value = sku;
-                
-                // Add visual feedback
-                skuInput.style.backgroundColor = '#f0fff4';
-                skuInput.style.borderColor = '#68d391';
-                
-                // Reset the styling after a delay
-                setTimeout(function() {
-                    skuInput.style.backgroundColor = '';
-                    skuInput.style.borderColor = '';
-                }, 1500);
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('File size exceeds 5MB limit', 'error');
+                return;
             }
+            
+            // Show preview
+            showImagePreview(file);
         }
         
-        // Get the form elements
-        const categorySelect = document.getElementById('product-category');
-        const productNameInput = document.getElementById('product-name');
-        
-        if (categorySelect && productNameInput) {
-            // Set up event listeners for both fields
+        // Setup event listeners
+        if (imageUploader) {
+            // File input change event
+            imageUploader.addEventListener('change', handleFileSelect);
             
-            // For category select
-            categorySelect.addEventListener('change', function() {
-                console.log('Category changed (direct listener)');
-                autoGenerateSKU();
+            // Drag and drop events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadPlaceholder.addEventListener(eventName, preventDefaults, false);
             });
             
-            // For product name input
-            ['input', 'change', 'blur', 'keyup'].forEach(function(eventType) {
-                productNameInput.addEventListener(eventType, function() {
-                    console.log(`Product name ${eventType} event (direct listener)`);
-                    setTimeout(autoGenerateSKU, 50);
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadPlaceholder.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadPlaceholder.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                uploadPlaceholder.classList.add('highlight');
+            }
+            
+            function unhighlight() {
+                uploadPlaceholder.classList.remove('highlight');
+            }
+            
+            uploadPlaceholder.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length) {
+                    handleFileSelect({dataTransfer: dt});
+                }
+            }
+            
+            // Click on placeholder to trigger file input
+            uploadPlaceholder.addEventListener('click', function() {
+                imageUploader.click();
+            });
+            
+            // Change button click event
+            if (changeBtn) {
+                changeBtn.addEventListener('click', function() {
+                    imageUploader.click();
                 });
-            });
-            
-            // Check immediately if we already have values
-            setTimeout(autoGenerateSKU, 100);
-            
-            // Also check periodically for the first few seconds
-            for (let i = 1; i <= 10; i++) {
-                setTimeout(autoGenerateSKU, i * 500);
             }
             
-            // Set up a MutationObserver to detect changes to the form fields
-            const observer = new MutationObserver(function(mutations) {
-                console.log('Mutation detected in form fields');
-                autoGenerateSKU();
-            });
-            
-            // Observe both fields for changes
-            observer.observe(categorySelect, { attributes: true, childList: true, characterData: true });
-            observer.observe(productNameInput, { attributes: true, childList: true, characterData: true });
-            
-            console.log('Direct event listeners set up successfully');
-        } else {
-            console.error('Could not find form elements for direct event listeners');
-        }
-    });
-</script>
-
-<!-- Ensure SKU button is clickable -->
-<script>
-    // Wait for the DOM to be fully loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded, ensuring SKU button is clickable');
-        
-        // Get the button
-        var generateButton = document.getElementById('generate-sku');
-        
-        if (generateButton) {
-            console.log('Found generate button, adding click event listener');
-            
-            // Add a click event listener
-            generateButton.addEventListener('click', function(e) {
-                console.log('Generate button clicked via event listener');
-                e.preventDefault();
-                
-                // Try the form method first
-                if (typeof generateSKUViaForm === 'function') {
-                    console.log('Using generateSKUViaForm function');
-                    return generateSKUViaForm();
-                }
-                
-                // Fallback to direct generation
-                console.log('Using direct SKU generation');
-                var category = document.getElementById('product-category').value;
-                var productName = document.getElementById('product-name').value;
-                
-                if (!category) {
-                    alert('Please select a category first');
-                    document.getElementById('product-category').focus();
-                    return false;
-                }
-                
-                if (!productName) {
-                    alert('Please enter a product name first');
-                    document.getElementById('product-name').focus();
-                    return false;
-                }
-                
-                var categoryPrefix = category.substring(0, 2).toUpperCase();
-                var randomNum = Math.floor(1000 + Math.random() * 9000);
-                var productPrefix = productName.substring(0, 2).toUpperCase();
-                var timestamp = new Date().getTime().toString().slice(-4);
-                
-                var sku = categoryPrefix + randomNum + productPrefix + timestamp;
-                document.getElementById('product-sku').value = sku;
-                
-                // Add visual feedback
-                var skuInput = document.getElementById('product-sku');
-                skuInput.style.backgroundColor = '#f0fff4';
-                skuInput.style.borderColor = '#68d391';
-                
-                // Reset the styling after a delay
-                setTimeout(function() {
-                    skuInput.style.backgroundColor = '';
-                    skuInput.style.borderColor = '';
-                }, 1500);
-                
-                return false;
-            });
-            
-            // Also try the direct click method
-            console.log('Trying direct click on generate button');
-            setTimeout(function() {
-                // Try to click the button directly if the SKU field is empty
-                var skuInput = document.getElementById('product-sku');
-                if (skuInput && !skuInput.value) {
-                    // Set test values if needed
-                    var categorySelect = document.getElementById('product-category');
-                    var productNameInput = document.getElementById('product-name');
-                    
-                    if (categorySelect && !categorySelect.value) {
-                        categorySelect.value = 'electronics';
-                    }
-                    
-                    // Removed the default "Test Product" value
-                    // if (productNameInput && !productNameInput.value) {
-                    //     productNameInput.value = 'Test Product';
-                    // }
-                    
-                    // Only click the button if user has entered a product name
-                    if (productNameInput && productNameInput.value.trim()) {
-                        // Try clicking the button
-                        console.log('Clicking generate button directly');
-                        generateButton.click();
-                    }
-                }
-            }, 2000);
-            } else {
-            console.error('Generate button not found');
-            
-            // Try the fallback button
-            var fallbackButton = document.getElementById('direct-sku-button');
-            if (fallbackButton) {
-                console.log('Using fallback button');
-                fallbackButton.style.display = 'block';
+            // Remove button click event
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    resetImageUploader();
+                });
             }
         }
-    });
-</script>
-
-<!-- Inline script for SKU generation -->
-<script>
-    // Fallback SKU generation function in case the main one doesn't load
-    if (!window.generateSKU) {
-        window.generateSKU = function() {
-            console.log('Fallback SKU generation function called');
-            
-            // Get the required elements
-            const categorySelect = document.getElementById('product-category');
-            const productNameInput = document.getElementById('product-name');
-            const skuInput = document.getElementById('product-sku');
-            
-            // Validate inputs
-            if (!categorySelect || !categorySelect.value) {
-                alert('Please select a category first');
-                if (categorySelect) categorySelect.focus();
-                return false;
-            }
-            
-            if (!productNameInput || !productNameInput.value.trim()) {
-                alert('Please enter a product name first');
-                if (productNameInput) productNameInput.focus();
-                return false;
-            }
-            
-            // Generate a simple SKU
-            const categoryPrefix = categorySelect.value.substring(0, 2).toUpperCase();
-            const randomNum = Math.floor(1000 + Math.random() * 9000);
-            const productPrefix = productNameInput.value.trim().substring(0, 2).toUpperCase();
-            const timestamp = new Date().getTime().toString().slice(-4);
-            
-            const sku = `${categoryPrefix}${randomNum}${productPrefix}${timestamp}`;
-            
-            // Set the SKU value
-            skuInput.value = sku;
-            
-            // Show success message
-            alert('SKU generated successfully: ' + sku);
-            
-            return true;
-        };
-    }
-    
-    // Ensure the button has the correct onclick handler
-    document.addEventListener('DOMContentLoaded', function() {
-        const generateSkuButton = document.getElementById('generate-sku');
-        if (generateSkuButton) {
-            generateSkuButton.onclick = function(e) {
-                e.preventDefault();
-                window.generateSKU();
-                return false;
+        
+        // Handle form submission
+        const form = document.getElementById('product-form');
+        if (form) {
+            const originalSubmit = form.onsubmit;
+            form.onsubmit = function(e) {
+                if (originalSubmit) {
+                    const result = originalSubmit.apply(this, arguments);
+                    if (result === false) return false;
+                }
+                
+                // Ensure the file is attached to the form
+                if (currentFile && hiddenInput) {
+                    try {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(currentFile);
+                        hiddenInput.files = dataTransfer.files;
+                    } catch (error) {
+                        console.error('Error setting file to hidden input during form submission:', error);
+                    }
+                }
+                
+                return true;
             };
         }
     });
 </script>
 
-<!-- Initialize Profit Margin Calculation -->
+<!-- Form Submission Handler -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    function updateProfitMargin() {
-        const costPriceInput = document.getElementById('product-cost-price');
-        const mrpInput = document.getElementById('product-mrp');
-        const sellingPriceInput = document.getElementById('product-selling-price');
-        const profitDisplay = document.getElementById('profit-margin-display');
-        
-        if (!costPriceInput || !sellingPriceInput || !profitDisplay) {
-            console.error('Required elements for profit margin calculation not found');
+    async function submitForm(action) {
+        const form = document.getElementById('product-form');
+        if (!form) {
+            console.error('Form not found');
             return;
         }
-        
-        const profitAmount = profitDisplay.querySelector('.profit-amount');
-        const profitPercentage = profitDisplay.querySelector('.profit-percentage');
-        
-        const costPrice = parseFloat(costPriceInput.value) || 0;
-        const mrp = parseFloat(mrpInput?.value) || 0;
-        const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
-        
-        console.log('Calculating profit margin:', { costPrice, mrp, sellingPrice });
-        
-        if (costPrice > 0 && sellingPrice > 0) {
-            const profit = sellingPrice - costPrice;
-            const percentage = (profit / costPrice) * 100;
-            
-            profitAmount.textContent = `₹${profit.toFixed(2)}`;
-            profitPercentage.textContent = `(${percentage.toFixed(1)}%)`;
-            
-            if (profit < 0) {
-                profitDisplay.className = 'profit-margin-display negative';
-            } else if (percentage < 15) {
-                profitDisplay.className = 'profit-margin-display low';
-            } else if (percentage < 30) {
-                profitDisplay.className = 'profit-margin-display medium';
-            } else {
-                profitDisplay.className = 'profit-margin-display high';
-            }
-        } else {
-            profitAmount.textContent = '₹0.00';
-            profitPercentage.textContent = '(0%)';
-            profitDisplay.className = 'profit-margin-display';
-        }
-    }
-    
-    const priceInputs = [
-        document.getElementById('product-cost-price'),
-        document.getElementById('product-mrp'),
-        document.getElementById('product-selling-price')
-    ];
-    
-    priceInputs.forEach(input => {
-        if (input) {
-            ['input', 'change', 'blur'].forEach(event => {
-                input.addEventListener(event, updateProfitMargin);
-            });
-        }
-    });
-    
-    // Initial calculation
-    updateProfitMargin();
-});
-</script>
-{% endblock %}
 
-{% block scripts %}
-<!-- FilePond Plugins -->
-<script src="https://unpkg.com/filepond-plugin-file-encode/dist/filepond-plugin-file-encode.min.js"></script>
-<script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.min.js"></script>
-<script src="https://unpkg.com/filepond-plugin-image-exif-orientation/dist/filepond-plugin-image-exif-orientation.min.js"></script>
-<script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.js"></script>
-<script src="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.min.js"></script>
-<script src="https://unpkg.com/filepond-plugin-image-transform/dist/filepond-plugin-image-transform.min.js"></script>
-<script src="https://unpkg.com/filepond-plugin-file-poster/dist/filepond-plugin-file-poster.min.js"></script>
-<!-- FilePond Core -->
-<script src="https://unpkg.com/filepond/dist/filepond.min.js"></script>
-<!-- Other Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-<script src="{{ url_for('static', filename='js/inventory_add.js') }}"></script>
+        // Show loading state
+        const submitBtn = document.querySelector(action === 'save' ? '.btn-primary' : '.btn-secondary');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Saving...';
 
-<!-- Ensure barcode preview is generated on page load -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Ensuring barcode preview is generated on page load');
-        
-        // Function to generate a barcode if none exists
-        function ensureBarcodeExists() {
-            const productNameInput = document.getElementById('product-name');
-            const barcodeInput = document.getElementById('product-barcode');
+        try {
+            // Create FormData
+            const formData = new FormData(form);
             
-            if (productNameInput && productNameInput.value.trim() && 
-                barcodeInput && !barcodeInput.value.trim()) {
-                console.log('Auto-generating barcode on page load');
-                autoGenerateBarcodeOnChange();
-            } else if (barcodeInput && barcodeInput.value.trim()) {
-                console.log('Updating existing barcode preview on page load');
-                autoGenerateBarcodeOnChange();
-            }
-        }
-        
-        // Try multiple times to ensure the barcode is generated
-        setTimeout(ensureBarcodeExists, 500);
-        setTimeout(ensureBarcodeExists, 1000);
-        setTimeout(ensureBarcodeExists, 2000);
-    });
-</script>
+            // Add action flag
+            formData.append('add_more', action === 'save-and-new' ? 'true' : 'false');
 
-<!-- JsBarcode initialization script -->
-<script>
-    // Check if JsBarcode is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Checking JsBarcode availability');
-        
-        // Function to check if JsBarcode is available
-        function checkJsBarcode() {
-            if (typeof JsBarcode === 'function') {
-                console.log('JsBarcode is available');
-                return true;
-            } else {
-                console.log('JsBarcode not available yet');
-                return false;
-            }
-        }
-        
-        // Initial check
-        if (!checkJsBarcode()) {
-            // If not available, try to load it again
-            console.log('Attempting to load JsBarcode again');
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js';
-            script.onload = function() {
-                console.log('JsBarcode loaded successfully');
-                // Try to update any existing barcode
-                setTimeout(function() {
-                    const barcodeInput = document.getElementById('product-barcode');
-                    if (barcodeInput && barcodeInput.value) {
-                        updateBarcodePreview(barcodeInput.value);
-                    }
-                }, 100);
-            };
-            document.head.appendChild(script);
-        }
-        
-        // Function to update barcode preview
-        window.updateBarcodePreview = function(value) {
-            try {
-                if (!value) return;
-                
-                const previewContainer = document.getElementById('barcode-preview');
-                const barcodeType = document.getElementById('barcode-type');
-                
-                if (!previewContainer || !barcodeType) return;
-                
-                // Clear previous barcode
-                previewContainer.innerHTML = '';
-                
-                // Create SVG element for the barcode
-                const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                previewContainer.appendChild(svgElement);
-                
-                // Generate barcode if JsBarcode is available
-                if (typeof JsBarcode === 'function') {
-                    console.log('Generating barcode preview for:', value);
-                    JsBarcode(svgElement, value, {
-                        format: barcodeType.value,
-                        lineColor: '#000',
-                        width: 2,
-                        height: 50,
-                        displayValue: true,
-                        fontSize: 14,
-                        margin: 10
-                        });
-                    } else {
-                    console.error('JsBarcode not available for preview generation');
-                    }
-                } catch (error) {
-                console.error('Error updating barcode preview:', error);
-            }
-        };
-        
-        // Add listener to barcode input for live preview
-        const barcodeInput = document.getElementById('product-barcode');
-        if (barcodeInput) {
-            barcodeInput.addEventListener('input', function() {
-                if (this.value) {
-                    updateBarcodePreview(this.value);
+            // Send request
+            const response = await fetch('/api/inventory/add', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
                 }
             });
+
+            // Parse response
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                // Show success message
+                showNotification('Product saved successfully!', 'success');
+                
+                if (action === 'save-and-new') {
+                    // Reset form and stay on page
+                    form.reset();
+                    document.getElementById('product-name').focus();
+                } else {
+                    // Redirect to inventory page
+                    window.location.href = '/inventory?refresh=' + new Date().getTime();
+                }
+            } else {
+                throw new Error(result.message || 'Failed to save product');
+            }
+        } catch (error) {
+            console.error('Error saving product:', error);
+            showNotification(error.message, 'error');
+        } finally {
+            // Restore button state
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    }
+
+    // Initialize form validation and setup
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('product-form');
+        
+        // Prevent default form submission
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitForm('save');
+            });
         }
     });
 </script>
 
-<!-- Final barcode preview check -->
-<script>
-    // Final check to ensure barcode preview is shown
-    document.addEventListener('DOMContentLoaded', function() {
-        // Wait for everything to load
-        setTimeout(function() {
-            console.log('Final barcode preview check');
-            const barcodeInput = document.getElementById('product-barcode');
-            
-            if (barcodeInput && barcodeInput.value.trim()) {
-                console.log('Found barcode value in final check:', barcodeInput.value);
-                
-                // Try all available methods to update the preview
-                if (typeof window.forceUpdateBarcodePreview === 'function') {
-                    window.forceUpdateBarcodePreview();
-                } else if (typeof window.updateBarcodePreview === 'function') {
-                    window.updateBarcodePreview(barcodeInput.value);
-                } else {
-                    // Direct update
-                    try {
-                        const previewContainer = document.getElementById('barcode-preview');
-                        const barcodeType = document.getElementById('barcode-type');
-                        
-                        if (previewContainer && barcodeType) {
-                            // Clear previous barcode
-                            previewContainer.innerHTML = '';
-                            
-                            // Create SVG element for the barcode
-                            const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                            previewContainer.appendChild(svgElement);
-                            
-                            // Generate barcode if JsBarcode is available
-                            if (typeof JsBarcode === 'function') {
-                                JsBarcode(svgElement, barcodeInput.value, {
-                                    format: barcodeType.value,
-                                    lineColor: '#000',
-                                    width: 2,
-                                    height: 50,
-                                    displayValue: true,
-                                    fontSize: 14,
-                                    margin: 10
-            });
-        }
-    }
-        } catch (error) {
-                        console.error('Error in final barcode preview update:', error);
-        }
-    }
-            }
-        }, 1000);
-});
-</script>
+<!-- Hidden submit button for form submission -->
+<button type="submit" style="display:none;">Submit</button>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- FilePond -->
+<script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+<script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
+<script src="https://unpkg.com/filepond-plugin-image-validate-size/dist/filepond-plugin-image-validate-size.js"></script>
+<script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+
+<!-- Add sku-generator.js script -->
+<script src="{{ url_for('static', filename='js/sku-generator.js') }}?v={{ range(9999999) | random }}"></script>
+
+<!-- Make sure the inventory_add.js is loaded with cache-busting parameter -->
+<script src="{{ url_for('static', filename='js/inventory_add.js') }}?v={{ range(9999999) | random }}"></script>
 {% endblock %}

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="AuraFlow.Ai - AI-Powered Business OS for Retailers">
     <meta name="theme-color" content="#4A90E2">
-    <title>Offline - AuraFlow.Ai</title>
+    <title>Offline - AuraFlow</title>
     
     <!-- PWA manifest -->
     <link rel="manifest" href="/manifest.json">
@@ -18,8 +18,9 @@
     <link rel="icon" type="image/png" href="/static/images/favicon.png">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="/static/css/normalize.css">
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/css/materialdesignicons.min.css') }}">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,88 +28,158 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        .offline-container {
+        .offline-page {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            padding: 20px;
             text-align: center;
-            padding: 2rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
         
         .offline-icon {
-            width: 120px;
-            height: 120px;
-            margin-bottom: 2rem;
-            background-color: var(--gray-200);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .offline-icon svg {
-            width: 60px;
-            height: 60px;
-            fill: var(--gray-600);
+            font-size: 64px;
+            color: #4A90E2;
+            margin-bottom: 20px;
         }
         
         .offline-title {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: var(--gray-800);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
         }
         
         .offline-message {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            color: var(--gray-600);
-            max-width: 500px;
+            font-size: 16px;
+            color: #34495e;
+            margin-bottom: 30px;
+            max-width: 400px;
         }
         
-        .offline-actions {
+        .retry-button {
+            padding: 12px 24px;
+            background-color: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .retry-button:hover {
+            background-color: #357ABD;
+        }
+        
+        .retry-button i {
+            font-size: 20px;
+        }
+        
+        .cached-content {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .cached-content h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .cached-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+        }
+        
+        .cached-content li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .cached-content li:last-child {
+            border-bottom: none;
+        }
+        
+        .cached-content a {
+            color: #4A90E2;
+            text-decoration: none;
             display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            align-items: center;
+            gap: 8px;
         }
         
-        @media (min-width: 768px) {
-            .offline-actions {
-                flex-direction: row;
-            }
+        .cached-content a:hover {
+            color: #357ABD;
         }
     </style>
 </head>
 <body>
-    <div class="offline-container">
-        <div class="offline-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z"/>
-            </svg>
-        </div>
+    <div class="offline-page">
+        <i class="mdi mdi-wifi-off offline-icon"></i>
         <h1 class="offline-title">You're Offline</h1>
         <p class="offline-message">
-            It looks like you've lost your internet connection. 
-            Don't worry, AuraFlow.Ai works offline! You can continue using the app, 
-            and your changes will sync when you're back online.
+            It seems you've lost your internet connection. Don't worry - you can still access previously loaded content.
         </p>
-        <div class="offline-actions">
-            <button id="retry-connection" class="btn btn-primary">Retry Connection</button>
-            <a href="/" class="btn btn-outline-primary">Go to Dashboard</a>
+        
+        <button class="retry-button" onclick="window.location.reload()">
+            <i class="mdi mdi-refresh"></i>
+            Try Again
+        </button>
+        
+        <div class="cached-content">
+            <h3>Available Offline</h3>
+            <ul>
+                <li>
+                    <a href="/inventory">
+                        <i class="mdi mdi-package-variant"></i>
+                        Inventory Management
+                    </a>
+                </li>
+                <li>
+                    <a href="/pos">
+                        <i class="mdi mdi-point-of-sale"></i>
+                        Point of Sale
+                    </a>
+                </li>
+                <li>
+                    <a href="/dashboard">
+                        <i class="mdi mdi-view-dashboard"></i>
+                        Dashboard
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
     
     <script>
-        // Check if we're back online
-        window.addEventListener('online', () => {
-            window.location.href = '/';
-        });
+        // Check connection status
+        function updateOnlineStatus() {
+            const retryButton = document.querySelector('.retry-button');
+            if (navigator.onLine) {
+                retryButton.textContent = 'Back Online - Click to Reload';
+                retryButton.style.backgroundColor = '#27ae60';
+            } else {
+                retryButton.innerHTML = '<i class="mdi mdi-refresh"></i> Try Again';
+                retryButton.style.backgroundColor = '#4A90E2';
+            }
+        }
         
-        // Retry connection button
-        document.getElementById('retry-connection').addEventListener('click', () => {
-            window.location.reload();
-        });
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        // Initial check
+        updateOnlineStatus();
     </script>
 </body>
 </html> 

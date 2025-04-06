@@ -1,34 +1,6 @@
-{% extends "base.html" %}
+{% extends "auth_layout.html" %}
 
-{% block body_class %}auth-page{% endblock %}
-
-{% block extra_head %}
-<link rel="stylesheet" href="/static/css/particles.css">
-<style>
-    /* Ensure the auth page is visible immediately */
-    .auth-page {
-        display: block !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-    }
-    
-    /* Ensure the auth container is visible immediately */
-    .auth-container {
-        display: flex !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-    }
-    
-    /* Ensure the auth box is visible immediately */
-    .auth-box {
-        display: block !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-    }
-</style>
-{% endblock %}
-
-{% block auth_content %}
+{% block content %}
 <div class="auth-container">
     <!-- Animated Background -->
     <div class="auth-background">
@@ -44,7 +16,7 @@
         <!-- Auth Forms Container -->
         <div class="auth-forms">
             <!-- Login Form -->
-            <form id="login-form" class="auth-form active" data-form="login">
+            <form id="login-form" class="auth-form active no-loader" data-form="login">
                 <h2>Welcome Back</h2>
                 <p class="auth-subtitle">Sign in to continue to AuraFlow.Ai</p>
                 
@@ -78,7 +50,7 @@
             </form>
             
             <!-- Register Form -->
-            <form id="register-form" class="auth-form" data-form="register">
+            <form id="register-form" class="auth-form no-loader" data-form="register">
                 <h2>Create Account</h2>
                 <p class="auth-subtitle">Get started with AuraFlow.Ai</p>
                 
@@ -125,7 +97,7 @@
             </form>
             
             <!-- Forgot Password Form -->
-            <form id="forgot-form" class="auth-form" data-form="forgot">
+            <form id="forgot-form" class="auth-form no-loader" data-form="forgot">
                 <h2>Reset Password</h2>
                 <p class="auth-subtitle">Enter your email to reset your password</p>
                 
@@ -146,6 +118,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="/static/js/particles.js"></script>
-<script src="/static/js/auth-ui.js"></script>
+<script src="{{ url_for('static', filename='js/particles.js') }}"></script>
+<script src="{{ url_for('static', filename='js/auth-ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 {% endblock %} 

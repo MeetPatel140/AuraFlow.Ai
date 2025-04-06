@@ -32,24 +32,22 @@ AuraFlow.Ai is a comprehensive business operating system designed specifically f
 
 ## Tech Stack
 
-- **Frontend**: HTML, CSS, JavaScript with modern UI libraries
-- **Backend**: Python with Flask
-- **Database**: PostgreSQL (online) + IndexedDB (offline)
-- **Caching**: Redis for session management and caching
-- **AI/ML**: TensorFlow, scikit-learn, Hugging Face models
-- **NLP**: spaCy and transformers for chatbots and insights
-- **Authentication**: Flask-Login, JWT, and OAuth
+- **Frontend**: NextJS with Bun runtime
+  - UI Framework: ShadCN UI (Tailwind CSS)
+  - Component Library: Origin UI
+  - AI Builder: V0
+- **Backend**: Python
+  - API Endpoints
+  - WebSocket Communication
+- **Database**: PostgreSQL
 - **Offline Support**: Service Workers + IndexedDB
-- **Background Tasks**: Celery + Redis
-- **Deployment**: Hostinger (or cloud options)
 
 ## Setup Instructions
 
 ### Prerequisites
+- Bun 1.0+
 - Python 3.8+
-- Node.js 14+
 - PostgreSQL 13+
-- Redis 6+
 
 ### Installation
 
@@ -69,8 +67,8 @@ pip install -r requirements.txt
 3. Set up the frontend dependencies
 ```
 cd frontend
-npm install
-npm run build
+bun install
+bun run build
 cd ..
 ```
 
@@ -82,14 +80,12 @@ cp .env.example .env
 
 5. Initialize the database
 ```
-flask db init
-flask db migrate
-flask db upgrade
+python manage.py migrate
 ```
 
 6. Start the development server
 ```
-flask run
+bun run dev
 ```
 
 ## Development Roadmap
@@ -101,4 +97,4 @@ flask run
 
 ## License
 
-[MIT License](LICENSE) 
+[MIT License](LICENSE)

@@ -47,7 +47,10 @@ class CacheMiddleware:
             response.headers['Cache-Control'] = 'public, max-age=604800, immutable'
         
         elif response.mimetype in ['text/css', 'application/javascript']:
-            # Cache CSS and JS for 1 day (86400 seconds)
+            # Force revalidation of CSS and JS files
+            response.headers['Cache-Control'] = 'no-cache, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
             response.headers['Cache-Control'] = 'public, max-age=86400'
         
         elif response.mimetype == 'application/manifest+json':
@@ -80,4 +83,4 @@ class CacheMiddleware:
             # Add other security headers
             response.headers['X-Content-Type-Options'] = 'nosniff'
         
-        return response 
+        return response

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AuraFlow.Ai - AI-Powered Business OS for Retailers">
+    <!-- Theme color for Chrome, Opera, and other browsers -->
+    <meta name="theme-color" content="#4A90E2">
+    <!-- Firefox theme color compatibility -->
+    <meta name="color-scheme" content="light">
+    <!-- Safari theme color -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="#4A90E2">
+    <title>{% block title %}AuraFlow.Ai - AI-Powered Business OS for Retailers{% endblock %}</title>
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- iOS support -->
+    <link rel="apple-touch-icon" href="/static/images/icons/icon-192x192.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css?v=5.3.0" 
+          integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" 
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-fixes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/particles.css') }}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap&v=20250313" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap&v=20250313" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css?v=7.2.96" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=6.4.0" 
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer">
+    
+    <style>
+        /* Custom styling for AuraFlow.Ai text logo */
+        .text-logo {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: linear-gradient(90deg, #4A90E2, #00D2D3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: -0.5px;
+        }
+        
+        /* Auth Page Styling */
+        body {
+            background-color: #f5f9fc;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .auth-page {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 1;
+        }
+        
+        .auth-background {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .auth-container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            min-height: 600px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .auth-box {
+            width: 450px;
+            max-width: 90%;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .auth-logo img {
+            height: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .auth-form {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .auth-form.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        .auth-form h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        
+        .auth-subtitle {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            font-size: 14px;
+            color: #333;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #4A90E2;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+        
+        .password-input {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            padding: 0;
+        }
+        
+        .toggle-password:hover {
+            color: #777;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .form-check-input {
+            margin-right: 10px;
+        }
+        
+        .form-check-label {
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background-color: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary:hover {
+            background-color: #357ABD;
+        }
+        
+        .auth-links {
+            display: flex;
+            justify-content: center;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .auth-links a {
+            color: #4A90E2;
+            text-decoration: none;
+        }
+        
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .divider {
+            margin: 0 8px;
+            color: #ddd;
+        }
+        
+        /* Ensure immediate visibility of auth elements */
+        .auth-page {
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        .auth-container {
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        .auth-box {
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+    </style>
+    
+    <!-- Extra head content -->
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="auth-page">
+    <!-- Auth Spinner - Global Loader -->
+    <div class="auth-spinner global-loader" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 15px; color: #333;" id="loader-text">Processing...</p>
+        </div>
+    </div>
+    
+    {% block content %}{% endblock %}
+    
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" 
+            crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications-handler.js') }}"></script>
+    
+    <!-- Extra scripts -->
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html> 

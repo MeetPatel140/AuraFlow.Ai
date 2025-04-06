@@ -143,29 +143,7 @@ const App = {
   
   // Initialize sidebar
   initSidebar() {
-    const sidebarToggle = document.getElementById('sidebar-toggle');
     const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('main-content');
-    
-    if (sidebar && sidebarToggle) {
-      // Check if sidebar state is stored in localStorage
-      const sidebarCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
-      
-      // Apply initial state
-      if (sidebarCollapsed) {
-        sidebar.classList.add('collapsed');
-        mainContent.classList.add('expanded');
-      }
-      
-      // Toggle sidebar
-      sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
-        
-        // Store state in localStorage
-        localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed'));
-      });
-    }
     
     // Handle sidebar dropdown toggles
     const dropdownToggles = document.querySelectorAll('.nav-link.has-dropdown');
@@ -252,8 +230,17 @@ const App = {
         return;
       }
       
-      // Let the browser handle navigation normally
-      // No need to prevent default or handle client-side
+      // Don't show loader on auth pages to prevent infinite loops
+      if (window.location.pathname.includes('/login') || 
+          window.location.pathname.includes('/auth') || 
+          window.location.pathname === '/' ||
+          link.href.includes('/login') ||
+          link.href.includes('/auth')) {
+        return;
+      }
+      
+      // Show loader before navigation
+      window.Loader.show('Processing...');
     });
   },
   
@@ -407,6 +394,145 @@ const App = {
     }
   }
 };
+
+// Global Loader Management
+window.Loader = {
+    show: function(message = 'Processing...') {
+        const loader = document.querySelector('.global-loader');
+        const loaderText = document.getElementById('loader-text');
+        
+        if (loader) {
+            if (loaderText) {
+                loaderText.textContent = message;
+            }
+            
+            loader.style.display = 'flex';
+            loader.classList.add('active');
+            
+            // Force reflow to ensure the loader is displayed immediately
+            loader.offsetHeight;
+            
+            // Set body to prevent scrolling while loader is active
+            document.body.style.overflow = 'hidden';
+            
+            console.log('Global loader shown with message:', message);
+        } else {
+            console.warn('Global loader element not found');
+        }
+    },
+    
+    hide: function() {
+        const loader = document.querySelector('.global-loader');
+        
+        if (loader) {
+            loader.classList.remove('active');
+            loader.style.display = 'none';
+            
+            // Re-enable scrolling
+            document.body.style.overflow = '';
+            
+            console.log('Global loader hidden');
+        } else {
+            console.warn('Global loader element not found');
+        }
+    },
+    
+    // Specialized loader messages
+    showWithMessage: function(message) {
+        this.show(message);
+    },
+    
+    // Show loader for signing in
+    showSigningIn: function() {
+        this.show('Processing...');
+    },
+    
+    // Show loader for loading data
+    showLoadingData: function() {
+        this.show('Processing...');
+    },
+    
+    // Show loader for saving data
+    showSaving: function() {
+        this.show('Processing...');
+    },
+    
+    // Show loader for processing
+    showProcessing: function() {
+        this.show('Processing...');
+    }
+};
+
+// Add global navigation hooks to show loader on page navigation
+document.addEventListener('DOMContentLoaded', function() {
+    // Intercept link clicks to show loader before navigation
+    document.addEventListener('click', function(e) {
+        // Check if the clicked element is a link or has a link parent
+        const link = e.target.closest('a');
+        
+        if (link && 
+            link.getAttribute('href') && 
+            !link.getAttribute('href').startsWith('#') && 
+            !link.getAttribute('href').startsWith('javascript:') &&
+            !link.getAttribute('target') &&
+            !link.classList.contains('no-loader')) {
+            
+            // Don't show loader on auth pages to prevent infinite loops
+            if (window.location.pathname.includes('/login') || 
+                window.location.pathname.includes('/auth') || 
+                window.location.pathname === '/' ||
+                link.href.includes('/login') ||
+                link.href.includes('/auth')) {
+                return;
+            }
+            
+            // Show loader before navigation
+            window.Loader.show('Processing...');
+        }
+    });
+    
+    // Intercept form submissions to show loader
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        
+        // Only intercept forms that don't have the no-loader class
+        if (form && !form.classList.contains('no-loader')) {
+            window.Loader.show('Processing...');
+        }
+    });
+    
+    // Handle back/forward browser navigation
+    window.addEventListener('beforeunload', function(e) {
+        // Don't show loader on login pages to prevent infinite loops
+        if (window.location.pathname.includes('/login') || 
+            window.location.pathname.includes('/auth') || 
+            window.location.pathname === '/') {
+            return;
+        }
+        
+        window.Loader.show('Processing...');
+    });
+    
+    // Hide loader when page is fully loaded
+    window.addEventListener('load', function() {
+        window.Loader.hide();
+    });
+    
+    // Add data-loader-text attribute support
+    const elementsWithLoaderText = document.querySelectorAll('[data-loader-text]');
+    elementsWithLoaderText.forEach(element => {
+        element.addEventListener('click', function() {
+            const loaderText = this.getAttribute('data-loader-text');
+            if (loaderText) {
+                window.Loader.show(loaderText);
+            } else {
+                window.Loader.show('Processing...');
+            }
+        });
+    });
+    
+    console.log('Global navigation hooks initialized');
+});
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {

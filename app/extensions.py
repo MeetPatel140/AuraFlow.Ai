@@ -13,8 +13,10 @@ except ImportError:
 
 try:
     login_manager = LoginManager()
-    login_manager.login_view = 'auth.login'
+    login_manager.login_view = '/login'
+    login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'info'
+    login_manager.session_protection = 'strong'
     
     @login_manager.user_loader
     def load_user(user_id):
@@ -26,6 +28,13 @@ except ImportError:
 try:
     from flask_jwt_extended import JWTManager
     jwt = JWTManager()
+    
+    @jwt.user_lookup_loader
+    def user_lookup_callback(_jwt_header, jwt_data):
+        from app.models.user import User
+        identity = jwt_data["sub"]
+        return User.query.filter_by(id=identity).one_or_none()
+        
 except ImportError:
     jwt = None
 
@@ -51,4 +60,20 @@ try:
     from celery import Celery
     celery_app = Celery()
 except ImportError:
-    celery_app = None 
+    celery_app = None
+
+def configure_login_manager(app):
+    """Configure Flask-Login."""
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = '/login'
+    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'info'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        """Load user by ID."""
+        from app.models.user import User
+        return User.query.get(int(user_id))
+    
+    return login_manager

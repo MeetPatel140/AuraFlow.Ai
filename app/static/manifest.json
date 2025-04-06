@@ -1,34 +1,37 @@
 {
-  "name": "AuraFlow.Ai",
+  "name": "AuraFlow",
   "short_name": "AuraFlow",
-  "description": "AI-Powered Business OS for Retailers",
+  "description": "Inventory Management System",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
+  "background_color": "#ffffff",
   "theme_color": "#4A90E2",
   "orientation": "any",
   "icons": [
     {
       "src": "/static/images/icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
+    },
+    {
+      "src": "/static/images/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ],
+  "scope": "/",
+  "prefer_related_applications": false,
+  "categories": ["business", "productivity"],
   "shortcuts": [
     {
       "name": "POS",
-      "short_name": "POS",
-      "description": "Open the Point of Sale",
       "url": "/pos",
-      "icons": [{ "src": "/static/images/icons/pos.png", "sizes": "192x192" }]
+      "description": "Point of Sale"
     },
     {
       "name": "Inventory",
-      "short_name": "Inventory",
-      "description": "Manage inventory",
       "url": "/inventory",
-      "icons": [{ "src": "/static/images/icons/inventory.png", "sizes": "192x192" }]
+      "description": "Manage inventory"
     }
   ],
   "screenshots": [
@@ -53,5 +56,9 @@
       "platform": "wide",
       "label": "Inventory Management"
     }
+  ],
+  "offline_enabled": true,
+  "permissions": [
+    "notifications"
   ]
 } 
